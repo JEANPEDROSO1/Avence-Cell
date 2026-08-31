@@ -283,11 +283,8 @@
     loadConfig();
 
     btnSalvarConfig.addEventListener('click', async () => {
-        const bgInput = document.getElementById('config-bg');
         const logoInput = document.getElementById('config-logo');
         const currentConfig = JSON.parse(localStorage.getItem('avence_config')) || {};
-        
-        let bgImage = currentConfig.bgImage || null;
         let logoImage = currentConfig.logoImage || null;
 
         const readFileAsDataURL = (file) => {
@@ -298,9 +295,6 @@
             });
         };
 
-        if (bgInput && bgInput.files && bgInput.files[0]) {
-            bgImage = await readFileAsDataURL(bgInput.files[0]);
-        }
         if (logoInput && logoInput.files && logoInput.files[0]) {
             logoImage = await readFileAsDataURL(logoInput.files[0]);
         }
@@ -324,7 +318,6 @@
             osTelefone: document.getElementById('config-os-telefone') ? document.getElementById('config-os-telefone').value : '(43) 99900-4377',
             osEmail: document.getElementById('config-os-email') ? document.getElementById('config-os-email').value : 'notecenter_ivp@hotmail.com',
             osTermos: document.getElementById('config-os-termos') ? document.getElementById('config-os-termos').value : '1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;\n2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);\n3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).\n4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO',
-            bgImage: bgImage,
             logoImage: logoImage
         };
         
