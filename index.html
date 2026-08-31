@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avence Cell - OS</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+    <!-- App UI (Hidden during print) -->
+    <div class="app-container no-print">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header" id="btn-logo-home" style="cursor: pointer;" title="Voltar ao Início">
+                <i class="ph ph-device-mobile"></i>
+                <h2 id="store-name-display">Avence Cell</h2>
+            </div>
+            <nav class="sidebar-menu">
+                <button class="menu-btn" data-modal="modal-abrir-os">
+                    <i class="ph ph-folder-plus"></i>
+                    <span>Abrir O.S</span>
+                </button>
+                <button class="menu-btn" data-target="alterar-os">
+                    <i class="ph ph-pencil-simple"></i>
+                    <span>Alterar O.S</span>
+                </button>
+                <button class="menu-btn" data-target="encerrar-os">
+                    <i class="ph ph-check-circle"></i>
+                    <span>Encerrar O.S</span>
+                </button>
+                <button class="menu-btn" data-target="estoque">
+                    <i class="ph ph-package"></i>
+                    <span>Estoque</span>
+                </button>
+                <button class="menu-btn" data-target="pdv">
+                    <i class="ph ph-shopping-cart"></i>
+                    <span>PDV / Caixa</span>
+                </button>
+                <button class="menu-btn" data-target="financeiro">
+                    <i class="ph ph-currency-dollar"></i>
+                    <span>Financeiro</span>
+                </button>
+                <button class="menu-btn" data-target="relatorios">
+                    <i class="ph ph-chart-bar"></i>
+                    <span>Relatórios</span>
+                </button>
+                <div class="spacer" style="flex:1"></div>
+                <button class="menu-btn" data-modal="modal-configuracoes" id="btn-config">
+                    <i class="ph ph-gear"></i>
+                    <span>Configurações</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="avatar"></div>
+                    <span>Usuário Admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ========================================== -->
+        <!--               MAIN CONTENT                 -->
+        <!-- ========================================== -->
+        <main class="main-content">
+            <header class="top-header">
+                <h1 id="page-title">Abrir O.S</h1>
+                <div class="date-time" id="datetime-display">--:--</div>
+            </header>
+
+            <div class="content-area">
+                <!-- ========================================== -->
+                <!--             TELA: DASHBOARD                -->
+                <!-- ========================================== -->
+                <section id="dashboard" class="screen active">
+                    <div class="empty-state large">
+                        <i class="ph ph-squares-four"></i>
+                        <h2>Bem-vindo à Avence Cell</h2>
+                        <p>Utilize o menu lateral para gerenciar as Ordens de Serviço.</p>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!--             TELA: CLIENTES                 -->
+                <!-- ========================================== -->
+                <section id="alterar-os" class="screen">
+                    <div class="empty-state large">
+                        <i class="ph ph-pencil-simple-slash"></i>
+                        <h2>Alterar O.S</h2>
+                        <p>Busque e edite as informações de uma Ordem de Serviço existente.</p>
+                    </div>
+                </section>
+
+                <section id="encerrar-os" class="screen">
+                    <div class="empty-state large">
+                        <i class="ph ph-check-circle"></i>
+                        <h2>Encerrar O.S</h2>
+                        <p>Finalize Ordens de Serviço prontas ou entregues.</p>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!--             TELA: ESTOQUE                  -->
+                <!-- ========================================== -->
+                <section id="estoque" class="screen">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <div class="search-box" style="margin: 0; width: 350px;">
+                            <i class="ph ph-magnifying-glass search-icon"></i>
+                            <input type="text" id="produto-search" placeholder="Buscar por Nome ou código EAN..." autocomplete="off">
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-secondary" id="btn-relatorio-compras" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-envelope-simple"></i> Relatório de Compras</button>
+                            <button class="btn btn-primary" id="btn-novo-produto" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-plus-circle"></i> Novo Produto</button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-surface-light); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column;">
+                        <div style="overflow-x: auto;">
+                            <table class="estoque-table">
+                                <thead>
+                                    <tr>
+                                        <th>EAN</th>
+                                        <th>Produto</th>
+                                        <th style="text-align: right;">Custo</th>
+                                        <th style="text-align: right;">Venda</th>
+                                        <th style="text-align: right;">Ganho</th>
+                                        <th style="text-align: center;">Qtd</th>
+                                        <th style="text-align: center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="estoque-tbody">
+                                    <!-- Produtos injetados via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!--             TELA: ORDEM DE SERVIÇO         -->
+                <!-- ========================================== -->
+                <!-- ========================================== -->
+                <!--             TELA: CAIXA / PDV              -->
+                <!-- ========================================== -->
+                <section id="pdv" class="screen">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><i class="ph ph-shopping-cart"></i> Ponto de Venda (PDV)</h2>
+                    </div>
+                    
+                    <div style="display: flex; gap: 24px; height: calc(100vh - 220px);">
+                        <!-- Left Column: Search & Cart -->
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                            <div class="search-box" style="margin: 0; width: 100%;">
+                                <i class="ph ph-barcode search-icon"></i>
+                                <input type="text" id="pdv-search" placeholder="Código de Barras (EAN) ou Nome..." autocomplete="off" style="font-size: 18px; padding: 16px 20px 16px 54px; width: 100%; border: none; background: transparent; color: var(--text-main); outline: none;">
+                            </div>
+                            
+                            <div style="flex: 1; background: var(--bg-surface-light); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column;">
+                                <div style="overflow-y: auto; flex: 1;">
+                                    <table class="estoque-table" style="min-width: auto;">
+                                        <thead style="position: sticky; top: 0; background: var(--bg-dark); z-index: 1;">
+                                            <tr>
+                                                <th style="width: 15%;">EAN</th>
+                                                <th style="width: 35%;">Produto/Serviço</th>
+                                                <th style="text-align: right; width: 15%;">Preço</th>
+                                                <th style="text-align: center; width: 110px;">Qtd</th>
+                                                <th style="text-align: right; width: 15%;">Total</th>
+                                                <th style="text-align: center; width: 60px;">Excluir</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pdv-tbody">
+                                            <!-- Items injected via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Totals & Checkout -->
+                        <div style="width: 350px; background: var(--bg-surface-light); border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; flex-direction: column; padding: 12px; overflow-y: hidden;">
+                            
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;">
+                                <label style="color: var(--text-muted); font-size: 13px;">Vendedor (Responsável)</label>
+                                <select id="pdv-vendedor" style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; outline: none; font-size: 14px; width: 100%; height: 30px;">
+                                    <option value="">Selecione o Vendedor...</option>
+                                    <!-- Injetado via JS -->
+                                </select>
+                            </div>
+
+                            <h3 style="margin-bottom: 8px; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Cliente <span style="font-size: 10px; font-weight: bold; color: #ef4444;">(Obrigatório)</span></h3>
+                            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                                <input type="hidden" id="pdv-cliente-id">
+                                <div style="position: relative;">
+                                    <input type="text" id="pdv-cliente-nome" placeholder="Nome do Cliente (Busca automática)" autocomplete="off" style="font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-main); outline: none; width: 100%;">
+                                    <div id="pdv-cliente-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 4px; z-index: 10; max-height: 150px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-top: 2px;"></div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="pdv-cliente-telefone" placeholder="Telefone" style="flex: 1; font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-main); outline: none; width: 100%;">
+                                    <input type="text" id="pdv-cliente-doc" placeholder="CPF/CNPJ" style="flex: 1; font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-main); outline: none; width: 100%;">
+                                </div>
+                                <input type="text" id="pdv-cliente-endereco" placeholder="Endereço" style="font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-main); outline: none;">
+                            </div>
+
+                            <div style="height: 1px; background: var(--border); margin-bottom: 12px;"></div>
+
+                            <h3 style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Resumo da Venda</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 15px;">
+                                    <span style="color: var(--text-muted);">Subtotal</span>
+                                    <span id="pdv-subtotal">R$ 0,00</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+                                    <span style="color: var(--text-muted);">Desconto</span>
+                                    <div style="display: flex; gap: 4px;">
+                                        <select id="pdv-tipo-desconto" style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; outline: none; height: 26px; font-size: 14px;">
+                                            <option value="rs">R$</option>
+                                            <option value="perc">%</option>
+                                        </select>
+                                        <input type="number" id="pdv-input-desconto" step="0.01" min="0" value="0.00" style="width: 80px; text-align: right; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; height: 26px; font-size: 14px;">
+                                    </div>
+                                </div>
+                                <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="color: var(--text-muted); font-size: 13px;">Forma de Pagamento</label>
+                                    <select id="pdv-forma-pgto" style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; outline: none; font-size: 14px; width: 100%; height: 30px;">
+                                        <option value="dinheiro">Dinheiro</option>
+                                        <option value="pix">PIX</option>
+                                        <option value="debito">Cartão de Débito</option>
+                                        <option value="credito_vista">Crédito (À Vista)</option>
+                                        <option value="credito_parcelado">Crédito (Parcelado)</option>
+                                    </select>
+                                </div>
+                                <div id="pdv-opcoes-dinheiro" style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">Valor Recebido</span>
+                                        <input type="number" id="pdv-valor-recebido" step="0.01" min="0" placeholder="0.00" style="width: 90px; text-align: right; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; height: 26px; font-size: 14px;">
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">Troco</span>
+                                        <span id="pdv-troco" style="font-weight: bold; color: #22c55e; font-size: 15px;">R$ 0,00</span>
+                                    </div>
+                                </div>
+                                <div id="pdv-opcoes-parcelado" style="display: none; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">Parcelas</span>
+                                        <select id="pdv-parcelas" style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; outline: none; width: 80px; height: 26px; font-size: 14px;">
+                                            <option value="2">2x</option>
+                                            <option value="3">3x</option>
+                                            <option value="4">4x</option>
+                                            <option value="5">5x</option>
+                                            <option value="6">6x</option>
+                                            <option value="7">7x</option>
+                                            <option value="8">8x</option>
+                                            <option value="9">9x</option>
+                                            <option value="10">10x</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">Valor da Parcela</span>
+                                        <span id="pdv-valor-parcela" style="font-weight: bold; color: var(--primary); font-size: 15px;">R$ 0,00</span>
+                                    </div>
+                                </div>
+                                <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                                <div style="display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; color: var(--primary);">
+                                    <span>Total</span>
+                                    <span id="pdv-total">R$ 0,00</span>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-primary" id="btn-finalizar-venda" style="margin-top: auto; padding: 10px; font-size: 14px; justify-content: center; background: #22c55e; border-color: #22c55e;">
+                                <i class="ph ph-check-circle"></i> Finalizar Venda
+                            </button>
+                            <button class="btn btn-secondary" id="btn-cancelar-venda" style="margin-top: 4px; padding: 6px; justify-content: center; color: #ef4444; border-color: transparent; font-size: 12px;">
+                                Cancelar Venda
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+        <!--             TELA: FINANCEIRO               -->
+        <!-- ========================================== -->
+        <section id="financeiro" class="screen">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><i class="ph ph-currency-dollar"></i> Painel Financeiro</h2>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div id="caixa-status-badge" style="padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 14px; background: #ef4444; color: white;">Caixa Fechado</div>
+                            <button class="btn btn-primary" id="btn-abrir-caixa" style="background-color: #22c55e; border-color: #22c55e; display: flex; align-items: center; gap: 6px;"><i class="ph ph-lock-key-open"></i> Abrir Caixa</button>
+                            <button class="btn btn-secondary" id="btn-fechar-caixa" style="display: none; align-items: center; gap: 6px; color: #ef4444; border-color: #ef4444;"><i class="ph ph-lock-key"></i> Fechar Caixa</button>
+                            <button class="btn btn-secondary" id="btn-sangria" style="display: none; align-items: center; gap: 6px;"><i class="ph ph-money"></i> Sangria / Suprimento</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumo Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+                        <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
+                            <span style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Saldo do Caixa Atual</span>
+                            <span id="fin-saldo-atual" style="font-size: 28px; font-weight: bold; color: var(--text-main);">R$ 0,00</span>
+                        </div>
+                        <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
+                            <span style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Entradas (Hoje)</span>
+                            <span id="fin-entradas-hoje" style="font-size: 28px; font-weight: bold; color: #22c55e;">R$ 0,00</span>
+                        </div>
+                        <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
+                            <span style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Saídas/Sangrias (Hoje)</span>
+                            <span id="fin-saidas-hoje" style="font-size: 28px; font-weight: bold; color: #ef4444;">R$ 0,00</span>
+                        </div>
+                        <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
+                            <span style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Projeção do Mês (Entradas)</span>
+                            <span id="fin-projecao-mes" style="font-size: 28px; font-weight: bold; color: #3b82f6;">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráficos e Histórico -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; height: 400px;">
+                        <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
+                            <h3 style="font-size: 16px; margin-bottom: 16px;">Fluxo dos Últimos 7 Dias</h3>
+                            <div style="flex: 1; position: relative; width: 100%;">
+                                <canvas id="financeiroChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+                            <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-surface);">
+                                <h3 style="font-size: 16px; margin: 0;">Últimas Movimentações</h3>
+                            </div>
+                            <div id="fin-historico-lista" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Histórico injetado via JS -->
+                                <p style="text-align: center; color: var(--text-muted); margin-top: 20px;">Nenhuma movimentação no caixa atual.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="relatorios" class="screen">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-chart-bar" style="color: var(--primary);"></i> Relatório de Desempenho (Equipe)</h2>
+                        <button class="btn btn-secondary" id="btn-refresh-relatorios" style="padding: 8px 16px;"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                    </div>
+                    
+                    <div id="relatorios-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                        <!-- Cards injetados via JS -->
+                    </div>
+                </section>
+                <!-- Removed configuracoes section to use modal instead -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals (Hidden during print) -->
+    
+    <!-- ========================================== -->
+    <!--                  MODAIS                    -->
+    <!-- ========================================== -->
+    
+    <!-- Modal: Abrir O.S (Busca) -->
+    <div class="modal-overlay no-print" id="modal-abrir-os">
+        <div class="modal-container large-modal" style="height: 700px; max-width: 1200px; width: 95vw; display: flex; flex-direction: column;">
+            <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <h2><i class="ph ph-folder-plus"></i> Abrir O.S</h2>
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <button class="btn btn-primary" id="btn-novo-cliente-header" style="padding: 12px 24px; font-size: 16px; font-weight: bold;"><i class="ph ph-user-plus"></i> Novo Cliente (F2)</button>
+                    <button class="close-btn" data-close="modal-abrir-os"><i class="ph ph-x"></i></button>
+                </div>
+            </div>
+            
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; overflow-x: hidden; max-width: 100%; box-sizing: border-box;">
+                <!-- Search Section at the TOP -->
+                <div style="display: flex; gap: 24px; align-items: stretch; background: rgba(0,0,0,0.2); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-top: 16px; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0;">
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0;">
+                        <label style="display: block; margin-bottom: 12px; color: var(--text-muted); font-size: 14px; font-weight: 500;">Buscar Cliente</label>
+                        <div class="search-box" style="margin: 0; width: 100%;">
+                            <i class="ph ph-magnifying-glass search-icon"></i>
+                            <input type="text" id="client-search" placeholder="Digite para buscar..." autocomplete="off">
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 0 1 480px; min-width: 0;">
+                        <label style="display: block; margin-bottom: 12px; color: var(--text-muted); font-size: 14px; font-weight: 500;">Pesquisar por</label>
+                        <div class="search-filters" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <label class="filter-radio">
+                                <input type="radio" name="searchFilter" value="inicio_nome" checked>
+                                <span>Início do nome</span>
+                            </label>
+                            <label class="filter-radio">
+                                <input type="radio" name="searchFilter" value="qualquer_nome">
+                                <span>Qualquer parte do nome</span>
+                            </label>
+                            <label class="filter-radio">
+                                <input type="radio" name="searchFilter" value="fim_nome">
+                                <span>Fim do nome/sobrenome</span>
+                            </label>
+                            <label class="filter-radio">
+                                <input type="radio" name="searchFilter" value="cpf">
+                                <span>CNPJ/CPF</span>
+                            </label>
+                            <label class="filter-radio">
+                                <input type="radio" name="searchFilter" value="telefone">
+                                <span>Telefone</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content taking up remaining space below (Client List) -->
+                <div style="flex: 1; margin-top: 24px; background: rgba(0,0,0,0.2); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0;">
+                    <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--bg-surface-light);">
+                        <h3 style="font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;"><i class="ph ph-users"></i> Clientes Cadastrados (Ordem Alfabética)</h3>
+                    </div>
+                    <div id="client-list-container" style="flex: 1; overflow-y: auto; padding: 12px;">
+                        <!-- Clients will be rendered here via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Configurações -->
+    <div class="modal-overlay no-print" id="modal-configuracoes">
+        <div class="modal-container" style="max-width: 700px; width: 95vw;">
+            <div class="modal-header">
+                <h2><i class="ph ph-gear"></i> Configurações do Sistema</h2>
+                <button class="close-btn" data-close="modal-configuracoes"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <div style="display: flex; background: var(--bg-surface-light); border-bottom: 1px solid var(--border);">
+                    <button class="config-tab-btn active" data-target="config-loja-tab" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-main); font-weight: bold; cursor: pointer; border-bottom: 2px solid var(--primary);">Loja</button>
+                    <button class="config-tab-btn" data-target="config-pref-tab" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent;">Sistema</button>
+                    <button class="config-tab-btn" data-target="config-seg-tab" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent;">Segurança</button>
+                    <button class="config-tab-btn" data-target="config-colab-tab" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent;">Equipe</button>
+                    <button class="config-tab-btn" data-target="config-estoque-tab" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent;">Estoque</button>
+                    <button class="config-tab-btn" data-target="config-os-tab" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent;">O.S.</button>
+                </div>
+                
+                <form id="form-config" style="padding: 24px;">
+                    <!-- TAB: LOJA -->
+                    <div id="config-loja-tab" class="config-tab-content" style="display: block;">
+                        <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--primary);"><i class="ph ph-storefront"></i> Dados da Loja</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Nome da Loja</label>
+                                <input type="text" id="config-loja" value="Avence Cell">
+                            </div>
+                            <div class="form-group">
+                                <label>Telefone da Loja</label>
+                                <input type="text" id="config-telefone" value="(43) 9900-4377">
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label>Endereço da Loja</label>
+                            <input type="text" id="config-endereco" value="RUA SANTA CATARINA - 35, IVAIPORA-PR">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                            <div class="form-group">
+                                <label>Email da Loja (Contato)</label>
+                                <input type="email" id="config-email" value="contato@avencecell.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Email para Relatórios</label>
+                                <input type="email" id="config-email-relatorio" placeholder="Seu email pessoal ou do comprador">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: PREFERENCIAS -->
+                    <div id="config-pref-tab" class="config-tab-content" style="display: none;">
+                        <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--primary);"><i class="ph ph-sliders-horizontal"></i> Preferências do Sistema</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Tema do Sistema</label>
+                                <select id="config-tema">
+                                    <option value="dark">Tema Escuro</option>
+                                    <option value="light">Tema Claro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label>Imagem de Fundo do Sistema</label>
+                            <input type="file" id="config-bg" accept="image/*" style="padding: 8px; background: var(--bg-surface-light);">
+                            <small style="color: var(--text-muted); margin-top: 4px;">Selecione uma imagem para o fundo.</small>
+                        </div>
+                    </div>
+
+                    <!-- TAB: SEGURANÇA -->
+                    <div id="config-seg-tab" class="config-tab-content" style="display: none;">
+                        <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--primary);"><i class="ph ph-shield-check"></i> Segurança Financeira</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Senha Principal do Sistema</label>
+                                <input type="password" id="config-senha-gerente" value="1234">
+                                <small style="color: var(--text-muted); margin-top: 4px;">Senha de "Dono" caso esqueça os acessos da equipe.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Limite Máximo do Caixa (R$)</label>
+                                <input type="number" id="config-limite-caixa" value="500" min="0" step="10">
+                                <small style="color: var(--text-muted); margin-top: 4px;">Aviso de sangria ao ultrapassar este valor.</small>
+                            </div>
+                        </div>
+                        <h4 style="margin-top: 24px; margin-bottom: 12px; font-size: 14px; color: var(--text-main);">Regras de Expediente</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Horário Fim de Expediente (Aviso)</label>
+                                <input type="time" id="config-horario-aviso" value="18:00">
+                                <small style="color: var(--text-muted); margin-top: 4px;">Horário para exibir o aviso na tela.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Horário de Bloqueio (Travamento)</label>
+                                <input type="time" id="config-horario-bloqueio" value="18:30">
+                                <small style="color: var(--text-muted); margin-top: 4px;">Horário limite para login de funcionários.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: COLABORADORES -->
+                    <div id="config-colab-tab" class="config-tab-content" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="font-size: 16px; color: var(--primary);"><i class="ph ph-users"></i> Gerenciar Equipe</h3>
+                            <button type="button" class="btn btn-primary" id="btn-add-colab" style="padding: 6px 12px; font-size: 13px;"><i class="ph ph-plus"></i> Novo</button>
+                        </div>
+                        
+                        <!-- Lista de Colaboradores -->
+                        <div id="lista-colaboradores" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; margin-bottom: 16px;">
+                            <p style="text-align: center; color: var(--text-muted);">Nenhum colaborador cadastrado.</p>
+                        </div>
+                        
+                        <!-- Formulário de Colaborador movido para modal-colaborador -->
+                        <!-- Histórico de Login -->
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+                            <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);"><i class="ph ph-clock"></i> Últimos Registros de Ponto</h3>
+                            <div id="lista-ponto" style="max-height: 150px; overflow-y: auto; font-size: 13px; color: var(--text-muted);">
+                                <p style="text-align: center;">Nenhum registro de ponto ainda.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: ESTOQUE -->
+                    <div id="config-estoque-tab" class="config-tab-content" style="display: none;">
+                        <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--primary);"><i class="ph ph-package"></i> Categorias do Estoque</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                            Gerencie os tipos (categorias) personalizados de produtos. Os tipos padrões (Produto Físico, Serviço, Peça e PC Montado) não podem ser removidos.
+                        </p>
+                        
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                            <input type="text" id="config-novo-tipo" placeholder="Ex: Acessórios, Ferramentas..." style="flex: 1; padding: 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-main);">
+                            <button type="button" id="btn-add-tipo-estoque" class="btn btn-primary" style="background: #22c55e; border-color: #22c55e;"><i class="ph ph-plus"></i> Adicionar</button>
+                        </div>
+                        
+                        <div style="border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); max-height: 250px; overflow-y: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                <thead style="background: var(--bg-surface-light); position: sticky; top: 0;">
+                                    <tr>
+                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border);">Tipo / Categoria</th>
+                                        <th style="padding: 10px; text-align: center; border-bottom: 1px solid var(--border); width: 80px;">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-tipos-estoque">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB: O.S. -->
+                    <div id="config-os-tab" class="config-tab-content" style="display: none;">
+                        <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--primary);"><i class="ph ph-receipt"></i> Configurações da Nota de Recebimento (O.S.)</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Título do Recibo</label>
+                                <input type="text" id="config-os-titulo" value="NOTE BOOK CENTER">
+                            </div>
+                            <div class="form-group">
+                                <label>Nome da Loja (Assinatura)</label>
+                                <input type="text" id="config-os-assinatura" value="NOTE BOOK CENTER">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                            <div class="form-group">
+                                <label>Endereço / Localização</label>
+                                <input type="text" id="config-os-endereco" value="RUA SANTA CATARINA - 35, IVAIPORA-PR">
+                            </div>
+                            <div class="form-group">
+                                <label>Sub Localização (Complemento)</label>
+                                <input type="text" id="config-os-complemento" value="COMPLEMENTO RUA ATRAS DO BANCO DO BRASIL">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                            <div class="form-group">
+                                <label>Telefone</label>
+                                <input type="text" id="config-os-telefone" value="(43) 99900-4377">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="config-os-email" value="notecenter_ivp@hotmail.com">
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label>Termos de Garantia e Entrega (Texto inferior)</label>
+                            <textarea id="config-os-termos" rows="5" style="resize: vertical; font-size: 13px;">1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;
+2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);
+3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).
+4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO</textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close="modal-configuracoes">Cancelar</button>
+                <button class="btn btn-primary" id="btn-salvar-config">Salvar Configurações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cadastro de Cliente -->
+    <div class="modal-overlay no-print" id="modal-cadastro" style="z-index: 110;">
+        <div class="modal-container large-modal" style="height: 85vh; max-height: 900px; max-width: 1200px; width: 95vw;">
+            <div class="modal-header">
+                <h2><i class="ph ph-user-plus"></i> Novo Cliente</h2>
+                <button class="close-btn" data-close="modal-cadastro"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body modal-scrollable" style="padding: 16px; flex: 1;">
+                <form id="form-cadastro">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Razão Social/Nome</label>
+                                <input type="text" id="c_nome" required style="background: #fcd34d; color: #000; border: 1px solid var(--border); ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Nome Fantasia <span style="font-size: 11px;">(opcional)</span></label>
+                                <input type="text" id="c_fantasia" ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Contato</label>
+                                <input type="text" id="c_contato" required ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">CNPJ/CPF</label>
+                                <input type="text" id="c_documento" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Ins. Est./RG</label>
+                                <input type="text" id="c_rg_ie" ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="width: 120px;">
+                                <label style="margin-bottom: 2px;">CEP</label>
+                                <input type="text" id="c_cep" ">
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label style="margin-bottom: 2px;">Endereço</label>
+                                <input type="text" id="c_endereco" ">
+                            </div>
+                            <div class="form-group" style="width: 80px;">
+                                <label style="margin-bottom: 2px;">Número</label>
+                                <input type="text" id="c_numero" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Complemento</label>
+                                <input type="text" id="c_complemento" ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Bairro</label>
+                                <input type="text" id="c_bairro" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Cidade</label>
+                                <input type="text" id="c_cidade" ">
+                            </div>
+                            <div class="form-group" style="width: 60px;">
+                                <label style="margin-bottom: 2px;">UF</label>
+                                <input type="text" id="c_uf" ">
+                            </div>
+                            <div class="form-group" style="flex: 1.5;">
+                                <label style="margin-bottom: 2px;">Email</label>
+                                <input type="email" id="c_email" ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1.5;">
+                                <label style="margin-bottom: 2px;">Site</label>
+                                <input type="text" id="c_site" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Telefone</label>
+                                <input type="text" id="c_telefone" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Comercial/FAX</label>
+                                <input type="text" id="c_comercial" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Celular</label>
+                                <input type="text" id="c_celular" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Radio</label>
+                                <input type="text" id="c_radio" ">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Aniversário</label>
+                                <input type="date" id="c_aniversario" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Grupo</label>
+                                <input type="text" id="c_grupo" ">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Pessoa</label>
+                                <select id="c_tipo_pessoa" ">
+                                    <option value="Fisica">Física</option>
+                                    <option value="Juridica">Jurídica</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label style="margin-bottom: 2px;">Observações</label>
+                                <textarea id="c_obs" rows="2" style="resize: none;"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px;">
+                            <div style="display: flex; gap: 12px; width: 40%;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label style="margin-bottom: 2px;">Pais</label>
+                                    <select id="c_pais" ">
+                                        <option value="Brasil">Brasil</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label style="margin-bottom: 2px;">Sexo</label>
+                                    <select id="c_sexo" ">
+                                        <option value=""></option>
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Feminino</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 12px;">
+                                <button class="btn btn-primary" id="btn-gravar-cliente" style="background: #2e7d32; color: #fff; display: flex; align-items: center; gap: 6px;"><i class="ph ph-floppy-disk"></i> Gravar</button>
+                                <button class="btn btn-secondary" data-close="modal-cadastro">Cancelar</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Histórico do Cliente -->
+    <div class="modal-overlay no-print" id="modal-historico-cliente" style="z-index: 105;">
+        <div class="modal-container large-modal" style="height: 700px; max-width: 1000px; width: 95vw; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h2><i class="ph ph-clock-counter-clockwise"></i> Histórico de Serviços: <span id="historico-cliente-nome" style="color: var(--primary);"></span></h2>
+                <button class="close-btn" id="btn-voltar-historico-x" title="Voltar para busca"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                <div style="flex: 1; background: var(--bg-surface-light); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="flex: 1; overflow-x: auto; overflow-y: auto;">
+                        <table class="estoque-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Nº O.S.</th>
+                                    <th>Aparelho</th>
+                                    <th>Defeito</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historico-cliente-tbody">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <button class="btn btn-primary" id="btn-alterar-os-historico" disabled style="padding: 12px 24px; font-size: 16px; font-weight: bold; background: #3b82f6; border-color: #3b82f6; width: 280px; justify-content: center; opacity: 0.5; cursor: not-allowed;"><i class="ph ph-pencil-simple"></i> Alterar O.S. Selecionada</button>
+                    <button class="btn btn-primary" id="btn-nova-os-historico" style="padding: 12px 24px; font-size: 16px; font-weight: bold; background: #22c55e; border-color: #22c55e; width: 280px; justify-content: center;"><i class="ph ph-plus-circle"></i> Criar Nova O.S.</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Seleção de Aparelho -->
+    <div class="modal-overlay no-print" id="modal-aparelho">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2><i class="ph ph-devices"></i> Selecionar Aparelho</h2>
+                <button class="close-btn" data-close="modal-aparelho"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="subtitle">O que o cliente deseja consertar?</p>
+                <div class="device-options">
+                    <button class="device-card" id="btn-celular">
+                        <div class="device-icon">
+                            <i class="ph ph-device-mobile"></i>
+                        </div>
+                        <h3>Celular</h3>
+                        <p>Smartphone, Tablet</p>
+                    </button>
+                    <button class="device-card" id="btn-notebook">
+                        <div class="device-icon">
+                            <i class="ph ph-laptop"></i>
+                        </div>
+                        <h3>Notebook</h3>
+                        <p>Laptop, PC</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalhes do Aparelho (Device Intake) -->
+    <div class="modal-overlay no-print" id="modal-intake">
+        <div class="modal-container large-modal" style="max-width: 1400px; width: 95vw; height: 95vh; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden;">
+            
+            <!-- Header (OS Title & Buttons) -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 16px 16px 16px; border-bottom: 2px solid var(--border);">
+                <div>
+                    <h4 style="color: var(--text-muted); margin: 0; font-weight: normal; font-size: 20px;">Ordem de Serviço</h4>
+                    <h1 style="margin: 0; font-size: 42px; font-weight: bold; letter-spacing: -1px;">
+                        <span style="color: #22c55e;">O.S. nº</span> <span id="intake-os-number" style="color: #ef4444;">-</span>
+                    </h1>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" id="btn-finalizar-imprimir" style="background: var(--bg-surface-light); color: var(--text-main); border: 1px solid var(--border); padding: 12px 24px; font-size: 18px; font-weight: bold;"><i class="ph ph-check" style="color: #ef4444;"></i> Gravar OS</button>
+                    <button class="btn btn-secondary" id="btn-cancelar-os" style="padding: 12px 24px; font-size: 18px; font-weight: bold;"><i class="ph ph-x"></i> Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px 0 0 0; overflow-y: auto; min-height: 0;">
+                
+                <!-- Top Section: Client Info & Meta & Finance -->
+                <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-surface); display: flex; flex-direction: column;">
+                    
+                    <!-- Cliente Row (Full Width) -->
+                    <div style="display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid var(--border);">
+                        <div style="padding: 6px 12px; font-weight: bold; font-size: 18px; border-right: 1px solid var(--border); display: flex; align-items: center; background: rgba(0,0,0,0.2);">Cliente:</div>
+                        <div style="padding: 6px 12px; font-size: 20px; font-weight: bold; background: var(--bg-surface-light); display: flex; justify-content: space-between; align-items: center;">
+                            <span id="intake-client-name">-</span>
+                            <button class="btn btn-secondary" id="btn-editar-cliente-os" style="padding: 6px 16px; font-size: 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;"><i class="ph ph-pencil-simple"></i> Editar</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 2 Columns Row -->
+                    <div style="display: grid; grid-template-columns: 1fr 300px;">
+                        
+                        <!-- Col 1: Contact Info + OS Meta -->
+                        <div border-right: 1px solid var(--border); style="display: flex; flex-direction: column;">
+                            
+                            <!-- Contact Info -->
+                            <div style="display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid var(--border);">
+                                <div style="padding: 6px 12px; font-weight: bold; font-size: 18px; border-right: 1px solid var(--border); display: flex; align-items: center; background: rgba(0,0,0,0.2);">Endereço:</div>
+                                <div style="padding: 6px 12px; font-size: 18px;" id="intake-client-address">-</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid var(--border);">
+                                <div style="padding: 6px 12px; font-weight: bold; font-size: 18px; border-right: 1px solid var(--border); display: flex; align-items: center; background: rgba(0,0,0,0.2);">Telefones:</div>
+                                <div style="padding: 6px 12px; font-size: 18px; color: #ef4444;" id="intake-client-phone">-</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid var(--border);">
+                                <div style="padding: 6px 12px; font-weight: bold; font-size: 18px; border-right: 1px solid var(--border); display: flex; align-items: center; background: rgba(0,0,0,0.2);">Doc's:</div>
+                                <div style="padding: 6px 12px; font-size: 18px;" id="intake-client-doc">-</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 100px 1fr; border-bottom: 1px solid var(--border);">
+                                <div style="padding: 6px 12px; font-weight: bold; font-size: 18px; border-right: 1px solid var(--border); display: flex; align-items: center; background: rgba(0,0,0,0.2);">e-Mail:</div>
+                                <div style="padding: 6px 12px; font-size: 18px;" id="intake-client-email">-</div>
+                            </div>
+                            
+                            <!-- OS Meta (Below e-Mail) -->
+                            <div style="padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1;">
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 16px; font-weight: bold; width: 70px;">Entrada</span>
+                                        <input type="date" id="intake-entrada" style="padding: 2px 6px; font-size: 16px; width: 140px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 16px; font-weight: bold; width: 70px;">Pronto</span>
+                                        <input type="date" id="intake-previsao" style="padding: 2px 6px; font-size: 16px; width: 140px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 16px; font-weight: bold; width: 70px;">Saída</span>
+                                        <input type="date" style="padding: 2px 6px; font-size: 16px; width: 140px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div>
+                                        <label style="font-size: 16px; font-weight: bold; margin-bottom: 2px; display: block;">Situação da OS</label>
+                                        <select style="padding: 2px 6px; font-size: 16px; width: 100%; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                            <option>Aguardando autorização do orçamento</option>
+                                            <option>Aprovado - Aguardando Peças</option>
+                                            <option>Em Manutenção</option>
+                                            <option>Pronto - Aguardando Retirada</option>
+                                            <option>Entregue</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 16px; font-weight: bold; margin-bottom: 2px; display: block;">Garantia até</label>
+                                        <input type="date" style="padding: 2px 6px; font-size: 16px; width: 100%; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    </div>
+                                    <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                                        <button id="btn-historico-interno" class="btn btn-secondary" style="padding: 4px 16px; font-size: 15px;"><i class="ph ph-clock-counter-clockwise"></i> Histórico</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Finance -->
+                        <div style="padding: 12px; display: flex; flex-direction: column;">
+                            <div style="display: grid; grid-template-columns: 1fr 100px; gap: 8px; font-size: 15px; flex: 1; align-items: center;">
+                                <div style="text-align: right; color: var(--primary); font-weight: bold;">Adiantamento</div>
+                                <input type="number" id="a_adiantamento" value="0.00" step="0.01" min="0" style="text-align: right; border: 1px solid var(--border); padding: 4px; background: var(--bg-dark); color: var(--text-main); border-radius: 4px; width: 100%;">
+                                
+                                <div style="text-align: right; font-weight: bold;">Mão-de-obra</div>
+                                <input type="number" id="a_maodeobra" value="0.00" step="0.01" min="0" style="text-align: right; border: 1px solid var(--border); padding: 4px; background: var(--bg-dark); color: var(--text-main); border-radius: 4px; width: 100%;">
+                                
+                                <div style="text-align: right; font-weight: bold;">Peças</div>
+                                <input type="number" id="a_pecas" value="0.00" step="0.01" min="0" style="text-align: right; border: 1px solid var(--border); padding: 4px; background: var(--bg-dark); color: var(--text-main); border-radius: 4px; width: 100%;">
+                                
+                                <div style="text-align: right; font-weight: bold;">Deslocamento</div>
+                                <input type="number" id="a_deslocamento" value="0.00" step="0.01" min="0" style="text-align: right; border: 1px solid var(--border); padding: 4px; background: var(--bg-dark); color: var(--text-main); border-radius: 4px; width: 100%;">
+                                
+                                <div style="text-align: right; font-weight: bold;">Serviço terceiros</div>
+                                <input type="number" id="a_terceiros" value="0.00" step="0.01" min="0" style="text-align: right; border: 1px solid var(--border); padding: 4px; background: var(--bg-dark); color: var(--text-main); border-radius: 4px; width: 100%;">
+                                
+                                <div style="text-align: right; font-weight: bold;">Outros</div>
+                                <input type="number" id="a_outros" value="0.00" step="0.01" min="0" style="text-align: right; border: 1px solid var(--border); padding: 4px; background: var(--bg-dark); color: var(--text-main); border-radius: 4px; width: 100%;">
+                            </div>
+                            <div id="a_total" style="text-align: right; font-size: 32px; font-weight: bold; color: #ef4444; margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                R$ 0,00
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="os-tabs-header" style="display: flex; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: bold; margin-top: 12px;">
+                    <div class="os-tab active" data-target="tab-aparelho" style="padding: 10px 20px; border: 1px solid var(--border); border-bottom: none; background: var(--bg-surface); color: #ef4444; border-top-left-radius: 4px; border-top-right-radius: 4px; position: relative; top: 1px; margin-right: 4px; cursor: pointer;">Aparelho</div>
+                    <div class="os-tab" data-target="tab-servicos" style="padding: 10px 20px; color: var(--text-muted); cursor: pointer; margin-right: 4px; border: 1px solid transparent; border-bottom: none;">Mão de obra/Serviços</div>
+                    <div class="os-tab" data-target="tab-pecas" style="padding: 10px 20px; color: var(--text-muted); cursor: pointer; margin-right: 4px; border: 1px solid transparent; border-bottom: none;">Peças utilizadas</div>
+                    <div class="os-tab" data-target="tab-obs" style="padding: 10px 20px; color: var(--text-muted); cursor: pointer; margin-right: 4px; border: 1px solid transparent; border-bottom: none;">Obs/Laudo técnico</div>
+                </div>
+
+                <!-- Tab Content Area -->
+                <div style="border: 1px solid var(--border); background: var(--bg-surface); border-top: none; padding: 16px; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                    <form id="form-intake" style="display: flex; flex-direction: column; gap: 8px; height: 100%; margin: 0; min-height: 0;">
+                        
+                        <!-- Tab Content (Aparelho) -->
+                        <div id="tab-aparelho" class="os-tab-content active" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; min-height: 0;">
+                            <!-- Coluna Esquerda -->
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div>
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Marca</label>
+                                    <input type="text" id="a_marca" required style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Acessórios</label>
+                                    <input type="text" id="a_acessorio" required style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Acessórios</label>
+                                    <input type="text" id="a_acessorio2" style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                </div>
+                                <div style="display: flex; flex-direction: column; flex: 1;">
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Observações</label>
+                                    <textarea id="a_obs" style="width: 100%; flex: 1; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; resize: none; overflow-y: auto;"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Coluna Direita -->
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div>
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Modelo</label>
+                                    <input type="text" id="a_modelo" required style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Nº de Série</label>
+                                        <input type="text" id="a_serie" style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Aparência</label>
+                                        <input type="text" id="a_aparencia" style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; flex: 1;">
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Defeito / Reclamação</label>
+                                    <textarea id="a_defeito" required style="width: 100%; flex: 1; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; resize: none; overflow-y: auto;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content (Mão de obra/Serviços) -->
+                        <div id="tab-servicos" class="os-tab-content" style="display: none; flex-direction: column; gap: 8px; flex: 1; min-height: 0;">
+                            <div style="font-size: 14px; font-weight: bold;">Lista de Serviços executados nesta OS</div>
+                            <div style="display: flex; gap: 16px; flex: 1; min-height: 0;">
+                                <!-- Left Column (Table + Obs) -->
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+                                    <!-- Table Area -->
+                                    <div style="flex: 1; border: 1px solid var(--border); background: var(--bg-dark); overflow: auto; display: flex; flex-direction: column;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                            <thead style="background: var(--bg-surface-light); position: sticky; top: 0;">
+                                                <tr>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal;">Descrição</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal; width: 60px;">Tipo</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal; width: 80px;">Inicio</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal; width: 80px;">Fim</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: right; font-weight: normal; width: 50px;">Qtd</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: right; font-weight: normal; width: 80px;">Valor</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal; width: 100px;">Técnico</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="os-servicos-tbody">
+                                                <!-- Empty rows for design -->
+                                                <tr>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;">&nbsp;</td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div flex-shrink: 0;">
+                                        <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Observações internas</label>
+                                        <textarea style="width: 100%; height: 60px; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sidebar Actions -->
+                                <div style="width: 140px; min-width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+                                    <button type="button" id="btn-add-servico-padrao-os" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px;"><i class="ph ph-file-text" style="font-size: 18px;"></i> Padrões</button>
+                                    <button type="button" id="btn-add-servico-avulso" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px;"><i class="ph ph-file" style="font-size: 18px;"></i> Avulsos</button>
+                                    <button type="button" id="btn-excluir-servico-os" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: #ef4444; font-size: 14px;"><i class="ph ph-x" style="font-size: 18px;"></i> Excluir</button>
+                                    
+                                    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                                        <div flex-shrink: 0;">
+                                            <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Total de horas</label>
+                                            <input type="text" value="000:00" style="width: 100%; padding: 4px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; text-align: center;" readonly>
+                                        </div>
+                                        <div flex-shrink: 0;">
+                                            <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Total</label>
+                                            <input type="text" id="os-servicos-total" value="R$ 0,00" style="width: 100%; padding: 4px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; text-align: center; font-weight: bold;" readonly>
+                                        </div>
+                                        <button type="button" class="btn btn-secondary" style="padding: 6px; font-size: 13px; flex-shrink: 0;">Deslocamentos</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content (Peças) -->
+                        <div id="tab-pecas" class="os-tab-content" style="display: none; flex-direction: column; gap: 8px; flex: 1; min-height: 0;">
+                            <div style="font-size: 14px; font-weight: bold;">Lista de Peças utilizadas nesta OS</div>
+                            <div style="display: flex; gap: 16px; flex: 1; min-height: 0;">
+                                <!-- Left Column (Table) -->
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+                                    <!-- Table Area -->
+                                    <div style="flex: 1; border: 1px solid var(--border); background: var(--bg-dark); overflow: auto; display: flex; flex-direction: column;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                            <thead style="background: var(--bg-surface-light); position: sticky; top: 0;">
+                                                <tr>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal; width: 100px;">Peça nº</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal;">Descrição</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: right; font-weight: normal; width: 80px;">Valor un</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: center; font-weight: normal; width: 60px;">Qtd.</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: right; font-weight: normal; width: 100px;">Valor Total</th>
+                                                    <th style="border: 1px solid var(--border); padding: 4px 8px; text-align: left; font-weight: normal; width: 120px;">Técnico</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="os-pecas-tbody">
+                                                <!-- Empty rows for design -->
+                                                <tr>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;">&nbsp;</td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                    <td style="border: 1px solid var(--border); padding: 4px 8px;"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sidebar Actions -->
+                                <div style="width: 140px; min-width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+                                    <button type="button" id="btn-add-peca-estoque-os" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px; text-align: left;"><i class="ph ph-file-text" style="font-size: 18px;"></i> <span>Peças do<br>Estoque</span></button>
+                                    <button type="button" id="btn-add-peca-avulsa-os" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px; text-align: left;"><i class="ph ph-file" style="font-size: 18px;"></i> <span>Peças<br>avulsas</span></button>
+                                    <button type="button" id="btn-excluir-peca-os" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: #ef4444; font-size: 14px; text-align: left;"><i class="ph ph-x" style="font-size: 18px;"></i> <span>Excluir</span></button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Content (Obs) -->
+                        <div id="tab-obs" class="os-tab-content" style="display: none; flex-direction: column; gap: 8px; flex: 1; min-height: 0;">
+                            <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Escreva no espaço abaixo o laudo técnico ou detalhes do conserto do equipamento</label>
+                            <textarea id="a_laudo" style="width: 100%; flex: 1; padding: 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; resize: none; overflow-y: auto;"></textarea>
+                            <div style="display: flex; justify-content: flex-start; margin-top: 4px;">
+                                <button type="button" class="btn btn-secondary" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px; font-weight: bold;">
+                                    <i class="ph ph-stack" style="font-size: 18px;"></i> Preencher Laudo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-start; align-items: flex-end; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 4px; gap: 24px; flex-shrink: 0;">
+                            <div style="width: 250px;">
+                                <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Técnico Responsável</label>
+                                <select id="a_tecnico" style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    <option value="Não definido">Não definido</option>
+                                </select>
+                            </div>
+                            <div style="width: 150px;">
+                                <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Prioridade</label>
+                                <select id="a_prioridade" style="width: 100%; padding: 6px 8px; font-size: 14px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;">
+                                    <option value="Normal">Normal</option>
+                                    <option value="Baixa">Baixa</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end; gap: 8px; flex: 1;">
+                                <div>
+                                    <label style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 2px;">Fotos/Docs</label>
+                                    <input type="file" id="a_imagem" accept="image/*" style="font-size: 14px; max-width: 200px;">
+                                </div>
+                                <div id="image-preview-container" style="display: none; align-items: center; gap: 6px; border: 1px solid var(--border); padding: 4px; border-radius: 4px; background: var(--bg-dark); ">
+                                    <img id="image-thumbnail" src="" style="height: 24px; width: 24px; object-fit: cover; border-radius: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" title="Clique para ampliar">
+                                    <button type="button" id="btn-remove-image" style="background: none; border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 2px;" title="Remover Foto">
+                                        <i class="ph ph-trash" style="font-size: 16px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT LAYOUT (Only visible during print) -->
+    <div id="print-receipt" class="print-only">
+        <div class="receipt-header">
+            <h1 id="p_store_name">NOTE BOOK CENTER</h1>
+            <p id="p_store_address">RUA SANTA CATARINA - 35, IVAIPORA-PR</p>
+            <p id="p_store_phone">(43) 9900-4377</p>
+            <p id="p_store_email">notecenter_ivp@hotmail.com</p>
+        </div>
+
+        <div class="receipt-title-box">
+            <h2>NOTA DE RECEBIMENTO</h2>
+            <h2 id="p_os_number">OS Nº 9273</h2>
+        </div>
+
+        <div class="receipt-row">
+            <div class="receipt-col left">
+                <div class="field-line"><strong>Cliente</strong> <span id="p_cliente"></span></div>
+                <div class="field-line"><strong>Fones</strong> <span id="p_fones"></span></div>
+            </div>
+            <div class="receipt-col right"></div>
+        </div>
+
+        <div class="receipt-row mt">
+            <div class="receipt-col left">
+                <div class="field-line"><strong>Marca</strong> <span id="p_marca"></span></div>
+                <div class="field-line"><strong>Modelo</strong> <span id="p_modelo"></span></div>
+                <div class="field-line"><strong>Nº de Série</strong> <span id="p_serie"></span></div>
+            </div>
+            <div class="receipt-col right">
+                <div class="field-line"><strong>Acessorios</strong> <span id="p_acessorios"></span></div>
+                <div class="field-line"><strong>Aparencia</strong> <span id="p_aparencia"></span></div>
+            </div>
+        </div>
+
+        <div class="receipt-row mt">
+            <div class="receipt-col left">
+                <div class="field-line"><strong>ENTRADA</strong> <span id="p_entrada"></span></div>
+                <div class="field-line"><strong>PREVISÃO</strong> <span id="p_previsao">Sem previsão no momento</span></div>
+            </div>
+        </div>
+
+        <div class="receipt-defeito-box">
+            <h4 class="center">Defeito/Reclamação</h4>
+            <p id="p_defeito"></p>
+        </div>
+
+        <div class="receipt-terms">
+            <p>1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;</p>
+            <p>2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);</p>
+            <p>3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO);</p>
+            <p>4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO</p>
+        </div>
+
+        <div class="receipt-signatures">
+            <div class="sig-line">
+                <div class="line"></div>
+                <p id="p_sig_client">Nome do Cliente</p>
+            </div>
+            <div class="sig-line">
+                <div class="line"></div>
+                <p id="p_sig_store">AVENCE CELL</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT DELIVERY LAYOUT -->
+    <div id="print-delivery" class="print-only">
+        <div class="receipt-header">
+            <h1 id="pd_store_name">NOTE BOOK CENTER</h1>
+            <p id="pd_store_address">RUA SANTA CATARINA - 35, IVAIPORA-PR</p>
+            <p id="pd_store_phone">(43) 9900-4377</p>
+            <p id="pd_store_email">notecenter_ivp@hotmail.com</p>
+        </div>
+
+        <div class="receipt-title-box">
+            <h2>NOTA DE ENTREGA</h2>
+            <h2 id="pd_os_number">OS Nº 9249</h2>
+        </div>
+
+        <div class="receipt-row">
+            <div class="receipt-col left">
+                <div class="field-line"><strong>CLIENTE</strong> <span id="pd_cliente"></span></div>
+                <div class="field-line"><strong>FONES</strong> <span id="pd_fones"></span></div>
+            </div>
+            <div class="receipt-col right"></div>
+        </div>
+
+        <div class="receipt-row mt">
+            <div class="receipt-col left">
+                <div class="field-line"><strong>Marca</strong> <span id="pd_marca"></span></div>
+                <div class="field-line"><strong>Modelo</strong> <span id="pd_modelo"></span></div>
+                <div class="field-line"><strong>Nº de Série</strong> <span id="pd_serie"></span></div>
+                <div class="field-line"><strong>Acessorios</strong> <span id="pd_acessorios"></span></div>
+            </div>
+            <div class="receipt-col right">
+                <div class="field-line"><strong>Aparencia</strong> <span id="pd_aparencia"></span></div>
+            </div>
+        </div>
+
+        <div class="receipt-row mt" style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0;">
+            <div class="field-line"><strong>SITUAÇÃO ATUAL</strong> <span>EQUIPAMENTO ENTREGUE REPARADO</span></div>
+            <div style="display: flex; justify-content: space-between;">
+                <div class="field-line"><strong>ENTRADA</strong> <span id="pd_entrada"></span></div>
+                <div class="field-line"><strong>PRONTO EM</strong> <span id="pd_pronto"></span></div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <div class="field-line"><strong>SAIDA</strong> <span id="pd_saida"></span></div>
+                <div class="field-line"><strong>GARANTIA ATE</strong> <span id="pd_garantia"></span></div>
+            </div>
+        </div>
+
+        <div class="receipt-defeito-box">
+            <div class="field-line"><strong>Defeito/Reclamação CORRIGIDO(S)</strong></div>
+            <p id="pd_defeito"></p>
+        </div>
+
+        <h4 style="text-align: center; margin-top: 5px; margin-bottom: 2px;">VALORES DO ORÇAMENTO</h4>
+        <div style="display: flex; flex-direction: column; font-size: 14px; margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between;"><span>MÃO DE OBRA</span> <span id="pd_v_maodeobra">R$ 0,00</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>PEÇAS</span> <span id="pd_v_pecas">R$ 0,00</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Deslocamento</span> <span id="pd_v_deslocamento">R$ 0,00</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Serviço terceiros</span> <span id="pd_v_terceiros">R$ 0,00</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Outros</span> <span id="pd_v_outros">R$ 0,00</span></div>
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000;"><span>TOTAL</span> <span id="pd_v_total">R$ 0,00</span></div>
+        </div>
+        
+        <p style="margin-top: 10px; font-size: 12px; text-align: justify;">Declaro estar recebendo materiais constantes nesta Ordem de Serviço devidamente reparados.</p>
+
+        <div class="receipt-signatures" style="margin-top: 15px;">
+            <div class="sig-line">
+                <div class="line"></div>
+                <p id="pd_sig_client">Nome do Cliente</p>
+            </div>
+            <div class="sig-line">
+                <div class="line"></div>
+                <p id="pd_sig_store">AVENCE CELL</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: Serviço Avulso -->
+    <div class="modal-overlay no-print" id="modal-servico-avulso">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-file-plus"></i> Serviço Avulso</h2>
+                <button class="close-btn" data-close="modal-servico-avulso"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Descrição do Serviço</label>
+                    <input type="text" id="avulso-descricao" placeholder="Ex: Limpeza, Formatação..." style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                </div>
+                <div style="display: flex; gap: 16px; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1;">
+                        <label style="font-weight: bold;">Valor Unitário</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                            <input type="number" id="avulso-valor" step="0.01" min="0" placeholder="0.00" style="font-size: 20px; padding: 12px 12px 12px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right; font-weight: bold;">
+                        </div>
+                    </div>
+                    <div style="flex: 1; text-align: right; padding-bottom: 4px;">
+                        <span style="font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor Final:</span>
+                        <div id="avulso-valor-preview" style="font-size: 24px; font-weight: bold; color: var(--primary);">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-servico-avulso">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-avulso" style="background-color: #22c55e; border-color: #22c55e;"><i class="ph ph-check"></i> Incluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Peça Avulsa -->
+    <div class="modal-overlay no-print" id="modal-peca-avulsa">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-file-plus"></i> Peça Avulsa</h2>
+                <button class="close-btn" data-close="modal-peca-avulsa"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Descrição da Peça/Produto</label>
+                    <input type="text" id="avulsa-peca-descricao" placeholder="Ex: Película Traseira Especial..." style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                </div>
+                <div style="display: flex; gap: 16px; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1;">
+                        <label style="font-weight: bold;">Valor Unitário</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                            <input type="number" id="avulsa-peca-valor" step="0.01" min="0" placeholder="0.00" style="font-size: 20px; padding: 12px 12px 12px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right; font-weight: bold;">
+                        </div>
+                    </div>
+                    <div style="flex: 1; text-align: right; padding-bottom: 4px;">
+                        <span style="font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor Final:</span>
+                        <div id="avulsa-peca-valor-preview" style="font-size: 24px; font-weight: bold; color: var(--primary);">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-peca-avulsa">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-peca-avulsa" style="background-color: #22c55e; border-color: #22c55e;"><i class="ph ph-check"></i> Incluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Pesquisa OS -->
+    <div class="modal-overlay no-print" id="modal-pesquisa-os">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="titulo-pesquisa-os"><i class="ph ph-magnifying-glass"></i> Localizar O.S</h2>
+                <button class="close-btn" data-close="modal-pesquisa-os"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: bold;">Número da O.S</label>
+                    <input type="number" id="input-pesquisa-os" placeholder="Ex: 9249" style="font-size: 18px; padding: 12px; text-align: center; letter-spacing: 2px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-primary" id="btn-confirmar-pesquisa-os" style="width: 100%; justify-content: center;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Checkout / Encerrar -->
+    <div class="modal-overlay no-print" id="modal-checkout">
+        <div class="modal-container" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-check-circle"></i> Fechamento e Pagamento</h2>
+                <button class="close-btn" data-close="modal-checkout"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; text-align: center;">
+                    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Valor Total</div>
+                    <div id="checkout-total" style="font-size: 32px; font-weight: bold; color: var(--primary);">R$ 0,00</div>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Forma de Pagamento</label>
+                    <select id="checkout-pagamento" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão Crédito">Cartão Crédito</option>
+                        <option value="Cartão Débito">Cartão Débito</option>
+                        <option value="Notinha">Notinha</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="checkout-calendario-container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Data de Vencimento (Notinha)</label>
+                    <input type="date" id="checkout-vencimento" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: bold;">Valor Pago</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                            <input type="number" id="checkout-valorpago" step="0.01" min="0" placeholder="0.00" style="font-size: 18px; padding: 10px 10px 10px 40px; text-align: right; width: 100%; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); box-sizing: border-box;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: bold;">Troco</label>
+                        <div id="checkout-troco" style="font-size: 24px; font-weight: bold; color: #ef4444; padding: 6px 0; text-align: right;">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-secondary" data-close="modal-checkout">Cancelar</button>
+                <button class="btn btn-primary" id="btn-finalizar-checkout" style="background-color: #22c55e; border-color: #22c55e;"><i class="ph ph-printer"></i> Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Visualizar Imagem -->
+    <div class="modal-overlay no-print" id="modal-imagem-preview" style="z-index: 200;">
+        <div class="modal-container" style="background: transparent; border: none; box-shadow: none; display: flex; flex-direction: column; align-items: center; max-width: 90vw;">
+            <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                <button class="close-btn" data-close="modal-imagem-preview" style="background: rgba(0,0,0,0.5); color: white; border-radius: 50%;"><i class="ph ph-x"></i></button>
+            </div>
+            <img id="full-image-preview" src="" style="max-width: 100%; max-height: 85vh; border-radius: 8px; object-fit: contain; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        </div>
+    </div>
+
+    <!-- Modal: Cadastro/Edição de Produto -->
+    <div class="modal-overlay no-print" id="modal-produto">
+        <div class="modal-container" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2 id="modal-produto-titulo"><i class="ph ph-package"></i> Novo Produto</h2>
+                <button class="close-btn" data-close="modal-produto"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-produto" style="display: flex; flex-direction: column; gap: 16px;">
+                    <input type="hidden" id="p_id">
+                    
+                    <div class="form-group">
+                        <label style="font-weight: bold;">Tipo</label>
+                        <select id="p_tipo" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                            <option value="produto">Produto Físico</option>
+                            <option value="servico">Serviço / Mão de Obra</option>
+                            <option value="peca">Peça p/ Manutenção</option>
+                            <option value="pc_montado">PC Montado (KIT)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="font-weight: bold;">Código de Barras (EAN)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <div style="position: relative; flex: 1;">
+                                <i class="ph ph-barcode" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--text-muted);"></i>
+                                <input type="number" id="p_ean" placeholder="Aproxime o leitor ou digite (Apenas Números)" style="font-size: 16px; padding: 10px 10px 10px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="btn-gerar-ean" white-space: nowrap;"><i class="ph ph-magic-wand"></i> Gerar EAN</button>
+                        </div>
+                        <small style="color: var(--text-muted); margin-top: 4px; display: block;">Se usar leitor de código de barras, o EAN será preenchido automaticamente.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="font-weight: bold;">Nome do Produto</label>
+                        <input type="text" id="p_nome" required placeholder="Ex: Película 3D iPhone 13" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label style="font-weight: bold;">Valor Pago (Custo)</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                                <input type="number" id="p_custo" step="0.01" min="0" required placeholder="0.00" style="font-size: 16px; padding: 10px 10px 10px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight: bold;">Valor de Venda</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                                <input type="number" id="p_venda" step="0.01" min="0" required placeholder="0.00" style="font-size: 16px; padding: 10px 10px 10px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+                            <label style="font-weight: bold;">Ganho Estimado</label>
+                            <div id="p_ganho_display" style="font-size: 24px; font-weight: bold; color: #22c55e;">R$ 0,00</div>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight: bold;">Qtd. em Estoque</label>
+                            <input type="number" id="p_qtd" min="0" required value="1" style="font-size: 18px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: center; font-weight: bold;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-produto">Cancelar</button>
+                <button class="btn btn-primary" id="btn-salvar-produto" style="background-color: #22c55e; border-color: #22c55e;"><i class="ph ph-floppy-disk"></i> Salvar Produto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Selecionar Serviço -->
+    <div class="modal-overlay no-print" id="modal-selecionar-servico">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2><i class="ph ph-wrench"></i> Selecionar Serviço Padrão</h2>
+                <button class="close-btn" data-close="modal-selecionar-servico"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <div class="search-box" style="margin-bottom: 16px; width: 100%;">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="text" id="servico-search" placeholder="Buscar serviço..." autocomplete="off" style="font-size: 16px; padding: 12px 20px 12px 48px; width: 100%; border: none; background: transparent; color: var(--text-main); outline: none;">
+                </div>
+                <div style="border: 1px solid var(--border); border-radius: 8px; background: var(--bg-dark); max-height: 300px; overflow-y: auto;">
+                    <table class="estoque-table" style="min-width: 100%;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-surface-light);">
+                            <tr>
+                                <th>Serviço</th>
+                                <th style="text-align: right; width: 100px;">Valor</th>
+                                <th style="text-align: center; width: 80px;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-servicos-padrao">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Selecionar Peça -->
+    <div class="modal-overlay no-print" id="modal-selecionar-peca">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2><i class="ph ph-package"></i> Selecionar Peça do Estoque</h2>
+                <button class="close-btn" data-close="modal-selecionar-peca"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <div class="search-box" style="margin-bottom: 16px; width: 100%;">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="text" id="peca-search" placeholder="Buscar peça..." autocomplete="off" style="font-size: 16px; padding: 12px 20px 12px 48px; width: 100%; border: none; background: transparent; color: var(--text-main); outline: none;">
+                </div>
+                <div style="border: 1px solid var(--border); border-radius: 8px; background: var(--bg-dark); max-height: 300px; overflow-y: auto;">
+                    <table class="estoque-table" style="min-width: 100%;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-surface-light);">
+                            <tr>
+                                <th>Peça / Produto</th>
+                                <th style="text-align: center; width: 80px;">Estoque</th>
+                                <th style="text-align: right; width: 100px;">Valor</th>
+                                <th style="text-align: center; width: 80px;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-pecas-estoque">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Selecionar KIT Montado -->
+    <div class="modal-overlay no-print" id="modal-selecionar-kit-montado">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2><i class="ph ph-desktop"></i> Selecionar KIT Montado</h2>
+                <button class="close-btn" data-close="modal-selecionar-kit-montado"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <div class="search-box" style="margin-bottom: 16px; width: 100%;">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="text" id="kit-montado-search" placeholder="Buscar KIT..." autocomplete="off" style="font-size: 16px; padding: 12px 20px 12px 48px; width: 100%; border: none; background: transparent; color: var(--text-main); outline: none;">
+                </div>
+                <div style="border: 1px solid var(--border); border-radius: 8px; background: var(--bg-dark); max-height: 300px; overflow-y: auto;">
+                    <table class="estoque-table" style="min-width: 100%;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-surface-light);">
+                            <tr>
+                                <th>PC Montado (KIT)</th>
+                                <th style="text-align: center; width: 80px;">Estoque</th>
+                                <th style="text-align: right; width: 100px;">Valor</th>
+                                <th style="text-align: center; width: 80px;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-kits-estoque">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Alerta Customizado -->
+    <div class="modal-overlay no-print" id="modal-alerta" style="z-index: 9999;">
+        <div class="modal-container" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <i class="ph ph-warning-circle" style="font-size: 56px; color: #ef4444;" id="alerta-icon"></i>
+            </div>
+            <div class="modal-body">
+                <h3 id="alerta-titulo" style="margin-bottom: 12px; font-size: 20px;">Atenção</h3>
+                <p id="alerta-mensagem" style="color: var(--text-muted); font-size: 15px; line-height: 1.5;">Mensagem de alerta aqui.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; border-top: none;">
+                <button class="btn btn-secondary" id="btn-cancelar-alerta" style="display: none; width: 45%; justify-content: center;">Cancelar</button>
+                <button class="btn btn-primary" id="btn-fechar-alerta" style="width: 100%; justify-content: center; font-size: 16px;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar EAN -->
+    <div class="modal-overlay no-print" id="modal-editar-ean">
+        <div class="modal-container large-modal" style="max-width: 900px; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h2><i class="ph ph-barcode"></i> Editor e Impressão de Etiquetas</h2>
+                <button class="close-btn" data-close="modal-editar-ean"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; display: flex; gap: 24px; max-height: 70vh;">
+                <!-- Configurações (Esquerda) -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label>Quantidade Total de Etiquetas</label>
+                        <input type="number" id="ean-qtd" value="1" min="1" max="500">
+                    </div>
+                    <div class="form-group">
+                        <label>Etiquetas por Linha (Colunas)</label>
+                        <select id="ean-colunas">
+                            <option value="1">1 Etiqueta</option>
+                            <option value="2">2 Etiquetas</option>
+                            <option value="3" selected>3 Etiquetas</option>
+                            <option value="4">4 Etiquetas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tamanho da Etiqueta</label>
+                        <select id="ean-tamanho">
+                            <option value="pequeno">Pequena</option>
+                            <option value="medio" selected>Média</option>
+                            <option value="grande">Grande</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="btn-imprimir-ean-confirmar" style="margin-top: auto; padding: 16px; font-size: 16px; justify-content: center;">
+                        <i class="ph ph-printer"></i> Imprimir Etiquetas
+                    </button>
+                </div>
+                
+                <!-- Preview (Direita) -->
+                <div style="flex: 2; border: 1px dashed var(--border); border-radius: var(--radius-md); background: #f8fafc; overflow-y: auto; padding: 16px;">
+                    <div style="margin-bottom: 12px; color: #64748b; font-size: 13px; text-align: center; font-weight: bold;">PREVIEW DA PÁGINA A4 (Aproximado)</div>
+                    <div id="ean-preview-container" style="display: grid; gap: 8px; justify-content: center;">
+                        <!-- JS vai injetar o grid de preview aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Relatório de Compras -->
+    <div class="modal-overlay no-print" id="modal-relatorio-compras">
+        <div class="modal-container large-modal" style="max-width: 1200px; width: 95vw; height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h2><i class="ph ph-envelope-simple"></i> Relatório Avançado de Estoque (Alto Giro & Estoque Parado)</h2>
+                <button class="close-btn" data-close="modal-relatorio-compras"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;">
+                <p style="color: var(--text-muted); font-size: 14px;">Este relatório avalia o desempenho de vendas baseado no histórico registrado. <strong>Nota:</strong> Produtos antigos que não tiveram sua quantidade de compra inicial registrada ou que foram vendidos antes dessa atualização não exibirão giro preciso.</p>
+                
+                <!-- Alto Giro -->
+                <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <div style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(34, 197, 94, 0.1); display: flex; align-items: center; gap: 8px;">
+                        <i class="ph ph-trend-up" style="color: #22c55e; font-size: 20px;"></i>
+                        <h3 style="margin: 0; color: #22c55e;">Produtos de Alto Giro (Mais Vendidos)</h3>
+                    </div>
+                    <div style="padding: 16px; overflow-x: auto;">
+                        <table class="estoque-table">
+                            <thead>
+                                <tr>
+                                    <th>EAN</th>
+                                    <th>Produto</th>
+                                    <th>Qtd. Comprada (Inicial)</th>
+                                    <th>Qtd. Atual</th>
+                                    <th>Qtd. Vendida</th>
+                                    <th>% Vendido</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-alto-giro">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Estoque Parado -->
+                <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <div style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; gap: 8px;">
+                        <i class="ph ph-warning-circle" style="color: #ef4444; font-size: 20px;"></i>
+                        <h3 style="margin: 0; color: #ef4444;">Estoque Parado (Encalhado)</h3>
+                    </div>
+                    <div style="padding: 16px; overflow-x: auto;">
+                        <table class="estoque-table">
+                            <thead>
+                                <tr>
+                                    <th>EAN</th>
+                                    <th>Produto</th>
+                                    <th>Qtd. Comprada (Inicial)</th>
+                                    <th>Qtd. Atual</th>
+                                    <th>Tempo no Estoque (Dias)</th>
+                                    <th>Última Venda</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-estoque-parado">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Login -->
+    <div class="modal-overlay no-print" id="modal-login" style="z-index: 10000; background: var(--bg-main); display: none;">
+        <div class="modal-container" style="max-width: 400px; text-align: center; border: 1px solid var(--border);">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-surface-light); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden;" id="login-avatar-preview">
+                        <i class="ph ph-user" style="font-size: 40px; color: var(--text-muted);"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body" style="padding-top: 16px;">
+                <h3 style="margin-bottom: 8px; font-size: 20px;">Acesso ao Sistema</h3>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Digite sua senha para continuar</p>
+                
+                <div class="form-group" style="text-align: left;">
+                    <input type="password" id="login-senha" placeholder="***" style="font-size: 20px; padding: 12px; text-align: center; letter-spacing: 4px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center; border-top: none;">
+                <button class="btn btn-primary" id="btn-entrar-login" style="width: 100%; justify-content: center; font-size: 16px; padding: 12px; background-color: var(--primary);">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Relatório Detalhado Colaborador -->
+    <div class="modal-overlay no-print" id="modal-relatorio-colab" style="z-index: 9999;">
+        <div class="modal-container" style="max-width: 800px; width: 90%;">
+            <div class="modal-header" style="align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <div id="modal-relat-foto" style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-surface-light); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <i class="ph ph-user" style="font-size: 32px; color: var(--text-muted);"></i>
+                    </div>
+                    <div>
+                        <h2 id="modal-relat-nome" style="margin: 0; font-size: 24px; color: var(--text-main);">Nome do Colaborador</h2>
+                        <span id="modal-relat-cargo" style="color: var(--primary); font-size: 14px; font-weight: 600; text-transform: uppercase;">Cargo</span>
+                    </div>
+                </div>
+                <button class="close-btn" data-close="modal-relatorio-colab"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div class="modal-body" style="padding: 24px;">
+                <!-- Grafico -->
+                <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <h3 style="font-size: 16px; margin-bottom: 16px;"><i class="ph ph-trend-up"></i> Vendas da Semana</h3>
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="relat-colab-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                    <!-- Histórico Ponto -->
+                    <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                        <h3 style="font-size: 16px; margin-bottom: 16px;"><i class="ph ph-clock"></i> Últimos Acessos</h3>
+                        <div id="modal-relat-ponto" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
+                            <!-- Tabela Ponto JS -->
+                        </div>
+                    </div>
+                    <!-- Resumo -->
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Total Vendas Mês</div>
+                            <div id="modal-relat-vendas" style="font-size: 24px; font-weight: bold; color: #22c55e; margin-top: 4px;">R$ 0,00</div>
+                        </div>
+                        <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Comissão Mês (Est.)</div>
+                            <div id="modal-relat-comissao" style="font-size: 24px; font-weight: bold; color: #eab308; margin-top: 4px;">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close="modal-relatorio-colab">Fechar Relatório</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: Colaborador -->
+    <div class="modal-overlay no-print" id="modal-colaborador" style="z-index: 120;">
+        <div class="modal-container" style="max-width: 600px; width: 95vw;">
+            <div class="modal-header">
+                <h2 id="colab-form-title"><i class="ph ph-user"></i> Novo Colaborador</h2>
+                <button class="close-btn" data-close="modal-colaborador"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body modal-scrollable" style="padding: 24px; flex: 1;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <div id="colab-foto-preview" style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-surface-light); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; background-size: cover; background-position: center;">
+                            <i class="ph ph-user" style="font-size: 32px; color: var(--text-muted);"></i>
+                        </div>
+                        <label class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; cursor: pointer;">
+                            Escolher Foto
+                            <input type="file" id="colab-foto" accept="image/*" style="display: none;">
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="colab-nome" placeholder="Ex: Jean Pedroso">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cargos / Permissões</label>
+                        <div id="colab-cargo-checkboxes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--bg-dark); padding: 12px; border: 1px solid var(--border); border-radius: 4px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                <input type="checkbox" value="Vendedor" class="cargo-check"> Vendedor (Vende no PDV)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                <input type="checkbox" value="Tecnico" class="cargo-check"> Técnico (Apenas Serviços)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                <input type="checkbox" value="Gerente" class="cargo-check"> Gerente (Financeiro)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                <input type="checkbox" value="Dono" class="cargo-check"> Dono (Acesso Total)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>Senha de Login</label>
+                            <input type="password" id="colab-senha-login" placeholder="Ex: 151004Jean">
+                        </div>
+                        <div class="form-group">
+                            <label>Senha de Retirada</label>
+                            <input type="password" id="colab-senha-retirada" placeholder="Ex: 151004">
+                            <small style="font-size: 10px; color: var(--text-muted);">Para Sangria/Fechamento</small>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border);">
+                        <div class="form-group">
+                            <label>Comissão Vendas (%)</label>
+                            <input type="number" id="colab-comissao-vendas" placeholder="Ex: 5" min="0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Comissão Serviços (%)</label>
+                            <input type="number" id="colab-comissao-servicos" placeholder="Ex: 10" min="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" data-close="modal-colaborador">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-save-colab" style="background: #22c55e; border-color: #22c55e;">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT BARCODE LAYOUT -->
+    <div id="print-barcode" class="print-only" style="display: none;">
+        <!-- Injetado via JS -->
+    </div>
+
+    <!-- Modais Financeiro -->
+    <div class="modal-overlay no-print" id="modal-abrir-caixa">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-lock-key-open"></i> Abrir Caixa</h2>
+                <button class="close-btn" data-close="modal-abrir-caixa"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Quem está abrindo o caixa?</label>
+                    <select id="fin-abrir-responsavel" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                        <!-- Injetado via JS -->
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Fundo de Caixa (Troco Inicial)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                        <input type="number" id="fin-saldo-inicial" step="0.01" min="0" placeholder="0.00" style="font-size: 20px; padding: 12px 12px 12px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right; font-weight: bold;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold; color: var(--primary);"><i class="ph ph-lock-key"></i> Senha do Colaborador</label>
+                    <input type="password" id="fin-abrir-senha" placeholder="***" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); margin-top: 4px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-abrir-caixa">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-abrir-caixa" style="background-color: #22c55e; border-color: #22c55e;"><i class="ph ph-check"></i> Confirmar Abertura</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Divergência de Caixa -->
+    <div class="modal-overlay no-print" id="modal-divergencia-caixa">
+        <div class="modal-container" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-warning-circle" style="color: #ef4444;"></i> Divergência na Abertura</h2>
+                <button class="close-btn" data-close="modal-divergencia-caixa"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 16px; border-radius: 4px; margin-bottom: 16px;">
+                    <p style="margin: 0 0 8px 0; color: var(--text-main); font-size: 15px;">Atenção! O saldo inicial informado não bate com o fechamento anterior.</p>
+                    <div id="div-divergencia-detalhes" style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
+                        <!-- Injetado via JS -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold;">Para confirmar a abertura, digite sua senha de autorização:</label>
+                    <input type="password" id="fin-divergencia-senha" placeholder="Sua senha..." style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); margin-top: 8px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-divergencia-caixa">Cancelar Abertura</button>
+                <button class="btn btn-primary" id="btn-confirmar-divergencia" style="background-color: #ef4444; border-color: #ef4444;"><i class="ph ph-check"></i> Estou Ciente (Abrir)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay no-print" id="modal-fechar-caixa">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-lock-key"></i> Fechar Caixa</h2>
+                <button class="close-btn" data-close="modal-fechar-caixa"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: var(--bg-dark); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Saldo Inicial (Fundo)</span><span id="resumo-fundo-caixa" style="font-weight: bold;">R$ 0,00</span></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Total de Entradas (Vendas)</span><span id="resumo-entradas-caixa" style="color: #22c55e; font-weight: bold;">R$ 0,00</span></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Total de Saídas (Sangrias)</span><span id="resumo-saidas-caixa" style="color: #ef4444; font-weight: bold;">R$ 0,00</span></div>
+                    <div style="height: 1px; background: var(--border); margin: 12px 0;"></div>
+                    <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold;">
+                        <span>Saldo Total Esperado</span>
+                        <span id="resumo-saldo-esperado" style="color: var(--primary);">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="font-weight: bold; color: var(--primary);">Valor Contado na Gaveta (R$)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                        <input type="number" id="fin-valor-informado" step="0.01" min="0" placeholder="0.00" style="font-size: 20px; padding: 12px 12px 12px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right; font-weight: bold;">
+                    </div>
+                    <small id="fin-diferenca-caixa" style="display: none; margin-top: 4px; font-size: 14px; font-weight: bold;"></small>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="font-weight: bold; color: #ef4444;">Deseja encerrar o movimento de hoje e enviar o fechamento por e-mail?</label>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="font-weight: bold;">Responsável pelo Fechamento (Dono/Gerente)</label>
+                    <select id="fin-fechar-responsavel" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                        <!-- Injetado via JS -->
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="font-weight: bold;">Senha do Gerente para Fechamento</label>
+                    <input type="password" id="fin-senha-fechar" placeholder="***" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-fechar-caixa">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-fechar-caixa" style="background-color: #ef4444; border-color: #ef4444;"><i class="ph ph-envelope-simple"></i> Encerrar e Enviar Email</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay no-print" id="modal-sangria">
+        <div class="modal-container" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-money"></i> Nova Sangria / Suprimento</h2>
+                <button class="close-btn" data-close="modal-sangria"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">Tipo de Movimentação</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <label style="cursor: pointer; border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 8px; background: var(--bg-dark);">
+                            <input type="radio" name="tipo_movimentacao" value="saida" checked accent-color: #ef4444;"> 
+                            <span style="font-weight: bold; color: #ef4444;"><i class="ph ph-arrow-circle-up"></i> Sangria (Retirada)</span>
+                        </label>
+                        <label style="cursor: pointer; border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 8px; background: var(--bg-dark);">
+                            <input type="radio" name="tipo_movimentacao" value="entrada" accent-color: #22c55e;"> 
+                            <span style="font-weight: bold; color: #22c55e;"><i class="ph ph-arrow-circle-down"></i> Suprimento (Depósito)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Responsável / Destinatário</label>
+                    <select id="fin-mov-responsavel" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                        <!-- Injetado via JS -->
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Valor (R$)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                        <input type="number" id="fin-mov-valor" step="0.01" min="0.01" placeholder="0.00" style="font-size: 20px; padding: 12px 12px 12px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right; font-weight: bold;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Motivo / Descrição</label>
+                    <input type="text" id="fin-mov-motivo" placeholder="Ex: Pagamento de mercadoria..." style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                </div>
+                <div class="form-group" style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <label style="font-weight: bold; color: var(--primary);"><i class="ph ph-lock-key"></i> Senha de Autorização (Dono ou Gerente)</label>
+                    <input type="password" id="fin-senha-sangria" placeholder="***" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); margin-top: 4px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-sangria">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-sangria"><i class="ph ph-check"></i> Registrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay no-print" id="modal-excluir-transacao">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-trash" style="color: #ef4444;"></i> Excluir Movimentação</h2>
+                <button class="close-btn" data-close="modal-excluir-transacao"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza de que deseja excluir esta movimentação?</p>
+                <div id="del-transacao-detalhes" style="margin-top: 12px; padding: 12px; background: var(--bg-dark); border-radius: 4px; border: 1px solid var(--border); font-size: 14px;">
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="font-weight: bold; color: var(--primary);"><i class="ph ph-lock-key"></i> Senha do Gerente/Dono</label>
+                    <input type="password" id="del-transacao-senha" placeholder="***" style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); margin-top: 4px;">
+                </div>
+                <input type="hidden" id="del-transacao-data">
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-excluir-transacao">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-excluir-transacao" style="background-color: #ef4444; border-color: #ef4444;"><i class="ph ph-trash"></i> Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recibo PDV (Apenas Impressão) -->
+    <div id="print-recibo-pdv" class="print-only">
+        <style>
+            @media print {
+                @page { size: auto; margin: 0; }
+                body { margin: 0; padding: 0; background: #fff; }
+                
+                #print-recibo-pdv {
+                    width: 100%; /* Adapts to A5/A4 */
+                    max-width: 148mm; /* A5 width */
+                    margin: 0 auto;
+                    padding: 10mm;
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 12px;
+                    color: #000;
+                    background: #fff;
+                }
+                .hr-dashed { border-top: 1px dashed #000; margin: 8px 0; }
+                .table-itens { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+                .table-itens th, .table-itens td { text-align: left; padding: 4px 4px; font-size: 12px; vertical-align: top; }
+                .table-itens th.right, .table-itens td.right { text-align: right; }
+                .table-itens th.center, .table-itens td.center { text-align: center; }
+            }
+            @media screen {
+                .print-only { display: none !important; }
+            }
+            @media screen and (max-width: 768px) {
+                .hide-on-mobile { display: none !important; }
+            }
+        </style>
+
+        <div style="text-align: center; font-weight: bold; font-size: 15px; text-transform: uppercase;">
+            <span id="recibo-loja-nome">NOME DA LOJA</span><br>
+            <span id="recibo-loja-end" style="font-weight: normal; font-size: 13px;">RUA SANTA CATARINA - 35, IVAIPORA-PR</span><br>
+            <span id="recibo-loja-tel" style="font-weight: normal; font-size: 13px;">(43) 9900-4377</span><br>
+        </div>
+        <br>
+        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+            <div><strong>Venda Nº : <span id="recibo-numero">000000</span></strong></div>
+            <div id="recibo-data">13:46 12/08/2026</div>
+        </div>
+        <div class="hr-dashed"></div>
+        <div style="font-size: 12px; line-height: 1.6;" id="recibo-cliente-info">
+            Cliente: <span id="recibo-cliente-nome">Consumidor Final</span><br>
+            CPF/CNPJ: <span id="recibo-cliente-doc"></span><br>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Endereço: <span id="recibo-cliente-end"></span></span>
+                <span>Telefone: <span id="recibo-cliente-tel"></span></span>
+            </div>
+        </div>
+        <div class="hr-dashed"></div>
+        <table class="table-itens">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Codigo</th>
+                    <th style="width: 32%;">Descrição</th>
+                    <th class="center" style="width: 5%;">UN</th>
+                    <th class="right" style="width: 13%;">Valor UN</th>
+                    <th class="center" style="width: 8%;">QTD</th>
+                    <th class="right" style="width: 12%;">Desconto</th>
+                    <th class="right" style="width: 18%;">Vlr Total</th>
+                </tr>
+            </thead>
+            <tbody id="recibo-itens">
+            </tbody>
+        </table>
+        
+        <div id="recibo-juros-linha" style="display: none; text-align: right; font-size: 12px; margin-top: 4px;">
+            Juros Maquininha: <span id="recibo-juros">R$ 0,00</span>
+        </div>
+        <div id="recibo-desconto-linha" style="display: none; text-align: right; font-size: 12px; margin-top: 4px;">
+            Desconto Geral: <span id="recibo-desconto">R$ 0,00</span>
+        </div>
+        
+        <div style="text-align: right; font-size: 14px; font-weight: bold; margin-top: 8px;">
+            TOTAL A PAGAR : <span id="recibo-total-final">R$ 0,00</span>
+        </div>
+        <br>
+        <div style="font-size: 12px; display: flex; justify-content: space-between;">
+            <div>Vendedor : <span id="recibo-vendedor">Não informado</span></div>
+            <div id="recibo-forma-pgto" style="font-weight: bold;"></div>
+        </div>
+        <div id="recibo-info-extra" style="font-size: 11px; margin-top: 2px;"></div>
+        
+        <div style="margin-top: 40px; text-align: center; font-size: 12px;">
+            _____________________________________<br>
+            Assinatura do Cliente
+        </div>
+    </div>
+
+    <!-- Recibo O.S. (Apenas Impressão / Metade A4 Paisagem) -->
+    <div id="print-intake" class="print-only">
+        <div class="intake-header">
+            <h1 id="pi-titulo">NOTE BOOK CENTER</h1>
+            <p id="pi-endereco">RUA SANTA CATARINA - 35, IVAIPORA-PR</p>
+            <p id="pi-complemento">COMPLEMENTO RUA ATRAS DO BANCO DO BRASIL</p>
+            <p id="pi-telefone-email">(43) 99900-4377  notecenter_ivp@hotmail.com</p>
+        </div>
+        
+        <div class="intake-title-row">
+            <h2>NOTA DE RECEBIMENTO</h2>
+            <h2>OS Nº <span id="pi-os-num"></span></h2>
+        </div>
+        
+        <div class="intake-grid">
+            <div class="intake-col-left">
+                <div class="intake-line"><span class="lbl">Cliente</span> <span id="pi-cliente" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">Fones</span> <span id="pi-fones" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">Marca</span> <span id="pi-marca" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">Modelo</span> <span id="pi-modelo" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">Nº de Série</span> <span id="pi-serie" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">ENTRADA</span> <span id="pi-entrada" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">PREVISÃO</span> <span id="pi-previsao" class="val"></span></div>
+            </div>
+            <div class="intake-col-right">
+                <div class="intake-line"><span class="lbl">Acessorios</span> <span id="pi-acessorios" class="val"></span></div>
+                <div class="intake-line"><span class="lbl">Aparencia</span> <span id="pi-aparencia" class="val"></span></div>
+            </div>
+        </div>
+        
+        <div class="intake-defeito-box">
+            <h4>Defeito/Reclamação</h4>
+            <p id="pi-defeito"></p>
+        </div>
+        
+        <div class="intake-termos" id="pi-termos">
+            1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;<br>
+            2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);<br>
+            3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).<br>
+            4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO
+        </div>
+        
+        <div class="intake-signatures">
+            <div class="sig-box">
+                <div class="sig-line"></div>
+                <p id="pi-assinatura-cliente">Assinatura do Cliente</p>
+            </div>
+            <div class="sig-box">
+                <div class="sig-line"></div>
+                <p id="pi-assinatura-loja">NOTE BOOK CENTER</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/estoque.js"></script>
+    <script src="js/pdv.js"></script>
+    <script src="js/os.js"></script>
+    <script src="js/financeiro.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputImagem = document.getElementById('a_imagem');
+            const previewContainer = document.getElementById('image-preview-container');
+            const thumbnail = document.getElementById('image-thumbnail');
+            const btnRemove = document.getElementById('btn-remove-image');
+            const modalPreview = document.getElementById('modal-imagem-preview');
+            const fullImage = document.getElementById('full-image-preview');
+
+            if(inputImagem) {
+                inputImagem.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                thumbnail.src = e.target.result;
+                                fullImage.src = e.target.result;
+                                previewContainer.style.display = 'flex';
+                            }
+                            reader.readAsDataURL(file);
+                        } else {
+                            // Se for doc e não imagem
+                            thumbnail.src = '';
+                            fullImage.src = '';
+                            previewContainer.style.display = 'none';
+                        }
+                    } else {
+                        previewContainer.style.display = 'none';
+                    }
+                });
+
+                btnRemove.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    inputImagem.value = '';
+                    previewContainer.style.display = 'none';
+                    thumbnail.src = '';
+                    fullImage.src = '';
+                });
+
+                thumbnail.addEventListener('click', function() {
+                    if (thumbnail.src) {
+                        modalPreview.classList.add('active');
+                    }
+                });
+            }
+
+            // Navegação customizada com a tecla Enter
+            const navOrder = [
+                'a_marca',
+                'a_modelo',
+                'a_acessorio',
+                'a_serie',
+                'a_aparencia',
+                'a_defeito',
+                'a_acessorio2',
+                'a_obs'
+            ];
+
+            navOrder.forEach((id, index) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault(); // Evita quebra de linha ou envio do form
+                            const nextId = navOrder[index + 1];
+                            if (nextId) {
+                                const nextEl = document.getElementById(nextId);
+                                if (nextEl) {
+                                    nextEl.focus();
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

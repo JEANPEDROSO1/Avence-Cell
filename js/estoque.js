@@ -1,0 +1,516 @@
+    // --- MÓDULO DE ESTOQUE ---
+    const modalProduto = document.getElementById('modal-produto');
+    const btnNovoProduto = document.getElementById('btn-novo-produto');
+    const btnSalvarProduto = document.getElementById('btn-salvar-produto');
+    const btnRelatorioCompras = document.getElementById('btn-relatorio-compras');
+    const tbodyEstoque = document.getElementById('estoque-tbody');
+    const searchEstoque = document.getElementById('produto-search');
+
+    const inputPId = document.getElementById('p_id');
+    const inputPTipo = document.getElementById('p_tipo');
+    const inputPEan = document.getElementById('p_ean');
+    const inputPNome = document.getElementById('p_nome');
+    const inputPCusto = document.getElementById('p_custo');
+    const inputPVenda = document.getElementById('p_venda');
+    const inputPQtd = document.getElementById('p_qtd');
+    const divPGanho = document.getElementById('p_ganho_display');
+    const formProduto = document.getElementById('form-produto');
+
+    let estoque = [];
+    try {
+        const stored = localStorage.getItem('avence_estoque');
+        if (stored) estoque = JSON.parse(stored);
+    } catch (e) {
+        console.error('Erro ao ler estoque do localStorage:', e);
+        estoque = [];
+    }
+    
+    function generateId() {
+        return Date.now().toString() + Math.random().toString(36).substring(2, 9);
+    }
+
+    // Seed mock parts if none exist
+    if (!estoque.find(p => p.tipo === 'peca')) {
+        estoque.push(
+            { id: generateId(), nome: 'Tela Frontal iPhone 11', custo: 120.00, venda: 250.00, qtd: 5, tipo: 'peca', codigo: '789123456789' },
+            { id: generateId(), nome: 'Bateria Samsung S20', custo: 80.00, venda: 150.00, qtd: 10, tipo: 'peca', codigo: '789123456790' },
+            { id: generateId(), nome: 'Conector de Carga Moto G', custo: 15.00, venda: 60.00, qtd: 20, tipo: 'peca', codigo: '789123456791' },
+            { id: generateId(), nome: 'Película de Vidro 3D', custo: 5.00, venda: 30.00, qtd: 50, tipo: 'acessorio', codigo: '789123456792' }
+        );
+        localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+    }
+
+    function formatMoney(value) {
+        return parseFloat(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderEstoque(filtro = '') {
+        if (!tbodyEstoque) return;
+        tbodyEstoque.innerHTML = '';
+        
+        let filtrados = estoque;
+        if (filtro) {
+            const termo = filtro.toLowerCase();
+            filtrados = estoque.filter(p => {
+                if (!p) return false;
+                return (p.nome && p.nome.toLowerCase().includes(termo)) || 
+                       (p.ean && p.ean.includes(termo));
+            });
+        }
+
+        filtrados.forEach(produto => {
+            if (!produto) return;
+            const nomeProd = produto.nome || 'Produto sem nome';
+            const custoProd = parseFloat(produto.custo) || 0;
+            const vendaProd = parseFloat(produto.venda) || 0;
+            const qtdProd = produto.qtd || 0;
+            const ganho = vendaProd - custoProd;
+            const tr = document.createElement('tr');
+            
+            // Alerta vermelho se qtd <= 2 e não for serviço
+            if (qtdProd <= 2 && produto.tipo !== 'servico') {
+                tr.classList.add('estoque-alerta');
+            }
+            
+            const badgeTipo = produto.tipo === 'servico' ? '<span style="font-size:10px; background:var(--primary); color:#fff; padding:2px 4px; border-radius:4px; margin-left:8px;">Serviço</span>' : '';
+
+            tr.innerHTML = `
+                <td>${produto.ean || '-'}</td>
+                <td style="font-weight: 500;">${nomeProd} ${badgeTipo}</td>
+                <td style="text-align: right;">${formatMoney(custoProd)}</td>
+                <td style="text-align: right;">${formatMoney(vendaProd)}</td>
+                <td style="text-align: right;" class="${ganho > 0 ? 'lucro-verde' : ''}">${formatMoney(ganho)}</td>
+                <td style="text-align: center;" class="qtd-col">${produto.tipo === 'servico' ? '-' : qtdProd}</td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <button class="btn btn-secondary btn-imprimir-prod" data-id="${produto.id}" title="Imprimir Etiqueta" style="padding: 6px; font-size: 16px; display: inline-flex; margin-right: 4px;"><i class="ph ph-barcode"></i></button>
+                    <button class="btn btn-secondary btn-editar-prod" data-id="${produto.id}" title="Editar" style="padding: 6px; font-size: 16px; display: inline-flex; margin-right: 4px;"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="btn btn-danger btn-excluir-prod" data-id="${produto.id}" title="Excluir" style="padding: 6px; font-size: 16px; display: inline-flex;"><i class="ph ph-trash"></i></button>
+                </td>
+            `;
+            tbodyEstoque.appendChild(tr);
+        });
+
+        // Event listeners para botões da tabela
+        document.querySelectorAll('.btn-editar-prod').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const produto = estoque.find(p => p.id == id);
+                if (produto) {
+                    inputPId.value = produto.id;
+                    if(inputPTipo) {
+                        inputPTipo.value = produto.tipo || 'produto';
+                        inputPTipo.dispatchEvent(new Event('change'));
+                    }
+                    inputPEan.value = produto.ean || '';
+                    inputPNome.value = produto.nome;
+                    inputPCusto.value = produto.custo;
+                    inputPVenda.value = produto.venda;
+                    if (produto.tipo !== 'servico') {
+                        inputPQtd.value = produto.qtd;
+                    }
+                    calcGanho();
+                    document.getElementById('modal-produto-titulo').innerHTML = '<i class="ph ph-pencil-simple"></i> Editar Produto';
+                    openModal(modalProduto);
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-excluir-prod').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const produto = estoque.find(p => p.id == id);
+                if (produto) {
+                    window.customAlert(`Deseja realmente excluir o produto <strong>${produto.nome}</strong>?`, 'warning', true, () => {
+                        estoque = estoque.filter(p => p.id != id);
+                        localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+                        renderEstoque(searchEstoque.value);
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-imprimir-prod').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const produto = estoque.find(p => p.id == id);
+                if (produto && produto.ean) {
+                    // Open the editor modal
+                    window.currentEanProduct = produto;
+                    
+                    const inputQtd = document.getElementById('ean-qtd');
+                    inputQtd.value = (produto.qtd && produto.qtd > 0) ? produto.qtd : 1;
+                    
+                    document.getElementById('ean-colunas').value = "3";
+                    document.getElementById('ean-tamanho').value = "medio";
+                    
+                    updateEanPreview();
+                    
+                    const modalEan = document.getElementById('modal-editar-ean');
+                    if(modalEan) openModal(modalEan);
+                    
+                } else {
+                    window.customAlert('Este produto não possui código de barras cadastrado.', 'warning');
+                }
+            });
+        });
+    }
+
+    // Lógica para EAN
+    const btnGerarEan = document.getElementById('btn-gerar-ean');
+    if (btnGerarEan) {
+        btnGerarEan.addEventListener('click', () => {
+            // Gera padrão EAN-13 brasileiro (começa com 789)
+            let base = '789' + Math.floor(100000000 + Math.random() * 900000000).toString();
+            // Calcula o dígito verificador
+            let sum = 0;
+            for (let i = 0; i < 12; i++) {
+                sum += parseInt(base[i]) * (i % 2 === 0 ? 1 : 3);
+            }
+            const check = (10 - (sum % 10)) % 10;
+            inputPEan.value = base + check;
+        });
+    }
+
+    if (inputPEan) {
+        inputPEan.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+        
+        inputPEan.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                inputPNome.focus();
+            }
+        });
+    }
+
+    if (btnNovoProduto) {
+        btnNovoProduto.addEventListener('click', () => {
+            formProduto.reset();
+            inputPId.value = '';
+            if(inputPTipo) {
+                inputPTipo.value = 'produto';
+                inputPTipo.dispatchEvent(new Event('change'));
+            }
+            calcGanho();
+            document.getElementById('modal-produto-titulo').innerHTML = '<i class="ph ph-package"></i> Novo Produto';
+            openModal(modalProduto);
+            setTimeout(() => inputPEan.focus(), 300); // Focar no EAN para o leitor
+        });
+    }
+    
+    if (btnRelatorioCompras) {
+        btnRelatorioCompras.addEventListener('click', () => {
+            const modal = document.getElementById('modal-relatorio-compras');
+            if (!modal) return;
+            
+            const tbodyGiro = document.getElementById('tbody-alto-giro');
+            const tbodyParado = document.getElementById('tbody-estoque-parado');
+            tbodyGiro.innerHTML = '';
+            tbodyParado.innerHTML = '';
+            
+            let historicoItens = JSON.parse(localStorage.getItem('avence_historico_vendas_itens')) || [];
+            const agora = Date.now();
+            const umDia = 24 * 60 * 60 * 1000;
+            
+            // Agrupar histórico por ID de produto
+            const vendasPorId = {};
+            historicoItens.forEach(v => {
+                if (!vendasPorId[v.id]) vendasPorId[v.id] = { qtdVendida: 0, ultimaVenda: 0 };
+                vendasPorId[v.id].qtdVendida += v.qtd;
+                const dataVenda = new Date(v.data).getTime();
+                if (dataVenda > vendasPorId[v.id].ultimaVenda) {
+                    vendasPorId[v.id].ultimaVenda = dataVenda;
+                }
+            });
+            
+            estoque.forEach(p => {
+                if (p.tipo === 'servico') return;
+                
+                const dataCadastro = parseInt(p.id) > 1000000000000 ? parseInt(p.id) : agora;
+                let diasNoEstoque = Math.floor((agora - dataCadastro) / umDia);
+                if (diasNoEstoque < 0) diasNoEstoque = 0;
+
+                const vendas = vendasPorId[p.id] || { qtdVendida: 0, ultimaVenda: 0 };
+                const qtdInicial = p.qtd_inicial || (p.qtd + vendas.qtdVendida);
+                const pctVendido = qtdInicial > 0 ? (vendas.qtdVendida / qtdInicial) * 100 : 0;
+                
+                // Alto Giro: vendeu >= 60% e teve alguma venda recente (ou > 10 itens vendidos)
+                if (pctVendido >= 60 || vendas.qtdVendida >= 10) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.ean || '-'}</td>
+                        <td>${p.nome}</td>
+                        <td style="text-align: center;">${qtdInicial}</td>
+                        <td style="text-align: center;">${p.qtd}</td>
+                        <td style="text-align: center;">${vendas.qtdVendida}</td>
+                        <td style="text-align: center; color: #22c55e; font-weight: bold;">${pctVendido.toFixed(1)}%</td>
+                    `;
+                    tbodyGiro.appendChild(tr);
+                }
+                
+                // Estoque Parado: > 90 dias (ou > 3 meses) e vendeu < 20%
+                if (diasNoEstoque >= 90 && pctVendido < 20) {
+                    const dataUltimaVendaStr = vendas.ultimaVenda > 0 ? new Date(vendas.ultimaVenda).toLocaleDateString('pt-BR') : 'Nunca';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.ean || '-'}</td>
+                        <td>${p.nome}</td>
+                        <td style="text-align: center;">${qtdInicial}</td>
+                        <td style="text-align: center;">${p.qtd}</td>
+                        <td style="text-align: center;">${diasNoEstoque} dias</td>
+                        <td style="text-align: center;">${dataUltimaVendaStr}</td>
+                    `;
+                    tbodyParado.appendChild(tr);
+                }
+            });
+            
+            if (tbodyGiro.children.length === 0) tbodyGiro.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum produto de alto giro encontrado.</td></tr>';
+            if (tbodyParado.children.length === 0) tbodyParado.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum produto parado encontrado.</td></tr>';
+            
+            openModal(modal);
+        });
+    }
+    
+    if (inputPTipo) {
+        inputPTipo.addEventListener('change', (e) => {
+            if (e.target.value === 'servico') {
+                inputPQtd.type = 'text';
+                inputPQtd.value = '∞';
+                inputPQtd.disabled = true;
+            } else {
+                inputPQtd.type = 'number';
+                inputPQtd.value = inputPQtd.value === '∞' ? '1' : (inputPQtd.value || '1');
+                inputPQtd.disabled = false;
+            }
+        });
+    }
+
+    function calcGanho() {
+        const custoStr = inputPCusto.value;
+        const vendaStr = inputPVenda.value;
+
+        if (custoStr === '' || vendaStr === '') {
+            divPGanho.textContent = 'R$ 0,00';
+            divPGanho.style.color = 'var(--text-muted)';
+            return;
+        }
+
+        const custo = parseFloat(custoStr) || 0;
+        const venda = parseFloat(vendaStr) || 0;
+        const ganho = venda - custo;
+        
+        divPGanho.textContent = formatMoney(ganho);
+        if (ganho < 0) {
+            divPGanho.style.color = '#ef4444';
+        } else {
+            divPGanho.style.color = '#22c55e';
+        }
+    }
+
+    if (inputPCusto) inputPCusto.addEventListener('input', calcGanho);
+    if (inputPVenda) inputPVenda.addEventListener('input', calcGanho);
+
+    if (btnSalvarProduto) {
+        btnSalvarProduto.addEventListener('click', (e) => {
+            e.preventDefault();
+            const nome = inputPNome.value.trim();
+            const custo = inputPCusto.value;
+            const venda = inputPVenda.value;
+            const qtd = inputPQtd.value;
+
+            if (!nome || !custo || !venda || (inputPTipo && inputPTipo.value !== 'servico' && !qtd)) {
+                window.customAlert('Preencha os campos obrigatórios (Nome, Custo, Venda e Quantidade).', 'warning');
+                return;
+            }
+
+            const id = inputPId.value || Date.now().toString();
+            const index = estoque.findIndex(p => p.id == id);
+            
+            const novoProduto = {
+                id: id,
+                tipo: inputPTipo ? inputPTipo.value : 'produto',
+                ean: inputPEan.value.trim(),
+                nome: nome,
+                custo: parseFloat(custo),
+                venda: parseFloat(venda),
+                qtd: (inputPTipo && inputPTipo.value === 'servico') ? 999999 : parseInt(qtd)
+            };
+
+            if (index >= 0) {
+                // Preserve qtd_inicial if exists, otherwise set it
+                novoProduto.qtd_inicial = estoque[index].qtd_inicial || estoque[index].qtd;
+                estoque[index] = novoProduto;
+            } else {
+                novoProduto.qtd_inicial = novoProduto.qtd;
+                estoque.push(novoProduto);
+            }
+
+            localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+            renderEstoque(searchEstoque.value);
+            closeModal(modalProduto);
+            window.customAlert('Produto salvo com sucesso!', 'success');
+        });
+    }
+
+    // Removed old EAN listener from here as it was merged above
+
+    if (searchEstoque) {
+        searchEstoque.addEventListener('input', (e) => {
+            renderEstoque(e.target.value);
+        });
+        
+        // EAN scanner on search input
+        searchEstoque.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                renderEstoque(e.target.value);
+            }
+        });
+    }
+
+    if (btnRelatorioCompras) {
+        btnRelatorioCompras.addEventListener('click', () => {
+            const faltando = estoque.filter(p => p.qtd <= 2);
+            if (faltando.length === 0) {
+                window.customAlert('Não há produtos precisando de reposição no momento.', 'success');
+            } else {
+                let msg = '<strong>Produtos para comprar:</strong><br><br>';
+                faltando.forEach(p => {
+                    msg += `- ${p.nome} (EAN: ${p.ean || 'N/A'}) - Restam: ${p.qtd}<br>`;
+                });
+                msg += '<br><br><em>(No futuro, esta lista será enviada para o seu e-mail)</em>';
+                
+                const modal = document.getElementById('modal-alerta');
+                document.getElementById('alerta-mensagem').innerHTML = msg;
+                document.getElementById('alerta-icon').className = 'ph ph-shopping-cart';
+                document.getElementById('alerta-icon').style.color = '#3b82f6';
+                document.getElementById('alerta-titulo').textContent = 'Relatório de Compras';
+                modal.classList.add('active');
+                
+                document.getElementById('btn-fechar-alerta').onclick = () => {
+                    modal.classList.remove('active');
+                    // Reset to default alert styles for next alerts
+                    document.getElementById('alerta-mensagem').textContent = '';
+                };
+            }
+        });
+    }
+
+    // Initial render
+    renderEstoque();
+    // Lógica para abas (OS Intake)
+    const osTabs = document.querySelectorAll('.os-tab');
+    const osTabContents = document.querySelectorAll('.os-tab-content');
+
+    if (osTabs.length > 0) {
+        const lastOsTab = localStorage.getItem('avence_last_os_tab');
+
+        osTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active classes
+                osTabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.style.border = '1px solid transparent';
+                    t.style.borderBottom = 'none';
+                    t.style.background = 'transparent';
+                    t.style.color = 'var(--text-muted)';
+                });
+                osTabContents.forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+
+                // Add active to clicked tab
+                tab.classList.add('active');
+                tab.style.border = '1px solid var(--border)';
+                tab.style.borderBottom = 'none';
+                tab.style.background = 'var(--bg-surface)';
+                tab.style.color = '#ef4444';
+
+                // Show target content
+                const target = document.getElementById(tab.getAttribute('data-target'));
+                if (target) {
+                    target.classList.add('active');
+                    if (target.id === 'tab-aparelho') {
+                        target.style.display = 'grid';
+                    } else {
+                        target.style.display = 'flex';
+                    }
+                }
+            });
+        });
+    }
+
+    // EAN Editor Logic
+    // EAN Editor Logic
+    window.updateEanPreview = function() {
+        const produto = window.currentEanProduct;
+        if(!produto) return;
+        const qtd = parseInt(document.getElementById('ean-qtd').value) || 1;
+        const colunas = parseInt(document.getElementById('ean-colunas').value) || 3;
+        const tamanho = document.getElementById('ean-tamanho').value;
+        
+        const previewContainer = document.getElementById('ean-preview-container');
+        const printBarcode = document.getElementById('print-barcode');
+        
+        previewContainer.innerHTML = '';
+        previewContainer.style.gridTemplateColumns = `repeat(${colunas}, 1fr)`;
+        
+        printBarcode.innerHTML = '';
+        printBarcode.style.gridTemplateColumns = `repeat(${colunas}, 1fr)`;
+        
+        const storeConfig = JSON.parse(localStorage.getItem('avence_config')) || { nome: 'Sua Loja' };
+        
+        let bcWidth = 2;
+        let bcHeight = 50;
+        let fontSize = 12;
+        
+        if(tamanho === 'pequeno') { bcWidth = 1; bcHeight = 30; fontSize = 10; }
+        if(tamanho === 'grande') { bcWidth = 2; bcHeight = 70; fontSize = 16; }
+        
+        for (let i = 0; i < qtd; i++) {
+            const container = document.createElement('div');
+            container.className = 'barcode-container';
+            container.innerHTML = `<div class="store-name" style="font-size:${fontSize}px">${storeConfig.nome}</div>
+                <div class="product-name" style="font-size:${fontSize-2}px">${produto.nome}</div>
+                <svg class="barcode-svg-${i}"></svg>
+                <div class="product-price" style="font-size:${fontSize+2}px">${formatMoney(produto.venda)}</div>`;
+            
+            previewContainer.appendChild(container.cloneNode(true));
+            printBarcode.appendChild(container);
+        }
+        
+        try {
+            JsBarcode("[class^='barcode-svg-']", produto.ean, {
+                format: "EAN13",
+                lineColor: "#000",
+                width: bcWidth,
+                height: bcHeight,
+                displayValue: true,
+                fontSize: fontSize
+            });
+        } catch(err) {
+            JsBarcode("[class^='barcode-svg-']", produto.ean, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: bcWidth,
+                height: bcHeight,
+                displayValue: true,
+                fontSize: fontSize
+            });
+        }
+    };
+    
+    document.getElementById('ean-qtd')?.addEventListener('input', window.updateEanPreview);
+    document.getElementById('ean-colunas')?.addEventListener('change', window.updateEanPreview);
+    document.getElementById('ean-tamanho')?.addEventListener('change', window.updateEanPreview);
+    
+    document.getElementById('btn-imprimir-ean-confirmar')?.addEventListener('click', () => {
+        const modal = document.getElementById('modal-editar-ean');
+        if(modal) modal.classList.remove('active');
+        
+        document.body.classList.add('printing-ean');
+        window.print();
+        setTimeout(() => { document.body.classList.remove('printing-ean'); }, 1000);
+    });
