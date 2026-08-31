@@ -40,7 +40,6 @@
             box-sizing: border-box;
         }
 
-        /* Container da Logo com bordas arredondadas / bolinha */
         .logo-preview {
             width: 120px; height: 120px;
             display: flex; align-items: center; justify-content: center;
@@ -48,11 +47,10 @@
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
-            background-color: var(--bg-surface-light);
-            border: 2px solid var(--border);
-            border-radius: 50%; /* Bolinha */
+            background-color: transparent;
+            border: none;
+            border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .logo-preview i { font-size: 56px; color: var(--text-muted); }
