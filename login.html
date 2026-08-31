@@ -3,180 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Avence Cell</title>
+    <title>Acesso - Avence Cell</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- Main CSS -->
     <link rel="stylesheet" href="css/main.css">
     
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-main);
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            position: relative;
+            margin: 0; padding: 0; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: #0f172a;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden; position: relative;
+            color: #fff;
         }
 
-        #bg-image {
+        /* Animated Background Elements */
+        .blob {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover;
-            background-position: center;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 10s infinite alternate ease-in-out;
             z-index: 1;
-            opacity: 0.2;
-            pointer-events: none;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #3b82f6; }
+        .blob-2 { bottom: -20%; right: -10%; width: 600px; height: 600px; background: #8b5cf6; animation-delay: -5s; }
+        
+        #bg-image {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            z-index: 2; opacity: 0.15; pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        .login-wrapper {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 420px;
+            padding: 20px;
         }
 
         .login-box {
-            position: relative;
-            z-index: 10;
-            background: var(--bg-surface);
+            background: rgba(30, 41, 59, 0.7);
             padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 400px;
             text-align: center;
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-        }
-
-        .avatar-preview {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--bg-surface-light);
-            border: 2px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
-            margin: 0 auto 20px auto;
-        }
-
-        .avatar-preview i {
-            font-size: 40px;
-            color: var(--text-muted);
-        }
-
-        .login-box h2 {
-            margin: 0 0 8px 0;
-            font-size: 24px;
-            color: var(--text-main);
-        }
-
-        .login-box p {
-            color: var(--text-muted);
-            margin: 0 0 24px 0;
-            font-size: 14px;
-        }
-
-        .password-input {
-            width: 100%;
-            padding: 16px;
-            font-size: 24px;
-            text-align: center;
-            letter-spacing: 8px;
-            background: var(--bg-surface-light);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-main);
-            outline: none;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             box-sizing: border-box;
         }
 
-        .password-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        .logo-preview {
+            width: 100px; height: 100px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px auto;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
+        .logo-preview i { font-size: 48px; color: #3b82f6; }
+
+        .login-box h2 {
+            margin: 0 0 4px 0; font-size: 28px; font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .login-box p { color: #94a3b8; margin: 0 0 32px 0; font-size: 15px; }
+
+        .form-group { text-align: left; margin-bottom: 20px; position: relative; }
+        .form-group label {
+            display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 8px; font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%; padding: 14px 16px; font-size: 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: #fff;
+            outline: none; transition: all 0.3s;
+            box-sizing: border-box; font-family: 'Outfit', sans-serif;
+        }
+        
+        select.form-control {
+            appearance: none; cursor: pointer;
+        }
+
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .password-container { position: relative; }
+        #senha { letter-spacing: 4px; font-family: monospace; font-size: 18px; }
+
         .btn-login {
-            width: 100%;
-            padding: 14px;
-            margin-top: 24px;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
+            width: 100%; padding: 16px; margin-top: 12px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.5);
+            font-family: 'Outfit', sans-serif;
         }
 
         .btn-login:hover {
-            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px rgba(59, 130, 246, 0.7);
         }
+        .btn-login:active { transform: translateY(0); }
 
         /* Toast notifications */
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 9999;
-        }
-
+        #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
         .toast {
-            min-width: 250px;
-            padding: 16px;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease forwards;
-            opacity: 0;
-            transform: translateX(100%);
+            min-width: 250px; padding: 16px; border-radius: 12px; color: #fff; font-size: 14px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            font-family: 'Outfit', sans-serif;
         }
-
-        @keyframes slideIn {
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateX(100%); }
-        }
-
-        .toast.success { background: #22c55e; }
-        .toast.error { background: #ef4444; }
-        .toast.warning { background: #f59e0b; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        .toast.success { background: #10b981; border: 1px solid #059669; }
+        .toast.error { background: #ef4444; border: 1px solid #dc2626; }
+        .toast.warning { background: #f59e0b; border: 1px solid #d97706; }
     </style>
 </head>
 <body>
-
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
     <div id="bg-image"></div>
 
-    <div class="login-box">
-        <div class="avatar-preview" id="avatar-preview">
-            <i class="ph ph-user"></i>
-        </div>
-        
-        <h2>Avence Cell</h2>
-        <p>Acesso ao Sistema</p>
+    <div class="login-wrapper">
+        <div class="login-box">
+            <div class="logo-preview" id="logo-preview">
+                <i class="ph ph-storefront"></i>
+            </div>
+            
+            <h2 id="loja-nome">Avence Cell</h2>
+            <p>Área Restrita do Sistema</p>
 
-        <input type="password" id="senha" class="password-input" placeholder="***" autofocus>
-        
-        <button class="btn-login" id="btn-entrar">Acessar Sistema</button>
+            <div class="form-group">
+                <label>Colaborador</label>
+                <select id="nome-usuario" class="form-control">
+                    <option value="" disabled selected>Selecione seu nome...</option>
+                    <!-- Injected via JS -->
+                </select>
+                <i class="ph ph-caret-down" style="position: absolute; right: 16px; top: 43px; color: #94a3b8; pointer-events: none;"></i>
+            </div>
+
+            <div class="form-group password-container">
+                <label>Senha de Acesso</label>
+                <input type="password" id="senha" class="form-control" placeholder="****">
+            </div>
+            
+            <button class="btn-login" id="btn-entrar">
+                Entrar no Sistema <i class="ph ph-arrow-right" style="margin-left: 8px; vertical-align: middle;"></i>
+            </button>
+        </div>
     </div>
 
     <div id="toast-container"></div>

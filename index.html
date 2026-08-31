@@ -16,6 +16,43 @@
         } else {
             // Torna o usuário logado disponível globalmente
             window.loggedUser = JSON.parse(sessionStorage.getItem('avence_session_logged'));
+            
+            // Controle de Acesso (RBAC) - Esconde botões baseados no Cargo
+            window.addEventListener('DOMContentLoaded', () => {
+                const cargos = Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo];
+                const isDono = cargos.includes('Dono');
+                const isGerente = cargos.includes('Gerente');
+                const isVendedor = cargos.includes('Vendedor');
+                const isTecnico = cargos.includes('Técnico') || cargos.includes('Tecnico');
+
+                if (!isDono) {
+                    if (isGerente) {
+                        // Gerente tem acesso a tudo exceto Configurações
+                        const btnConfig = document.getElementById('btn-config');
+                        if (btnConfig) btnConfig.style.display = 'none';
+                    } 
+                    else if (isTecnico && !isVendedor) {
+                        // Somente Técnico: Esconde PDV, Financeiro, Relatórios, Config
+                        const hideTargets = ['pdv', 'financeiro', 'relatorios'];
+                        hideTargets.forEach(target => {
+                            const btn = document.querySelector(`.menu-btn[data-target="${target}"]`);
+                            if (btn) btn.style.display = 'none';
+                        });
+                        const btnConfig = document.getElementById('btn-config');
+                        if (btnConfig) btnConfig.style.display = 'none';
+                    }
+                    else if (isVendedor || (isTecnico && isVendedor)) {
+                        // Vendedor (ou Técnico que também é Vendedor): Esconde Financeiro, Relatórios, Config
+                        const hideTargets = ['financeiro', 'relatorios'];
+                        hideTargets.forEach(target => {
+                            const btn = document.querySelector(`.menu-btn[data-target="${target}"]`);
+                            if (btn) btn.style.display = 'none';
+                        });
+                        const btnConfig = document.getElementById('btn-config');
+                        if (btnConfig) btnConfig.style.display = 'none';
+                    }
+                }
+            });
         }
     </script>
 </head>
@@ -516,12 +553,18 @@
                                     <option value="light">Tema Claro</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>Imagem de Fundo do Sistema</label>
+                                <input type="file" id="config-bg" accept="image/*" style="padding: 8px; background: var(--bg-surface-light);">
+                                <small style="color: var(--text-muted); margin-top: 4px;">Selecione uma imagem para o fundo.</small>
+                            </div>
                         </div>
-                        <div class="form-group mt-3">
-                            <label>Imagem de Fundo do Sistema</label>
-                            <input type="file" id="config-bg" accept="image/*" style="padding: 8px; background: var(--bg-surface-light);">
-                            <small style="color: var(--text-muted); margin-top: 4px;">Selecione uma imagem para o fundo.</small>
-                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                            <div class="form-group">
+                                <label>Logo da Loja</label>
+                                <input type="file" id="config-logo" accept="image/*" style="padding: 8px; background: var(--bg-surface-light);">
+                                <small style="color: var(--text-muted); margin-top: 4px;">Exibida na tela de Login e Impressões.</small>
+                            </div>
                         
                         <div class="form-group mt-3" style="border-top: 1px solid var(--border); padding-top: 16px;">
                             <h4 style="margin-bottom: 8px; color: #3b82f6;"><i class="ph ph-cloud-arrow-up"></i> Nuvem (Appwrite)</h4>

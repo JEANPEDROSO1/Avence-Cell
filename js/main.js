@@ -282,46 +282,55 @@
     
     loadConfig();
 
-    btnSalvarConfig.addEventListener('click', () => {
+    btnSalvarConfig.addEventListener('click', async () => {
         const bgInput = document.getElementById('config-bg');
-        let bgImage = JSON.parse(localStorage.getItem('avence_config'))?.bgImage || null;
+        const logoInput = document.getElementById('config-logo');
+        const currentConfig = JSON.parse(localStorage.getItem('avence_config')) || {};
         
-        const saveConfig = (imageStr) => {
-            const config = {
-                nome: document.getElementById('config-loja').value,
-                endereco: document.getElementById('config-endereco').value,
-                telefone: document.getElementById('config-telefone').value,
-                email: document.getElementById('config-email').value,
-                emailRelatorio: document.getElementById('config-email-relatorio') ? document.getElementById('config-email-relatorio').value : '',
-                tecnico: document.getElementById('config-tecnico') ? document.getElementById('config-tecnico').value : 'Não definido',
-                tema: document.getElementById('config-tema') ? document.getElementById('config-tema').value : 'dark',
-                senhaGerente: document.getElementById('config-senha-gerente') ? document.getElementById('config-senha-gerente').value : '1234',
-                limiteCaixa: document.getElementById('config-limite-caixa') ? parseFloat(document.getElementById('config-limite-caixa').value) : 500,
-                horarioAviso: document.getElementById('config-horario-aviso') ? document.getElementById('config-horario-aviso').value : '18:00',
-                horarioBloqueio: document.getElementById('config-horario-bloqueio') ? document.getElementById('config-horario-bloqueio').value : '18:30',
-                osTitulo: document.getElementById('config-os-titulo') ? document.getElementById('config-os-titulo').value : 'NOTE BOOK CENTER',
-                osAssinatura: document.getElementById('config-os-assinatura') ? document.getElementById('config-os-assinatura').value : 'NOTE BOOK CENTER',
-                osEndereco: document.getElementById('config-os-endereco') ? document.getElementById('config-os-endereco').value : 'RUA SANTA CATARINA - 35, IVAIPORA-PR',
-                osComplemento: document.getElementById('config-os-complemento') ? document.getElementById('config-os-complemento').value : 'COMPLEMENTO RUA ATRAS DO BANCO DO BRASIL',
-                osTelefone: document.getElementById('config-os-telefone') ? document.getElementById('config-os-telefone').value : '(43) 99900-4377',
-                osEmail: document.getElementById('config-os-email') ? document.getElementById('config-os-email').value : 'notecenter_ivp@hotmail.com',
-                osTermos: document.getElementById('config-os-termos') ? document.getElementById('config-os-termos').value : '1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;\n2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);\n3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).\n4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO',
-                bgImage: imageStr
-            };
-            localStorage.setItem('avence_config', JSON.stringify(config));
-            loadConfig();
-            window.customAlert('Configurações salvas com sucesso!', 'success');
+        let bgImage = currentConfig.bgImage || null;
+        let logoImage = currentConfig.logoImage || null;
+
+        const readFileAsDataURL = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
         };
 
-        if (bgInput.files && bgInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                saveConfig(e.target.result);
-            };
-            reader.readAsDataURL(bgInput.files[0]);
-        } else {
-            saveConfig(bgImage);
+        if (bgInput && bgInput.files && bgInput.files[0]) {
+            bgImage = await readFileAsDataURL(bgInput.files[0]);
         }
+        if (logoInput && logoInput.files && logoInput.files[0]) {
+            logoImage = await readFileAsDataURL(logoInput.files[0]);
+        }
+
+        const config = {
+            nome: document.getElementById('config-loja').value,
+            endereco: document.getElementById('config-endereco').value,
+            telefone: document.getElementById('config-telefone').value,
+            email: document.getElementById('config-email').value,
+            emailRelatorio: document.getElementById('config-email-relatorio') ? document.getElementById('config-email-relatorio').value : '',
+            tecnico: document.getElementById('config-tecnico') ? document.getElementById('config-tecnico').value : 'Não definido',
+            tema: document.getElementById('config-tema') ? document.getElementById('config-tema').value : 'dark',
+            senhaGerente: document.getElementById('config-senha-gerente') ? document.getElementById('config-senha-gerente').value : '1234',
+            limiteCaixa: document.getElementById('config-limite-caixa') ? parseFloat(document.getElementById('config-limite-caixa').value) : 500,
+            horarioAviso: document.getElementById('config-horario-aviso') ? document.getElementById('config-horario-aviso').value : '18:00',
+            horarioBloqueio: document.getElementById('config-horario-bloqueio') ? document.getElementById('config-horario-bloqueio').value : '18:30',
+            osTitulo: document.getElementById('config-os-titulo') ? document.getElementById('config-os-titulo').value : 'NOTE BOOK CENTER',
+            osAssinatura: document.getElementById('config-os-assinatura') ? document.getElementById('config-os-assinatura').value : 'NOTE BOOK CENTER',
+            osEndereco: document.getElementById('config-os-endereco') ? document.getElementById('config-os-endereco').value : 'RUA SANTA CATARINA - 35, IVAIPORA-PR',
+            osComplemento: document.getElementById('config-os-complemento') ? document.getElementById('config-os-complemento').value : 'COMPLEMENTO RUA ATRAS DO BANCO DO BRASIL',
+            osTelefone: document.getElementById('config-os-telefone') ? document.getElementById('config-os-telefone').value : '(43) 99900-4377',
+            osEmail: document.getElementById('config-os-email') ? document.getElementById('config-os-email').value : 'notecenter_ivp@hotmail.com',
+            osTermos: document.getElementById('config-os-termos') ? document.getElementById('config-os-termos').value : '1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;\n2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);\n3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).\n4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO',
+            bgImage: bgImage,
+            logoImage: logoImage
+        };
+        
+        localStorage.setItem('avence_config', JSON.stringify(config));
+        loadConfig();
+        window.customAlert('Configurações salvas com sucesso!', 'success');
     });
 
     // Update Clock
