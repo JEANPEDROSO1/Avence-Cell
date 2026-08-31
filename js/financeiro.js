@@ -826,9 +826,8 @@
         }
     };
 
-    const formColabContainer = document.getElementById('form-colaborador-container');
     const btnAddColab = document.getElementById('btn-add-colab');
-    if (btnAddColab && formColabContainer) {
+    if (btnAddColab) {
         btnAddColab.addEventListener('click', () => {
             editingColabId = null;
             document.getElementById('colab-form-title').textContent = 'Novo Colaborador';
@@ -848,7 +847,7 @@
     }
 
     const btnCancelColab = document.getElementById('btn-cancel-colab');
-    if (btnCancelColab && formColabContainer) {
+    if (btnCancelColab) {
         btnCancelColab.addEventListener('click', () => {
             closeModal(document.getElementById('modal-colaborador'));
         });
@@ -948,8 +947,6 @@
             preview.dataset.base64 = '';
         }
         openModal(document.getElementById('modal-colaborador'));
-        
-        formColabContainer.style.display = 'block';
     }
 
     // Evento de abrir modal de configuração
