@@ -67,37 +67,23 @@ document.addEventListener('DOMContentLoaded', () => {
         let userToLog = null;
         let isDono = false;
 
-        // Verifica se é o dono master tentando entrar
-        const isMasterName = typedName.toLowerCase() === 'admin' || typedName.toLowerCase() === 'dono' || typedName.toLowerCase() === 'administrador';
+        // Busca pelo nome ignorando maiusculas/minusculas
+        const colab = colaboradores.find(c => c.nome.toLowerCase() === typedName.toLowerCase());
         
-        if (isMasterName && senha === config.senhaGerente) {
-            userToLog = { id: 'master', nome: 'Administrador (Dono)', cargo: ['Dono'], isDono: true };
-            isDono = true;
-        } 
-        else if (isMasterName && senha !== config.senhaGerente) {
-            customAlert('Senha incorreta para a conta Administrador!', 'error');
+        if (!colab) {
+            customAlert('Usuário não encontrado no sistema. Cadastre-o primeiro.', 'error');
+            return;
+        }
+        
+        if (colab.senhaLogin !== senha) {
+            customAlert('Senha incorreta!', 'error');
             inputSenha.value = '';
             return;
         }
-        else {
-            // Busca pelo nome ignorando maiusculas/minusculas
-            const colab = colaboradores.find(c => c.nome.toLowerCase() === typedName.toLowerCase());
-            
-            if (!colab) {
-                customAlert('Usuário não encontrado no sistema.', 'error');
-                return;
-            }
-            
-            if (colab.senhaLogin !== senha) {
-                customAlert('Senha incorreta!', 'error');
-                inputSenha.value = '';
-                return;
-            }
 
-            const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
-            userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
-            isDono = userToLog.isDono;
-        }
+        const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
+        userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
+        isDono = userToLog.isDono;
 
         if (userToLog) {
             // Checagem de Horário Bloqueado
