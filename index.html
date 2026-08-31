@@ -9,6 +9,15 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PROTEÇÃO DE SESSÃO -->
+    <script>
+        if (!sessionStorage.getItem('avence_session_logged')) {
+            window.location.href = 'login.html';
+        } else {
+            // Torna o usuário logado disponível globalmente
+            window.loggedUser = JSON.parse(sessionStorage.getItem('avence_session_logged'));
+        }
+    </script>
 </head>
 <body>
     <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
@@ -56,11 +65,40 @@
                 </button>
             </nav>
             <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="avatar"></div>
-                    <span>Usuário Admin</span>
+                <div class="user-info" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="avatar" id="sidebar-avatar"><i class="ph ph-user"></i></div>
+                        <span id="sidebar-username" style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;">Usuário</span>
+                    </div>
+                    <button id="btn-logout" title="Sair do Sistema" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: 0.2s;">
+                        <i class="ph ph-sign-out" style="font-size: 20px;"></i>
+                    </button>
                 </div>
             </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const u = window.loggedUser;
+                    if(u) {
+                        document.getElementById('sidebar-username').textContent = u.nome.split(' ')[0];
+                        if(u.foto) {
+                            document.getElementById('sidebar-avatar').innerHTML = '';
+                            document.getElementById('sidebar-avatar').style.backgroundImage = `url(${u.foto})`;
+                            document.getElementById('sidebar-avatar').style.backgroundSize = 'cover';
+                        }
+                    }
+                    
+                    const btnLogout = document.getElementById('btn-logout');
+                    if(btnLogout) {
+                        btnLogout.addEventListener('click', () => {
+                            if(confirm('Tem certeza que deseja sair do sistema?')) {
+                                sessionStorage.removeItem('avence_session_logged');
+                                window.location.href = 'login.html';
+                            }
+                        });
+                    }
+                });
+            </script>
         </aside>
 
         <!-- ========================================== -->
