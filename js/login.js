@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup Customizations
     if (config.nome) lojaNomeEl.textContent = config.nome;
-    if (config.bgImage) document.getElementById('bg-image').style.backgroundImage = `url(${config.bgImage})`;
     if (config.logoImage) {
         logoPreview.style.backgroundImage = `url(${config.logoImage})`;
         logoPreview.innerHTML = '';

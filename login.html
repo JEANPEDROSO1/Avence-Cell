@@ -33,13 +33,6 @@
         }
         .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #3b82f6; }
         .blob-2 { bottom: -20%; right: -10%; width: 600px; height: 600px; background: #8b5cf6; animation-delay: -5s; }
-        
-        #bg-image {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover; background-position: center;
-            z-index: 2; opacity: 0.15; pointer-events: none;
-            mix-blend-mode: overlay;
-        }
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
@@ -67,26 +60,23 @@
         }
 
         .logo-preview {
-            width: 100px; height: 100px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%; height: 140px;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 24px auto;
+            margin: 0 auto 16px auto;
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            background-color: transparent;
         }
 
-        .logo-preview i { font-size: 48px; color: #3b82f6; }
+        .logo-preview i { font-size: 64px; color: #3b82f6; }
 
         .login-box h2 {
             margin: 0 0 4px 0; font-size: 28px; font-weight: 700;
             background: linear-gradient(to right, #60a5fa, #a78bfa);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .login-box p { color: #94a3b8; margin: 0 0 32px 0; font-size: 15px; }
+        .login-box p { color: #94a3b8; margin: 0 0 24px 0; font-size: 15px; }
 
         .form-group { text-align: left; margin-bottom: 20px; position: relative; }
         .form-group label {
@@ -149,7 +139,6 @@
 <body>
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
-    <div id="bg-image"></div>
 
     <div class="login-wrapper">
         <div class="login-box">
