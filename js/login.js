@@ -27,18 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoPreview.innerHTML = '';
     }
 
-    // Populate Select
-    const optDono = document.createElement('option');
-    optDono.value = 'master';
-    optDono.textContent = 'Administrador (Dono)';
-    selectNome.appendChild(optDono);
-
-    colaboradores.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = c.nome;
-        selectNome.appendChild(opt);
-    });
+    // Removido o select e injection options
 
     function customAlert(message, type = 'info') {
         const container = document.getElementById('toast-container');
@@ -61,12 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    function checkLogin() {
-        const selectedId = selectNome.value;
+    function checkLogin(e) {
+        if(e) e.preventDefault();
+        
+        const typedName = document.getElementById('nome-usuario').value.trim();
         const senha = inputSenha.value.trim();
         
-        if (!selectedId) {
-            customAlert('Selecione seu nome na lista.', 'warning');
+        if (!typedName) {
+            customAlert('Digite seu nome.', 'warning');
             return;
         }
         if (!senha) {
@@ -77,13 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let userToLog = null;
         let isDono = false;
 
-        if (selectedId === 'master') {
-            if (senha === config.senhaGerente) {
-                userToLog = { id: 'master', nome: 'Dono (Master)', cargo: ['Dono'], isDono: true };
-                isDono = true;
-            }
+        // Verifica se é o dono master pela senha
+        if (senha === config.senhaGerente) {
+            userToLog = { id: 'master', nome: typedName || 'Dono (Master)', cargo: ['Dono'], isDono: true };
+            isDono = true;
         } else {
-            const colab = colaboradores.find(c => c.id === selectedId);
+            // Busca pelo nome ignorando maiusculas/minusculas
+            const colab = colaboradores.find(c => c.nome.toLowerCase() === typedName.toLowerCase());
             if (colab && colab.senhaLogin === senha) {
                 const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
                 userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
@@ -120,8 +111,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    btnEntrar.addEventListener('click', checkLogin);
-    inputSenha.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkLogin();
-    });
+    document.getElementById('login-form').addEventListener('submit', checkLogin);
 });

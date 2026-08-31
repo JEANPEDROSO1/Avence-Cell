@@ -555,14 +555,16 @@
                             </div>
                             <div class="form-group">
                                 <label>Imagem de Fundo do Sistema</label>
-                                <input type="file" id="config-bg" accept="image/*" style="padding: 8px; background: var(--bg-surface-light);">
+                                <div id="preview-config-bg" style="width: 100%; height: 80px; background: var(--bg-surface-light); border: 1px dashed var(--border); border-radius: 8px; margin-bottom: 8px; background-size: cover; background-position: center;"></div>
+                                <input type="file" id="config-bg" accept="image/*" style="padding: 8px; background: var(--bg-surface-light); width: 100%;">
                                 <small style="color: var(--text-muted); margin-top: 4px;">Selecione uma imagem para o fundo.</small>
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                             <div class="form-group">
                                 <label>Logo da Loja</label>
-                                <input type="file" id="config-logo" accept="image/*" style="padding: 8px; background: var(--bg-surface-light);">
+                                <div id="preview-config-logo" style="width: 100px; height: 100px; background: var(--bg-surface-light); border: 1px dashed var(--border); border-radius: 8px; margin-bottom: 8px; background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
+                                <input type="file" id="config-logo" accept="image/*" style="padding: 8px; background: var(--bg-surface-light); width: 100%;">
                                 <small style="color: var(--text-muted); margin-top: 4px;">Exibida na tela de Login e Impressões.</small>
                             </div>
                         
