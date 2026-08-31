@@ -74,11 +74,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Busca pelo nome ignorando maiusculas/minusculas
             const colab = colaboradores.find(c => c.nome.toLowerCase() === typedName.toLowerCase());
-            if (colab && colab.senhaLogin === senha) {
-                const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
-                userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
-                isDono = userToLog.isDono;
+            
+            if (!colab) {
+                customAlert('Usuário não encontrado no sistema.', 'error');
+                return;
             }
+            
+            if (colab.senhaLogin !== senha) {
+                customAlert('Senha incorreta!', 'error');
+                inputSenha.value = '';
+                return;
+            }
+
+            const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
+            userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
+            isDono = userToLog.isDono;
         }
 
         if (userToLog) {
@@ -104,9 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btnEntrar.innerHTML = '<i class="ph ph-spinner ph-spin" style="font-size: 24px;"></i>';
             btnEntrar.disabled = true;
             setTimeout(() => { window.location.href = 'index.html'; }, 800);
-        } else {
-            customAlert('Senha incorreta!', 'error');
-            inputSenha.value = '';
         }
     }
 
