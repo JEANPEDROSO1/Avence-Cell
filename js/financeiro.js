@@ -942,8 +942,8 @@
             }
             const senhaLogin = document.getElementById('colab-senha-login').value.trim();
             const senhaRetirada = document.getElementById('colab-senha-retirada').value.trim();
-            const comissaoVendas = document.getElementById('colab-comissao-vendas') ? document.getElementById('colab-comissao-vendas').value : '5';
-            const comissaoServicos = document.getElementById('colab-comissao-servicos') ? document.getElementById('colab-comissao-servicos').value : '10';
+            const comissaoVendas = document.getElementById('colab-comissao-vendas') ? (parseFloat(document.getElementById('colab-comissao-vendas').value) || 0) : 0;
+            const comissaoServicos = document.getElementById('colab-comissao-servicos') ? (parseFloat(document.getElementById('colab-comissao-servicos').value) || 0) : 0;
             const fotoBase64 = document.getElementById('colab-foto-preview').dataset.base64 || '';
 
             if (!nome || !senhaLogin) {
