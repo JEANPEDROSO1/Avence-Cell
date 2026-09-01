@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         else {
-            const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : [colab.cargo];
+            const colabCargos = Array.isArray(colab.cargo) ? colab.cargo : (typeof colab.cargo === 'string' ? colab.cargo.split(',').map(s => s.trim()) : [colab.cargo]);
             userToLog = { ...colab, cargo: colabCargos, isDono: colabCargos.includes('Dono') };
             isDono = userToLog.isDono;
         }
