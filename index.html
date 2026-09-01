@@ -57,6 +57,10 @@
     </script>
 </head>
 <body>
+    <!-- Dummy inputs to absorb Chrome's aggressive autofill -->
+    <input style="opacity: 0; position: absolute; left: -9999px" type="text" name="fakeusernameremembered" autocomplete="username"/>
+    <input style="opacity: 0; position: absolute; left: -9999px" type="password" name="fakepasswordremembered" autocomplete="current-password"/>
+
     <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
     <!-- App UI (Hidden during print) -->
     <div class="app-container no-print">
