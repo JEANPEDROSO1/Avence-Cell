@@ -1,3 +1,11 @@
+// -- Desabilita autocomplete do navegador em todo o sistema --
+document.querySelectorAll('input, form').forEach(el => {
+    el.setAttribute('autocomplete', 'off'); // Bloqueia auto-preenchimento
+    if (el.tagName.toLowerCase() === 'input' && el.type !== 'password' && el.type !== 'email') {
+        el.setAttribute('autocomplete', 'new-password'); // Hack para forçar o Chrome a não preencher o nome de usuário (Jean Pedroso)
+    }
+});
+
 // DOMContentLoaded Wrapper Removed
     // -- Limpa o financeiro a pedido do usuário --
     if (!localStorage.getItem('financeiro_zerado_v2')) {
