@@ -480,6 +480,9 @@ document.querySelectorAll('input, form').forEach(el => {
             closeModal(document.getElementById('modal-pesquisa-os'));
 
             if (currentOSAction === 'alterar') {
+                document.getElementById('intake-os-number').textContent = currentFlowData.osNumber !== undefined ? currentFlowData.osNumber : (currentFlowData.numero || '-');
+                document.getElementById('intake-client-name').textContent = typeof currentFlowData.cliente === 'string' ? currentFlowData.cliente : (currentFlowData.cliente?.nome || '-');
+                document.getElementById('intake-client-phone').textContent = currentFlowData.fones || currentFlowData.cliente?.telefone || '-';
                 openModal(document.getElementById('modal-intake'));
                 setTimeout(() => document.getElementById('a_marca').focus(), 300);
             } else if (currentOSAction === 'encerrar') {
@@ -857,10 +860,18 @@ document.querySelectorAll('input, form').forEach(el => {
         document.getElementById('form-intake').reset();
         
         // Generate OS Number
+        // Generate OS Number
         let nextOsNum = 0;
         if (window.globalData && window.globalData.os && window.globalData.os.length > 0) {
-            const maxOs = Math.max(...window.globalData.os.map(o => parseInt(o.osNumber) || 0));
-            nextOsNum = maxOs + 1;
+            // Only consider OSes that actually have an 'osNumber' field to avoid old random 'numero's
+            const validNumbers = window.globalData.os
+                .filter(o => o.osNumber !== undefined && o.osNumber !== null)
+                .map(o => parseInt(o.osNumber))
+                .filter(n => !isNaN(n));
+                
+            if (validNumbers.length > 0) {
+                nextOsNum = Math.max(...validNumbers) + 1;
+            }
         }
         currentFlowData.osNumber = nextOsNum;
         
@@ -1318,6 +1329,9 @@ document.querySelectorAll('input, form').forEach(el => {
                 }
 
                 // Em vez de ir para a tela vazia, abre o modal-intake (onde ficam as abas de peças, serviços, etc.)
+                document.getElementById('intake-os-number').textContent = currentFlowData.osNumber !== undefined ? currentFlowData.osNumber : (currentFlowData.numero || '-');
+                document.getElementById('intake-client-name').textContent = typeof currentFlowData.cliente === 'string' ? currentFlowData.cliente : (currentFlowData.cliente?.nome || '-');
+                document.getElementById('intake-client-phone').textContent = currentFlowData.fones || currentFlowData.cliente?.telefone || '-';
                 openModal(document.getElementById('modal-intake'));
                 setTimeout(() => document.getElementById('a_marca')?.focus(), 300);
             }
