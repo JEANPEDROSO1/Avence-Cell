@@ -195,6 +195,7 @@
                             <input type="text" id="produto-search" placeholder="Buscar por Nome ou código EAN..." autocomplete="off">
                         </div>
                         <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-secondary" id="btn-config-ean" title="Configurar Impressão de EAN" style="display: flex; align-items: center; justify-content: center; padding: 0 12px;"><i class="ph ph-gear"></i></button>
                             <button class="btn btn-secondary" id="btn-relatorio-compras" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-envelope-simple"></i> Relatório de Compras</button>
                             <button class="btn btn-primary" id="btn-novo-produto" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-plus-circle"></i> Novo Produto</button>
                         </div>
@@ -1734,24 +1735,19 @@
     <div class="modal-overlay no-print" id="modal-editar-ean">
         <div class="modal-container large-modal" style="max-width: 900px; display: flex; flex-direction: column;">
             <div class="modal-header">
-                <h2><i class="ph ph-barcode"></i> Editor e Impressão de Etiquetas</h2>
+                <h2><i class="ph ph-gear"></i> Configuração de Impressão de EAN</h2>
                 <button class="close-btn" data-close="modal-editar-ean"><i class="ph ph-x"></i></button>
             </div>
             <div class="modal-body" style="padding: 24px; display: flex; gap: 24px; max-height: 70vh;">
                 <!-- Configurações (Esquerda) -->
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
                     <div class="form-group">
-                        <label>Quantidade Total de Etiquetas</label>
-                        <input type="number" id="ean-qtd" value="1" min="1" max="500">
+                        <label>Etiquetas por Linha (Colunas)</label>
+                        <input type="number" id="ean-colunas" value="3" min="1" max="10">
                     </div>
                     <div class="form-group">
-                        <label>Etiquetas por Linha (Colunas)</label>
-                        <select id="ean-colunas">
-                            <option value="1">1 Etiqueta</option>
-                            <option value="2">2 Etiquetas</option>
-                            <option value="3" selected>3 Etiquetas</option>
-                            <option value="4">4 Etiquetas</option>
-                        </select>
+                        <label>Quantidade de Linhas</label>
+                        <input type="number" id="ean-linhas" value="10" min="1" max="100">
                     </div>
                     <div class="form-group">
                         <label>Tamanho da Etiqueta</label>
@@ -1761,8 +1757,8 @@
                             <option value="grande">Grande</option>
                         </select>
                     </div>
-                    <button class="btn btn-primary" id="btn-imprimir-ean-confirmar" style="margin-top: auto; padding: 16px; font-size: 16px; justify-content: center;">
-                        <i class="ph ph-printer"></i> Imprimir Etiquetas
+                    <button class="btn btn-primary" id="btn-salvar-config-ean" style="margin-top: auto; padding: 16px; font-size: 16px; justify-content: center; background-color: #22c55e; border-color: #22c55e;">
+                        <i class="ph ph-floppy-disk"></i> Salvar Configuração
                     </button>
                 </div>
                 

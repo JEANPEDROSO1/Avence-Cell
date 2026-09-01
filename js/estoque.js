@@ -25,19 +25,30 @@
         estoque = [];
     }
     
+    let eanConfig = { linhas: 10, colunas: 3, tamanho: 'medio' };
+    try {
+        const storedConfig = localStorage.getItem('avence_ean_config');
+        if (storedConfig) eanConfig = JSON.parse(storedConfig);
+    } catch(e) {}
+    
+    const btnConfigEan = document.getElementById('btn-config-ean');
+    if (btnConfigEan) {
+        btnConfigEan.addEventListener('click', () => {
+            document.getElementById('ean-linhas').value = eanConfig.linhas;
+            document.getElementById('ean-colunas').value = eanConfig.colunas;
+            document.getElementById('ean-tamanho').value = eanConfig.tamanho;
+            
+            // Preview com produto dummy
+            window.currentEanProduct = { nome: 'Produto Exemplo', ean: '7891234567890', venda: 99.90 };
+            updateEanPreview();
+            
+            const modal = document.getElementById('modal-editar-ean');
+            if(modal) openModal(modal);
+        });
+    }
+    
     function generateId() {
         return Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    }
-
-    // Seed mock parts if none exist
-    if (!estoque.find(p => p.tipo === 'peca')) {
-        estoque.push(
-            { id: generateId(), nome: 'Tela Frontal iPhone 11', custo: 120.00, venda: 250.00, qtd: 5, tipo: 'peca', codigo: '789123456789' },
-            { id: generateId(), nome: 'Bateria Samsung S20', custo: 80.00, venda: 150.00, qtd: 10, tipo: 'peca', codigo: '789123456790' },
-            { id: generateId(), nome: 'Conector de Carga Moto G', custo: 15.00, venda: 60.00, qtd: 20, tipo: 'peca', codigo: '789123456791' },
-            { id: generateId(), nome: 'Película de Vidro 3D', custo: 5.00, venda: 30.00, qtd: 50, tipo: 'acessorio', codigo: '789123456792' }
-        );
-        localStorage.setItem('avence_estoque', JSON.stringify(estoque));
     }
 
     function formatMoney(value) {
@@ -134,20 +145,17 @@
                 const id = e.currentTarget.getAttribute('data-id');
                 const produto = estoque.find(p => p.id == id);
                 if (produto && produto.ean) {
-                    // Open the editor modal
                     window.currentEanProduct = produto;
                     
-                    const inputQtd = document.getElementById('ean-qtd');
-                    inputQtd.value = (produto.qtd && produto.qtd > 0) ? produto.qtd : 1;
-                    
-                    document.getElementById('ean-colunas').value = "3";
-                    document.getElementById('ean-tamanho').value = "medio";
+                    document.getElementById('ean-linhas').value = eanConfig.linhas;
+                    document.getElementById('ean-colunas').value = eanConfig.colunas;
+                    document.getElementById('ean-tamanho').value = eanConfig.tamanho;
                     
                     updateEanPreview();
                     
-                    const modalEan = document.getElementById('modal-editar-ean');
-                    if(modalEan) openModal(modalEan);
-                    
+                    document.body.classList.add('printing-ean');
+                    window.print();
+                    setTimeout(() => { document.body.classList.remove('printing-ean'); }, 1000);
                 } else {
                     window.customAlert('Este produto não possui código de barras cadastrado.', 'warning');
                 }
@@ -447,8 +455,9 @@
     window.updateEanPreview = function() {
         const produto = window.currentEanProduct;
         if(!produto) return;
-        const qtd = parseInt(document.getElementById('ean-qtd').value) || 1;
+        const linhas = parseInt(document.getElementById('ean-linhas').value) || 10;
         const colunas = parseInt(document.getElementById('ean-colunas').value) || 3;
+        const qtd = linhas * colunas;
         const tamanho = document.getElementById('ean-tamanho').value;
         
         const previewContainer = document.getElementById('ean-preview-container');
@@ -502,15 +511,20 @@
         }
     };
     
-    document.getElementById('ean-qtd')?.addEventListener('input', window.updateEanPreview);
+    document.getElementById('ean-linhas')?.addEventListener('input', window.updateEanPreview);
     document.getElementById('ean-colunas')?.addEventListener('change', window.updateEanPreview);
     document.getElementById('ean-tamanho')?.addEventListener('change', window.updateEanPreview);
     
-    document.getElementById('btn-imprimir-ean-confirmar')?.addEventListener('click', () => {
-        const modal = document.getElementById('modal-editar-ean');
-        if(modal) modal.classList.remove('active');
+    document.getElementById('btn-salvar-config-ean')?.addEventListener('click', () => {
+        eanConfig = {
+            linhas: parseInt(document.getElementById('ean-linhas').value) || 10,
+            colunas: parseInt(document.getElementById('ean-colunas').value) || 3,
+            tamanho: document.getElementById('ean-tamanho').value || 'medio'
+        };
+        localStorage.setItem('avence_ean_config', JSON.stringify(eanConfig));
         
-        document.body.classList.add('printing-ean');
-        window.print();
-        setTimeout(() => { document.body.classList.remove('printing-ean'); }, 1000);
+        const modal = document.getElementById('modal-editar-ean');
+        if(modal) closeModal(modal);
+        
+        window.customAlert('Configuração de impressão salva!', 'success');
     });

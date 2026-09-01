@@ -912,15 +912,6 @@
         }, 1000);
     });
 
-    // Dummy Clients List
-    const dummyClients = [
-        { id: "d1", nome: "Ana Santos", telefone: "(43) 9988-7766", cpf: "111.222.333-44", documento: "111.222.333-44" },
-        { id: "d2", nome: "Bruno Costa", telefone: "(43) 9123-4567", cpf: "555.666.777-88", documento: "555.666.777-88" },
-        { id: "d3", nome: "Carlos Oliveira", telefone: "(43) 9999-0000", cpf: "999.888.777-66", documento: "999.888.777-66" },
-        { id: "d4", nome: "João da Silva", telefone: "(43) 99999-8888", cpf: "123.456.789-00", documento: "123.456.789-00" },
-        { id: "d5", nome: "Maria Clara", telefone: "(43) 9876-5432", cpf: "444.333.222-11", documento: "444.333.222-11" }
-    ];
-
     window.clientes = [];
     try {
         const cliStr = localStorage.getItem('avence_clientes');
@@ -929,8 +920,8 @@
         console.error('Erro ao ler clientes do localStorage:', e);
     }
     
-    if (!window.clientes || window.clientes.length === 0 || !Array.isArray(window.clientes)) {
-        window.clientes = [...dummyClients];
+    if (!window.clientes || !Array.isArray(window.clientes)) {
+        window.clientes = [];
         localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
     }
 
