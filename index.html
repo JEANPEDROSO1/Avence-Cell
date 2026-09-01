@@ -65,8 +65,11 @@
     <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
     <!-- App UI (Hidden during print) -->
     <div class="app-container no-print">
+        
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+        
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header" id="btn-logo-home" style="cursor: pointer;" title="Voltar ao Início">
                 <i class="ph ph-device-mobile"></i>
                 <h2 id="store-name-display">Avence Cell</h2>
@@ -155,7 +158,12 @@
         <!-- ========================================== -->
         <main class="main-content">
             <header class="top-header">
-                <h1 id="page-title">Abrir O.S</h1>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button id="mobile-menu-btn" class="mobile-only" style="background: transparent; border: none; color: var(--text-main); font-size: 28px; cursor: pointer;">
+                        <i class="ph ph-list"></i>
+                    </button>
+                    <h1 id="page-title">Abrir O.S</h1>
+                </div>
                 <div class="date-time" id="datetime-display">--:--</div>
             </header>
 
@@ -239,9 +247,9 @@
                         <h2 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><i class="ph ph-shopping-cart"></i> Ponto de Venda (PDV)</h2>
                     </div>
                     
-                    <div style="display: flex; gap: 24px; height: calc(100vh - 220px);">
+                    <div class="pdv-container">
                         <!-- Left Column: Search & Cart -->
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                        <div class="pdv-left-col">
                             <div class="search-box" style="margin: 0; width: 100%;">
                                 <i class="ph ph-barcode search-icon"></i>
                                 <input type="text" id="pdv-search" placeholder="Código de Barras (EAN) ou Nome..." autocomplete="off" style="font-size: 18px; padding: 16px 20px 16px 54px; width: 100%; border: none; background: transparent; color: var(--text-main); outline: none;">
@@ -269,7 +277,7 @@
                         </div>
                         
                         <!-- Right Column: Totals & Checkout -->
-                        <div style="width: 350px; background: var(--bg-surface-light); border-radius: var(--radius-lg); border: 1px solid var(--border); display: flex; flex-direction: column; padding: 12px; overflow-y: hidden;">
+                        <div class="pdv-right-col">
                             
                             <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;">
                                 <label style="color: var(--text-muted); font-size: 13px;">Vendedor (Responsável)</label>

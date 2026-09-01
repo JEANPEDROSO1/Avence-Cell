@@ -1226,7 +1226,10 @@ document.querySelectorAll('input, form').forEach(el => {
                     if (osStr) osList = JSON.parse(osStr);
                 } catch(e) {}
                 
-                const filtradas = osList.filter(o => o.cliente && o.cliente.nome.toLowerCase().includes(clienteAtual.toLowerCase()));
+                const filtradas = osList.filter(o => {
+                    const clientName = typeof o.cliente === 'string' ? o.cliente : (o.cliente?.nome || '');
+                    return clientName.toLowerCase().includes(clienteAtual.toLowerCase());
+                });
                 
                 if (filtradas.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 16px;">Nenhum serviço anterior encontrado para este cliente.</td></tr>';
@@ -1234,17 +1237,25 @@ document.querySelectorAll('input, form').forEach(el => {
                     filtradas.forEach(os => {
                         const tr = document.createElement('tr');
                         tr.style.cursor = 'pointer';
+                        
+                        const osNum = os.osNumber || os.numero || '-';
+                        const marcaModelo = (os.marca || os.aparelho?.marca || '') + ' ' + (os.modelo || os.aparelho?.modelo || '');
+                        const defeitoStr = os.defeito || os.aparelho?.defeito || '-';
+                        let dataStr = '-';
+                        if (os.dataIntake) dataStr = os.dataIntake.split('-').reverse().join('/');
+                        else if (os.data) dataStr = os.data.split('T')[0].split('-').reverse().join('/');
+                        
                         tr.innerHTML = `
-                            <td>${os.numero}</td>
-                            <td>${os.aparelho ? os.aparelho.marca + ' ' + os.aparelho.modelo : '-'}</td>
-                            <td>${os.aparelho ? os.aparelho.defeito : '-'}</td>
-                            <td>${os.data ? os.data.split('T')[0].split('-').reverse().join('/') : '-'}</td>
+                            <td>${osNum}</td>
+                            <td>${marcaModelo.trim() || '-'}</td>
+                            <td>${defeitoStr}</td>
+                            <td>${dataStr}</td>
                             <td><span class="status-badge bg-status-orcamento">${os.status || 'Orçamento'}</span></td>
                         `;
                         tr.addEventListener('click', () => {
                             Array.from(tbody.querySelectorAll('tr')).forEach(row => row.style.background = 'transparent');
                             tr.style.background = 'rgba(59, 130, 246, 0.1)';
-                            osSelecionadaHistorico = os.numero;
+                            osSelecionadaHistorico = osNum;
                             const btnAlt = document.getElementById('btn-alterar-os-historico');
                             if (btnAlt) {
                                 btnAlt.disabled = false;
@@ -1275,24 +1286,24 @@ document.querySelectorAll('input, form').forEach(el => {
                     if (osStr) osList = JSON.parse(osStr);
                 } catch(e) {}
                 
-                const selectedOS = osList.find(o => o.numero === osSelecionadaHistorico);
+                const selectedOS = osList.find(o => (o.osNumber || o.numero) === osSelecionadaHistorico);
                 if (selectedOS) {
                     currentFlowData = { ...selectedOS };
                     
                     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-                    if (selectedOS.aparelho) {
-                        setVal('a_marca', selectedOS.aparelho.marca);
-                        setVal('a_modelo', selectedOS.aparelho.modelo);
-                        setVal('a_acessorio', selectedOS.aparelho.acessorio);
-                        setVal('a_acessorio2', selectedOS.aparelho.acessorio2);
-                        setVal('a_serie', selectedOS.aparelho.serie);
-                        setVal('a_aparencia', selectedOS.aparelho.aparencia);
-                        setVal('a_defeito', selectedOS.aparelho.defeito);
-                        setVal('a_obs', selectedOS.aparelho.obs);
-                        setVal('a_tecnico', selectedOS.aparelho.tecnico);
-                        setVal('a_prioridade', selectedOS.aparelho.prioridade);
-                        setVal('a_senha', selectedOS.aparelho.senha);
-                    }
+                    
+                    // Fallback to new flat structure or old nested structure
+                    setVal('a_marca', selectedOS.marca || selectedOS.aparelho?.marca);
+                    setVal('a_modelo', selectedOS.modelo || selectedOS.aparelho?.modelo);
+                    setVal('a_acessorio', selectedOS.acessorio || selectedOS.aparelho?.acessorio);
+                    setVal('a_acessorio2', selectedOS.aparelho?.acessorio2); // Old only
+                    setVal('a_serie', selectedOS.serie || selectedOS.aparelho?.serie);
+                    setVal('a_aparencia', selectedOS.aparencia || selectedOS.aparelho?.aparencia);
+                    setVal('a_defeito', selectedOS.defeito || selectedOS.aparelho?.defeito);
+                    setVal('a_obs', selectedOS.obs || selectedOS.aparelho?.obs);
+                    setVal('a_tecnico', selectedOS.tecnico || selectedOS.aparelho?.tecnico);
+                    setVal('a_prioridade', selectedOS.prioridade || selectedOS.aparelho?.prioridade);
+                    setVal('a_senha', selectedOS.senha || selectedOS.aparelho?.senha);
                     
                     setVal('a_adiantamento', selectedOS.adiantamento || '0.00');
                     setVal('a_maodeobra', selectedOS.maodeobra || '0.00');
@@ -1335,3 +1346,28 @@ document.querySelectorAll('input, form').forEach(el => {
     applyPhoneMask(document.getElementById('c_telefone'));
     applyPhoneMask(document.getElementById('c_celular'));
     applyPhoneMask(document.getElementById('c_comercial'));
+
+
+// Mobile Sidebar Logic
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+if(mobileMenuBtn && sidebar && sidebarOverlay) {
+    mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.add('mobile-open');
+        sidebarOverlay.classList.add('active');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        sidebarOverlay.classList.remove('active');
+    });
+    const menuBtns = sidebar.querySelectorAll('.menu-btn');
+    menuBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if(window.innerWidth <= 768) {
+                sidebar.classList.remove('mobile-open');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
+    });
+}
