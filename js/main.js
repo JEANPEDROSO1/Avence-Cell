@@ -430,9 +430,15 @@
     const btnConfirmarPesquisa = document.getElementById('btn-confirmar-pesquisa-os');
     if (btnConfirmarPesquisa) {
         btnConfirmarPesquisa.addEventListener('click', () => {
-            const osNumber = document.getElementById('input-pesquisa-os').value;
+            const osNumber = document.getElementById('input-pesquisa-os').value.trim();
             if (!osNumber) {
                 window.customAlert('Por favor, informe o número da O.S.', 'warning');
+                return;
+            }
+
+            const osExists = window.globalData && window.globalData.os && window.globalData.os.some(os => os.osNumber === osNumber);
+            if (!osExists) {
+                window.customAlert(`Ops! Não encontramos nenhuma O.S com o número "${osNumber}". Verifique e tente novamente.`, 'error');
                 return;
             }
 
