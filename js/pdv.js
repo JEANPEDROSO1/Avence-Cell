@@ -8,6 +8,17 @@
     const btnFinalizarVenda = document.getElementById('btn-finalizar-venda');
     const btnCancelarVenda = document.getElementById('btn-cancelar-venda');
 
+    const pdvClienteTelefone = document.getElementById('pdv-cliente-telefone');
+    if (pdvClienteTelefone) {
+        pdvClienteTelefone.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length > 11) v = v.substring(0, 11);
+            if (v.length > 2) v = `(${v.substring(0, 2)}) ${v.substring(2)}`;
+            if (v.length > 9) v = `${v.substring(0, 9)}-${v.substring(9)}`;
+            e.target.value = v;
+        });
+    }
+
     function renderPdvCart() {
         if (!pdvTbody) return;
         pdvTbody.innerHTML = '';
@@ -253,7 +264,7 @@
             const docEl = document.getElementById('pdv-cliente-doc');
             const endEl = document.getElementById('pdv-cliente-endereco');
             const idEl = document.getElementById('pdv-cliente-id');
-            
+
             if (!val) {
                 pdvClienteDropdown.style.display = 'none';
                 if (telEl) telEl.value = '';
