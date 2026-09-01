@@ -436,11 +436,40 @@
                 return;
             }
 
-            const osExists = window.globalData && window.globalData.os && window.globalData.os.some(os => os.osNumber === osNumber);
-            if (!osExists) {
+            const selectedOS = window.globalData && window.globalData.os ? window.globalData.os.find(os => os.osNumber === osNumber) : null;
+            if (!selectedOS) {
                 window.customAlert(`Ops! Não encontramos nenhuma O.S com o número "${osNumber}". Verifique e tente novamente.`, 'error');
                 return;
             }
+
+            // Popula os dados para o fluxo atual
+            currentFlowData = {
+                osNumber: selectedOS.osNumber,
+                cliente: { nome: selectedOS.cliente, telefone: selectedOS.fones },
+                aparelho: {
+                    marca: selectedOS.marca, modelo: selectedOS.modelo, serie: selectedOS.serie,
+                    acessorio: selectedOS.acessorio, aparencia: selectedOS.aparencia, defeito: selectedOS.defeito
+                }
+            };
+
+            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+            
+            // Popula campos de Cliente e Aparelho (caso Alterar)
+            setVal('c_nome', selectedOS.cliente);
+            setVal('c_telefone', selectedOS.fones);
+            setVal('a_marca', selectedOS.marca);
+            setVal('a_modelo', selectedOS.modelo);
+            setVal('a_serie', selectedOS.serie);
+            setVal('a_acessorio', selectedOS.acessorio);
+            setVal('a_aparencia', selectedOS.aparencia);
+            setVal('a_defeito', selectedOS.defeito);
+            setVal('a_laudo', selectedOS.laudo);
+            setVal('a_adiantamento', selectedOS.adiantamento || '0.00');
+            setVal('a_maodeobra', selectedOS.maodeobra || '0.00');
+            setVal('a_pecas', selectedOS.pecas || '0.00');
+            setVal('a_deslocamento', selectedOS.deslocamento || '0.00');
+            setVal('a_terceiros', selectedOS.terceiros || '0.00');
+            setVal('a_outros', selectedOS.outros || '0.00');
 
             closeModal(document.getElementById('modal-pesquisa-os'));
 
