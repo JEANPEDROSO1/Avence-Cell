@@ -859,7 +859,12 @@ document.querySelectorAll('input, form').forEach(el => {
         document.getElementById('form-intake').reset();
         
         // Generate OS Number
-        currentFlowData.osNumber = Math.floor(Math.random() * 10000) + 1000;
+        let nextOsNum = 0;
+        if (window.globalData && window.globalData.os && window.globalData.os.length > 0) {
+            const maxOs = Math.max(...window.globalData.os.map(o => parseInt(o.osNumber) || 0));
+            nextOsNum = maxOs + 1;
+        }
+        currentFlowData.osNumber = nextOsNum;
         
         // Populate Intake Header
         document.getElementById('intake-os-number').textContent = currentFlowData.osNumber;
@@ -912,7 +917,7 @@ document.querySelectorAll('input, form').forEach(el => {
 
         try {
             const osDoc = {
-                osNumber: currentFlowData.osNumber ? currentFlowData.osNumber.toString() : Math.floor(Math.random() * 10000) + 1000 + "",
+                osNumber: currentFlowData.osNumber !== undefined ? currentFlowData.osNumber.toString() : "0",
                 status: 'Aberta',
                 cliente: document.getElementById('intake-client-name').textContent || (currentFlowData.cliente ? currentFlowData.cliente.nome : ''),
                 fones: document.getElementById('intake-client-phone').textContent || (currentFlowData.cliente ? currentFlowData.cliente.telefone : ''),
