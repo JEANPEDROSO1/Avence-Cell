@@ -84,7 +84,6 @@ window.globalData = {
 };
 
 window.bootAppwrite = async function() {
-    window.showLoading('Sincronizando com Banco de Dados...');
     try {
         const [cli, est, cfg, col, os, tr, fec, pts] = await Promise.all([
             window.appwrite.databases.listDocuments(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, [window.appwrite.Query.limit(5000)]),
@@ -106,7 +105,6 @@ window.bootAppwrite = async function() {
         window.globalData.fechamentos = fec.documents.map(d => ({...d, id: d.$id}));
         window.globalData.pontos = pts.documents.map(d => ({...d, id: d.$id}));
 
-        window.hideLoading();
         document.dispatchEvent(new Event('appwriteReady'));
     } catch (e) {
         window.showLoading('Erro Appwrite: ' + (e.message || e));
