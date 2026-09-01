@@ -202,14 +202,14 @@
                 <!--             TELA: ESTOQUE                  -->
                 <!-- ========================================== -->
                 <section id="estoque" class="screen">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <div class="search-box" style="margin: 0; width: 350px;">
+                    <div class="section-header">
+                        <div class="search-box">
                             <i class="ph ph-magnifying-glass search-icon"></i>
-                            <input type="text" id="produto-search" placeholder="Buscar por Nome ou cÃ³digo EAN..." autocomplete="off">
+                            <input type="text" id="produto-search" placeholder="Buscar por Nome ou código EAN..." autocomplete="off">
                         </div>
-                        <div style="display: flex; gap: 12px;">
-                            <button class="btn btn-secondary" id="btn-config-ean" title="Configurar ImpressÃ£o de EAN" style="display: flex; align-items: center; justify-content: center; padding: 0 12px;"><i class="ph ph-gear"></i></button>
-                            <button class="btn btn-secondary" id="btn-relatorio-compras" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-envelope-simple"></i> RelatÃ³rio de Compras</button>
+                        <div class="actions">
+                            <button class="btn btn-secondary" id="btn-config-ean" title="Configurar Impressão de EAN" style="display: flex; align-items: center; justify-content: center; padding: 0 12px;"><i class="ph ph-gear"></i></button>
+                            <button class="btn btn-secondary" id="btn-relatorio-compras" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-envelope-simple"></i> Relatório de Compras</button>
                             <button class="btn btn-primary" id="btn-novo-produto" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-plus-circle"></i> Novo Produto</button>
                         </div>
                     </div>
@@ -382,9 +382,9 @@
         <!--             TELA: FINANCEIRO               -->
         <!-- ========================================== -->
         <section id="financeiro" class="screen">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="section-header">
                         <h2 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><i class="ph ph-currency-dollar"></i> Painel Financeiro</h2>
-                        <div style="display: flex; gap: 12px; align-items: center;">
+                        <div class="actions">
                             <div id="caixa-status-badge" style="padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 14px; background: #ef4444; color: white;">Caixa Fechado</div>
                             <button class="btn btn-primary" id="btn-abrir-caixa" style="background-color: #22c55e; border-color: #22c55e; display: flex; align-items: center; gap: 6px;"><i class="ph ph-lock-key-open"></i> Abrir Caixa</button>
                             <button class="btn btn-secondary" id="btn-fechar-caixa" style="display: none; align-items: center; gap: 6px; color: #ef4444; border-color: #ef4444;"><i class="ph ph-lock-key"></i> Fechar Caixa</button>
@@ -393,7 +393,7 @@
                     </div>
                     
                     <!-- Resumo Cards -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div class="stats-grid">
                         <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
                             <span style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Saldo do Caixa Atual</span>
                             <span id="fin-saldo-atual" style="font-size: 28px; font-weight: bold; color: var(--text-main);">R$ 0,00</span>
@@ -434,9 +434,11 @@
                 </section>
 
                 <section id="relatorios" class="screen">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-chart-bar" style="color: var(--primary);"></i> RelatÃ³rio de Desempenho (Equipe)</h2>
-                        <button class="btn btn-secondary" id="btn-refresh-relatorios" style="padding: 8px 16px;"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                    <div class="section-header">
+                        <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-chart-bar" style="color: var(--primary);"></i> Relatório de Desempenho (Equipe)</h2>
+                        <div class="actions">
+                            <button class="btn btn-secondary" id="btn-refresh-relatorios" style="padding: 8px 16px;"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                        </div>
                     </div>
                     
                     <div id="relatorios-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
@@ -467,8 +469,8 @@
             
             <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; overflow-x: hidden; max-width: 100%; box-sizing: border-box;">
                 <!-- Search Section at the TOP -->
-                <div style="display: flex; gap: 24px; align-items: stretch; background: rgba(0,0,0,0.2); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-top: 16px; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0;">
-                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0;">
+                <div class="section-header" style="background: rgba(0,0,0,0.2); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-top: 16px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 100%;">
                         <label style="display: block; margin-bottom: 12px; color: var(--text-muted); font-size: 14px; font-weight: 500;">Buscar Cliente</label>
                         <div class="search-box" style="margin: 0; width: 100%;">
                             <i class="ph ph-magnifying-glass search-icon"></i>
@@ -476,7 +478,7 @@
                         </div>
                     </div>
                     
-                    <div style="flex: 0 1 480px; min-width: 0;">
+                    <div style="flex: 1; min-width: 0; width: 100%;">
                         <label style="display: block; margin-bottom: 12px; color: var(--text-muted); font-size: 14px; font-weight: 500;">Pesquisar por</label>
                         <div class="search-filters" style="display: flex; flex-wrap: wrap; gap: 8px;">
                             <label class="filter-radio">
@@ -2439,3 +2441,6 @@
     </div>
 </body>
 </html>
+
+
+

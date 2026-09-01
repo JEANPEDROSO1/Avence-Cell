@@ -1,6 +1,6 @@
     // --- FINANCEIRO LOGIC ---
-    let caixaAberto = JSON.parse(localStorage.getItem('avence_caixa_aberto')) || false;
-    let fundoCaixa = parseFloat(localStorage.getItem('avence_fundo_caixa')) || 0;
+    let caixaAberto = false;
+    let fundoCaixa = 0;
     let transacoesCaixa = [];
     
     document.addEventListener('appwriteReady', () => {
@@ -19,6 +19,13 @@
                 // If it was local, we would save, but for Appwrite we might want to update documents.
                 // Leaving as local sync for fallback.
                 localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+            }
+        }
+        if (window.globalData && window.globalData.config) {
+            if (window.globalData.config.caixaAberto !== undefined) {
+                caixaAberto = window.globalData.config.caixaAberto === true || window.globalData.config.caixaAberto === 'true';
+                fundoCaixa = parseFloat(window.globalData.config.fundoCaixa) || 0;
+                window.caixaAberto = caixaAberto;
             }
         }
         if (typeof renderFinanceiro === 'function') renderFinanceiro();
@@ -450,9 +457,27 @@
         btnConfAbrir.addEventListener('click', window.processarAberturaCaixa);
     }
 
-    function efetivarAberturaCaixa(valor, responsavelId) {
+    async function efetivarAberturaCaixa(valor, responsavelId) {
         fundoCaixa = valor;
         caixaAberto = true; window.caixaAberto = true;
+        
+        try {
+            let docId = window.globalData?.config?.id;
+            const dataToSave = { caixaAberto: true, fundoCaixa: valor, responsavelCaixa: responsavelId || '' };
+            if (docId) {
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CONFIG, docId, dataToSave);
+                window.globalData.config = { ...window.globalData.config, ...dataToSave };
+            } else {
+                docId = window.appwrite.ID.unique();
+                const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CONFIG, docId, dataToSave);
+                if(!window.globalData) window.globalData = {};
+                window.globalData.config = { ...dataToSave, id: created.$id };
+            }
+        } catch(e) {
+            console.error('Erro ao salvar status do caixa na nuvem:', e);
+            window.customAlert('Aviso: O status do caixa não pôde ser sincronizado com a nuvem.', 'warning');
+        }
+        
         localStorage.setItem('avence_fundo_caixa', fundoCaixa);
         localStorage.setItem('avence_caixa_aberto', JSON.stringify(true));
         if (responsavelId) localStorage.setItem('avence_abertura_responsavel', responsavelId);
@@ -636,6 +661,14 @@
             if (!window.globalData) window.globalData = {};
             if (!window.globalData.fechamentos) window.globalData.fechamentos = [];
             window.globalData.fechamentos.push({...fechamentoData, id: created.$id});
+            
+            // Sincronizar fechamento do caixa na nuvem
+            let configId = window.globalData?.config?.id;
+            if (configId) {
+                const dataToSave = { caixaAberto: false, fundoCaixa: 0, responsavelCaixa: '' };
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CONFIG, configId, dataToSave);
+                window.globalData.config = { ...window.globalData.config, ...dataToSave };
+            }
         } catch(err) {
             console.error('Erro ao registrar fechamento:', err);
         }
@@ -1321,3 +1354,4 @@
 
     renderFinanceiro();
 // End Wrapper Removed
+
