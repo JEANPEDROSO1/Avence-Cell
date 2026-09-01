@@ -182,7 +182,7 @@ document.querySelectorAll('input, form').forEach(el => {
             vendedorSelect.appendChild(opt);
         });
 
-        const loggedUserStr = localStorage.getItem('avence_logged_user');
+        const loggedUserStr = sessionStorage.getItem('avence_session_logged');
         if (loggedUserStr) {
             const loggedUser = JSON.parse(loggedUserStr);
             setTimeout(() => {
@@ -195,7 +195,7 @@ document.querySelectorAll('input, form').forEach(el => {
                         }
                     }
                 }
-            }, 50);
+            }, 100);
         }
     };
 
