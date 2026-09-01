@@ -795,12 +795,16 @@ document.querySelectorAll('input, form').forEach(el => {
             
             if (existingIdx >= 0) {
                 const id = window.clientes[existingIdx].id;
+                const updatePayload = { ...currentFlowData.cliente };
+                delete updatePayload.id;
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, id, updatePayload);
                 currentFlowData.cliente.id = id;
-                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, id, currentFlowData.cliente);
                 window.clientes[existingIdx] = { ...window.clientes[existingIdx], ...currentFlowData.cliente };
             } else {
                 const docId = window.appwrite.ID.unique();
-                const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, docId, currentFlowData.cliente);
+                const createPayload = { ...currentFlowData.cliente };
+                delete createPayload.id;
+                const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, docId, createPayload);
                 currentFlowData.cliente.id = created.$id;
                 window.clientes.push(currentFlowData.cliente);
             }
