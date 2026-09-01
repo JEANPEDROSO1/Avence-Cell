@@ -13,8 +13,8 @@
         pdvClienteTelefone.addEventListener('input', (e) => {
             let v = e.target.value.replace(/\D/g, '');
             if (v.length > 11) v = v.substring(0, 11);
-            if (v.length > 2) v = `(${v.substring(0, 2)}) ${v.substring(2)}`;
-            if (v.length > 9) v = `${v.substring(0, 9)}-${v.substring(9)}`;
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
             e.target.value = v;
         });
     }
