@@ -182,22 +182,20 @@ document.querySelectorAll('input, form').forEach(el => {
             vendedorSelect.appendChild(opt);
         });
 
-        const whoOpened = localStorage.getItem('avence_abertura_responsavel');
-        if (whoOpened) {
-            const openedColab = colabs.find(c => String(c.id) === String(whoOpened));
-            if (openedColab) {
-                setTimeout(() => {
-                    const sel = document.getElementById('pdv-vendedor');
-                    if (sel) {
-                        for(let i = 0; i < sel.options.length; i++) {
-                            if (sel.options[i].value === openedColab.nome) {
-                                sel.selectedIndex = i;
-                                break;
-                            }
+        const loggedUserStr = localStorage.getItem('avence_logged_user');
+        if (loggedUserStr) {
+            const loggedUser = JSON.parse(loggedUserStr);
+            setTimeout(() => {
+                const sel = document.getElementById('pdv-vendedor');
+                if (sel) {
+                    for(let i = 0; i < sel.options.length; i++) {
+                        if (sel.options[i].value === loggedUser.nome) {
+                            sel.selectedIndex = i;
+                            break;
                         }
                     }
-                }, 50);
-            }
+                }
+            }, 50);
         }
     };
 
