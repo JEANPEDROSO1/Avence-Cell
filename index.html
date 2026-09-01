@@ -581,7 +581,10 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                             <div class="form-group">
                                 <label>Senha Principal do Sistema</label>
-                                <input type="password" id="config-senha-gerente" value="1234">
+                                <div style="position: relative;">
+                                    <input type="password" id="config-senha-gerente" value="1234" style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                                    <button type="button" onclick="const p = document.getElementById('config-senha-gerente'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<i class=\'ph ph-eye\'></i>' : '<i class=\'ph ph-eye-slash\'></i>';" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 5px;"><i class="ph ph-eye"></i></button>
+                                </div>
                                 <small style="color: var(--text-muted); margin-top: 4px;">Senha de "Dono" caso esqueça os acessos da equipe.</small>
                             </div>
                             <div class="form-group">
@@ -1958,11 +1961,17 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div class="form-group">
                             <label>Senha de Login</label>
-                            <input type="password" id="colab-senha-login" placeholder="Ex: 151004Jean">
+                            <div style="position: relative;">
+                                <input type="password" id="colab-senha-login" placeholder="Ex: 151004Jean" style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                                <button type="button" onclick="const p = document.getElementById('colab-senha-login'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<i class=\'ph ph-eye\'></i>' : '<i class=\'ph ph-eye-slash\'></i>';" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 5px;"><i class="ph ph-eye"></i></button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Senha de Retirada</label>
-                            <input type="password" id="colab-senha-retirada" placeholder="Ex: 151004">
+                            <div style="position: relative;">
+                                <input type="password" id="colab-senha-retirada" placeholder="Ex: 151004" style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                                <button type="button" onclick="const p = document.getElementById('colab-senha-retirada'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<i class=\'ph ph-eye\'></i>' : '<i class=\'ph ph-eye-slash\'></i>';" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 5px;"><i class="ph ph-eye"></i></button>
+                            </div>
                             <small style="font-size: 10px; color: var(--text-muted);">Para Sangria/Fechamento</small>
                         </div>
                     </div>
