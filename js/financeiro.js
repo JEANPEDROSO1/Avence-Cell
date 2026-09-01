@@ -1,19 +1,28 @@
     // --- FINANCEIRO LOGIC ---
     let caixaAberto = JSON.parse(localStorage.getItem('avence_caixa_aberto')) || false;
     let fundoCaixa = parseFloat(localStorage.getItem('avence_fundo_caixa')) || 0;
-    let transacoesCaixa = JSON.parse(localStorage.getItem('avence_transacoes_caixa')) || [];
+    let transacoesCaixa = [];
     
-    // Retroactive Fix: Convert any old divergence adjustments that were recorded as 'saida'/'entrada' to info_furo/info_sobra
-    let hasFixedOldTransactions = false;
-    transacoesCaixa.forEach(t => {
-        if (t.motivo && t.motivo.includes('Ajuste de Caixa na Abertura (Divergência)')) {
-            if (t.tipo === 'saida') { t.tipo = 'info_furo'; hasFixedOldTransactions = true; }
-            if (t.tipo === 'entrada') { t.tipo = 'info_sobra'; hasFixedOldTransactions = true; }
+    document.addEventListener('appwriteReady', () => {
+        if (window.globalData && window.globalData.transacoes) {
+            transacoesCaixa = window.globalData.transacoes;
+            
+            // Retroactive Fix: Convert any old divergence adjustments
+            let hasFixedOldTransactions = false;
+            transacoesCaixa.forEach(t => {
+                if (t.motivo && t.motivo.includes('Ajuste de Caixa na Abertura (Divergência)')) {
+                    if (t.tipo === 'saida') { t.tipo = 'info_furo'; hasFixedOldTransactions = true; }
+                    if (t.tipo === 'entrada') { t.tipo = 'info_sobra'; hasFixedOldTransactions = true; }
+                }
+            });
+            if (hasFixedOldTransactions) {
+                // If it was local, we would save, but for Appwrite we might want to update documents.
+                // Leaving as local sync for fallback.
+                localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+            }
         }
+        if (typeof renderFinanceiro === 'function') renderFinanceiro();
     });
-    if (hasFixedOldTransactions) {
-        localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
-    }
 
     let financeiroChartInstance = null;
 
@@ -139,18 +148,30 @@
         renderChart();
     }
 
-    window.registrarTransacaoCaixa = function(tipo, valor, motivo, formaPgto = 'dinheiro') {
+    window.registrarTransacaoCaixa = async function(tipo, valor, motivo, formaPgto = 'dinheiro') {
         if(!caixaAberto) return false;
-        transacoesCaixa.push({
+        
+        const newTx = {
             tipo: tipo,
-            valor: valor,
+            valor: parseFloat(valor),
             motivo: motivo,
             formaPgto: formaPgto,
             data: new Date().toISOString()
-        });
-        localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
-        renderFinanceiro();
-        return true;
+        };
+        
+        try {
+            const docId = window.appwrite.ID.unique();
+            const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, docId, newTx);
+            newTx.id = created.$id;
+            transacoesCaixa.push(newTx);
+            localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+            renderFinanceiro();
+            return true;
+        } catch(err) {
+            console.error('Erro ao registrar transação na nuvem:', err);
+            window.customAlert('Erro ao registrar transação financeira na nuvem: ' + err.message, 'warning');
+            return false;
+        }
     };
 
     function renderChart() {
@@ -441,7 +462,7 @@
 
     const btnConfirmarDivergencia = document.getElementById('btn-confirmar-divergencia');
     if (btnConfirmarDivergencia) {
-        btnConfirmarDivergencia.addEventListener('click', () => {
+        btnConfirmarDivergencia.addEventListener('click', async () => {
             const modalDivergencia = document.getElementById('modal-divergencia-caixa');
             const responsavelId = modalDivergencia.dataset.responsavelId;
             const responsavelNome = modalDivergencia.dataset.responsavelNome;
@@ -460,7 +481,7 @@
             
             const tipo = diff < 0 ? 'info_furo' : 'info_sobra';
             const motivo = `Ajuste de Caixa na Abertura (Divergência) - Resp: ${responsavelNome}`;
-            window.registrarTransacaoCaixa(tipo, Math.abs(diff), motivo);
+            await window.registrarTransacaoCaixa(tipo, Math.abs(diff), motivo);
             
             document.getElementById('fin-divergencia-senha').value = '';
             closeModal(modalDivergencia);
@@ -470,7 +491,7 @@
 
     const btnConfExcluir = document.getElementById('btn-confirmar-excluir-transacao');
     if (btnConfExcluir) {
-        btnConfExcluir.addEventListener('click', () => {
+        btnConfExcluir.addEventListener('click', async () => {
             const dataTarget = document.getElementById('del-transacao-data').value;
             const senhaInput = document.getElementById('del-transacao-senha').value;
             
@@ -484,12 +505,21 @@
             
             const index = transacoesCaixa.findIndex(t => t.data === dataTarget);
             if (index > -1) {
-                transacoesCaixa.splice(index, 1);
-                localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));
-                
-                closeModal(document.getElementById('modal-excluir-transacao'));
-                window.customAlert('Movimentação excluída com sucesso.', 'success');
-                renderFinanceiro();
+                try {
+                    const txId = transacoesCaixa[index].id;
+                    if(txId) {
+                        await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, txId);
+                    }
+                    transacoesCaixa.splice(index, 1);
+                    localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+                    
+                    closeModal(document.getElementById('modal-excluir-transacao'));
+                    window.customAlert('Movimentação excluída com sucesso.', 'success');
+                    renderFinanceiro();
+                } catch(err) {
+                    console.error('Erro ao excluir:', err);
+                    window.customAlert('Erro ao excluir transação na nuvem.', 'warning');
+                }
             } else {
                 window.customAlert('Transação não encontrada.', 'warning');
             }
@@ -508,7 +538,7 @@
 
     const btnConfSangria = document.getElementById('btn-confirmar-sangria');
     if(btnConfSangria) {
-        btnConfSangria.addEventListener('click', () => {
+        btnConfSangria.addEventListener('click', async () => {
             const responsavelId = document.getElementById('fin-mov-responsavel') ? document.getElementById('fin-mov-responsavel').value : '';
             if (!responsavelId) { window.customAlert('Selecione quem é o Responsável/Destinatário.', 'warning'); return; }
             
@@ -555,7 +585,7 @@
                 }
             }
 
-            window.registrarTransacaoCaixa(tipo, valor, motivoFinal);
+            await window.registrarTransacaoCaixa(tipo, valor, motivoFinal);
             document.getElementById('fin-mov-valor').value = '';
             document.getElementById('fin-mov-motivo').value = '';
             if (document.getElementById('fin-mov-responsavel')) document.getElementById('fin-mov-responsavel').value = '';
@@ -565,7 +595,7 @@
         });
     }
 
-    window.processarFechamentoCaixa = function() {
+    window.processarFechamentoCaixa = async function() {
         const informadoStr = document.getElementById('fin-valor-informado').value;
         if (informadoStr === '') {
             window.customAlert('Por favor, informe o valor contado na gaveta.', 'warning');
@@ -594,12 +624,23 @@
         fundoCaixa = 0;
         
         const nomeFechamento = (isMaster && !colabResp) ? 'Administrador/Dono' : responsavelNome;
-        
-        localStorage.setItem('avence_ultimo_fechamento', JSON.stringify({
+        const fechamentoData = {
             valorFechado: parseFloat(informadoStr) || 0,
             responsavel: nomeFechamento,
             data: new Date().toISOString()
-        }));
+        };
+        
+        try {
+            const docId = window.appwrite.ID.unique();
+            const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CAIXA, docId, fechamentoData);
+            if (!window.globalData) window.globalData = {};
+            if (!window.globalData.fechamentos) window.globalData.fechamentos = [];
+            window.globalData.fechamentos.push({...fechamentoData, id: created.$id});
+        } catch(err) {
+            console.error('Erro ao registrar fechamento:', err);
+        }
+        
+        localStorage.setItem('avence_ultimo_fechamento', JSON.stringify(fechamentoData));
         
         localStorage.setItem('avence_caixa_aberto', JSON.stringify(false));
         localStorage.setItem('avence_fundo_caixa', 0);
@@ -757,8 +798,20 @@
     updateProductTypesDropdown();
 
     // CRUD Colaboradores
-    window.colaboradores = JSON.parse(localStorage.getItem('avence_colaboradores')) || [];
-    window.pontos = JSON.parse(localStorage.getItem('avence_pontos')) || [];
+    window.colaboradores = [];
+    window.pontos = [];
+    
+    document.addEventListener('appwriteReady', () => {
+        if(window.globalData && window.globalData.colaboradores) {
+            window.colaboradores = window.globalData.colaboradores;
+            localStorage.setItem('avence_colaboradores', JSON.stringify(window.colaboradores));
+        }
+        if(window.globalData && window.globalData.pontos) {
+            window.pontos = window.globalData.pontos;
+            localStorage.setItem('avence_pontos', JSON.stringify(window.pontos));
+        }
+        if(typeof window.renderColaboradores === 'function') window.renderColaboradores();
+    });
     let editingColabId = null;
 
     window.renderColaboradores = function() {
@@ -795,14 +848,20 @@
                 });
             });
             document.querySelectorAll('.btn-del-colab').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', async (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
                     if(confirm('Tem certeza que deseja remover este colaborador?')) {
-                        window.colaboradores = window.colaboradores.filter(c => c.id !== id);
-                        localStorage.setItem('avence_colaboradores', JSON.stringify(window.colaboradores));
-            if(typeof window.updateTecnicoDropdowns === 'function') window.updateTecnicoDropdowns();
-            if(typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
-                        window.renderColaboradores();
+                        try {
+                            await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_COLABS, id);
+                            window.colaboradores = window.colaboradores.filter(c => c.id !== id);
+                            localStorage.setItem('avence_colaboradores', JSON.stringify(window.colaboradores));
+                            if(typeof window.updateTecnicoDropdowns === 'function') window.updateTecnicoDropdowns();
+                            if(typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
+                            window.renderColaboradores();
+                        } catch(err) {
+                            console.error(err);
+                            window.customAlert('Erro ao excluir colaborador na nuvem.', 'warning');
+                        }
                     }
                 });
             });
@@ -873,7 +932,7 @@
 
     const btnSaveColab = document.getElementById('btn-save-colab');
     if (btnSaveColab) {
-        btnSaveColab.addEventListener('click', () => {
+        btnSaveColab.addEventListener('click', async () => {
             const nome = document.getElementById('colab-nome').value.trim();
             const cargoNodes = document.querySelectorAll('.cargo-check:checked');
             const cargo = Array.from(cargoNodes).map(cb => cb.value);
@@ -892,30 +951,42 @@
                 return;
             }
 
-            if (editingColabId) {
-                const colab = window.colaboradores.find(c => c.id === editingColabId);
-                if (colab) {
-                    colab.nome = nome;
-                    colab.cargo = cargo;
-                    colab.senhaLogin = senhaLogin;
-                    colab.senhaRetirada = senhaRetirada;
-                    colab.comissaoVendas = comissaoVendas;
-                    colab.comissaoServicos = comissaoServicos;
-                    if(fotoBase64) colab.foto = fotoBase64;
-                }
-            } else {
-                window.colaboradores.push({
-                    id: Date.now().toString(),
-                    nome, cargo, senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos, foto: fotoBase64
-                });
-            }
+            const btnText = btnSaveColab.innerHTML;
+            btnSaveColab.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvando...';
+            btnSaveColab.disabled = true;
 
-            localStorage.setItem('avence_colaboradores', JSON.stringify(window.colaboradores));
-            if(typeof window.updateTecnicoDropdowns === 'function') window.updateTecnicoDropdowns();
-            if(typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
-            closeModal(document.getElementById('modal-colaborador'));
-            window.renderColaboradores();
-            window.customAlert('Colaborador salvo com sucesso!', 'success');
+            try {
+                if (editingColabId) {
+                    const updateData = { nome, cargo, senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos };
+                    if(fotoBase64) updateData.foto = fotoBase64;
+                    
+                    await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_COLABS, editingColabId, updateData);
+                    
+                    const colab = window.colaboradores.find(c => c.id === editingColabId);
+                    if (colab) {
+                        Object.assign(colab, updateData);
+                    }
+                } else {
+                    const novoData = { nome, cargo, senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos, foto: fotoBase64 };
+                    const docId = window.appwrite.ID.unique();
+                    const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_COLABS, docId, novoData);
+                    novoData.id = created.$id;
+                    window.colaboradores.push(novoData);
+                }
+
+                localStorage.setItem('avence_colaboradores', JSON.stringify(window.colaboradores));
+                if(typeof window.updateTecnicoDropdowns === 'function') window.updateTecnicoDropdowns();
+                if(typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
+                closeModal(document.getElementById('modal-colaborador'));
+                window.renderColaboradores();
+                window.customAlert('Colaborador salvo com sucesso!', 'success');
+            } catch(err) {
+                console.error(err);
+                window.customAlert('Erro ao salvar colaborador na nuvem: ' + err.message, 'warning');
+            }
+            
+            btnSaveColab.innerHTML = btnText;
+            btnSaveColab.disabled = false;
         });
     }
 

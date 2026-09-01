@@ -2322,6 +2322,11 @@
     <script src="js/financeiro.js?v=2"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Iniciar sincronização do Appwrite
+            if (window.bootAppwrite) {
+                window.bootAppwrite();
+            }
+
             const inputImagem = document.getElementById('a_imagem');
             const previewContainer = document.getElementById('image-preview-container');
             const thumbnail = document.getElementById('image-thumbnail');

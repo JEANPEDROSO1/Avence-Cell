@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    if (window.bootAppwrite) {
+        window.bootAppwrite();
+    }
+
     const selectNome = document.getElementById('nome-usuario');
     const inputSenha = document.getElementById('senha');
     const btnEntrar = document.getElementById('btn-entrar');
@@ -17,7 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
         bgImage: '',
         logoImage: ''
     };
-    const colaboradores = JSON.parse(localStorage.getItem('avence_colaboradores')) || [];
+    let colaboradores = JSON.parse(localStorage.getItem('avence_colaboradores')) || [];
+    
+    document.addEventListener('appwriteReady', () => {
+        if (window.globalData && window.globalData.colaboradores) {
+            colaboradores = window.globalData.colaboradores;
+            // Atualizar no localStorage como cache
+            localStorage.setItem('avence_colaboradores', JSON.stringify(colaboradores));
+        }
+    });
 
     // Setup Customizations
     if (config.nome) lojaNomeEl.textContent = config.nome;

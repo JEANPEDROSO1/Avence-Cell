@@ -330,7 +330,7 @@
     }
 
     if (btnFinalizarVenda) {
-        btnFinalizarVenda.addEventListener('click', () => {
+        btnFinalizarVenda.addEventListener('click', async () => {
             if (pdvCart.length === 0) {
                 window.customAlert('Adicione produtos ao carrinho primeiro.', 'warning');
                 return;
@@ -346,37 +346,56 @@
                 return;
             }
 
-            if (!window.clientes) window.clientes = [];
-            let clienteExiste = window.clientes.find(c => c.nome.toLowerCase() === valNomeCli.toLowerCase());
-            if (!clienteExiste) {
-                window.clientes.push({
-                    id: Date.now().toString(),
-                    nome: valNomeCli,
-                    telefone: valTelCli,
-                    celular: valTelCli,
-                    documento: valDocCli,
-                    cpf: valDocCli,
-                    endereco: valEndCli
-                });
-                localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
-                if (typeof window.renderClientes === 'function') window.renderClientes();
-            }
+            const btnText = btnFinalizarVenda.innerHTML;
+            btnFinalizarVenda.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Finalizando...';
+            btnFinalizarVenda.disabled = true;
 
-            // Abater do estoque físico (serviço não abate)
-            let alterouEstoque = false;
-            pdvCart.forEach(itemCart => {
-                if (itemCart.tipo !== 'servico') {
-                    const estItem = estoque.find(p => p.id === itemCart.id);
-                    if (estItem) {
-                        estItem.qtd -= itemCart.qtd;
-                        alterouEstoque = true;
+            try {
+                if (!window.clientes) window.clientes = [];
+                let clienteExiste = window.clientes.find(c => c.nome.toLowerCase() === valNomeCli.toLowerCase());
+                if (!clienteExiste) {
+                    const novoCliente = {
+                        nome: valNomeCli,
+                        telefone: valTelCli,
+                        celular: valTelCli,
+                        documento: valDocCli,
+                        cpf: valDocCli,
+                        endereco: valEndCli
+                    };
+                    const docId = window.appwrite.ID.unique();
+                    const createdCli = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, docId, novoCliente);
+                    novoCliente.id = createdCli.$id;
+                    window.clientes.push(novoCliente);
+                    localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
+                    if (typeof window.renderClientes === 'function') window.renderClientes();
+                }
+
+                // Abater do estoque físico na nuvem (serviço não abate)
+                let alterouEstoque = false;
+                for (let itemCart of pdvCart) {
+                    if (itemCart.tipo !== 'servico') {
+                        const estItem = estoque.find(p => p.id === itemCart.id);
+                        if (estItem) {
+                            estItem.qtd -= itemCart.qtd;
+                            alterouEstoque = true;
+                            // Update cloud stock
+                            await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, estItem.id, {
+                                qtd: estItem.qtd
+                            });
+                        }
                     }
                 }
-            });
 
-            if (alterouEstoque) {
-                localStorage.setItem('avence_estoque', JSON.stringify(estoque));
-                renderEstoque();
+                if (alterouEstoque) {
+                    localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+                    if(typeof renderEstoque === 'function') renderEstoque();
+                }
+            } catch(err) {
+                console.error(err);
+                window.customAlert('Erro ao atualizar dados na nuvem: ' + err.message, 'warning');
+                btnFinalizarVenda.innerHTML = btnText;
+                btnFinalizarVenda.disabled = false;
+                return;
             }
 
             // Save items history for reports
@@ -568,7 +587,7 @@
             }
 
             if (window.caixaAberto && window.registrarTransacaoCaixa) {
-                window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto);
+                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto);
             } else if (!window.caixaAberto) {
                 window.customAlert('Aviso: O caixa está FECHADO. A venda foi concluída mas não registrada no fluxo de caixa.', 'warning');
             }
@@ -584,5 +603,8 @@
             if (document.getElementById('pdv-cliente-id')) document.getElementById('pdv-cliente-id').value = '';
             
             renderPdvCart();
+            
+            btnFinalizarVenda.innerHTML = btnText;
+            btnFinalizarVenda.disabled = false;
         });
     }

@@ -17,21 +17,14 @@
     const formProduto = document.getElementById('form-produto');
 
     let estoque = [];
-    try {
-        const stored = localStorage.getItem('avence_estoque');
-        if (stored) estoque = JSON.parse(stored);
-    } catch (e) {
-        console.error('Erro ao ler estoque do localStorage:', e);
-        estoque = [];
-    }
     
-    // CLEANUP TEMPORÁRIO DOS MOCKS
-    const mockNames = ['Tela Frontal iPhone 11', 'Bateria Samsung S20', 'Conector de Carga Moto G', 'Película de Vidro 3D'];
-    const beforeLen = estoque.length;
-    estoque = estoque.filter(p => !mockNames.includes(p.nome));
-    if (estoque.length !== beforeLen) {
-        localStorage.setItem('avence_estoque', JSON.stringify(estoque));
-    }
+    document.addEventListener('appwriteReady', () => {
+        if (window.globalData && window.globalData.estoque) {
+            estoque = window.globalData.estoque;
+            localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+            if (typeof renderEstoque === 'function') renderEstoque();
+        }
+    });
     
     let eanConfig = { linhas: 10, colunas: 3, tamanho: 'medio' };
     try {
@@ -139,10 +132,18 @@
                 const id = e.currentTarget.getAttribute('data-id');
                 const produto = estoque.find(p => p.id == id);
                 if (produto) {
-                    window.customAlert(`Deseja realmente excluir o produto <strong>${produto.nome}</strong>?`, 'warning', true, () => {
-                        estoque = estoque.filter(p => p.id != id);
-                        localStorage.setItem('avence_estoque', JSON.stringify(estoque));
-                        renderEstoque(searchEstoque.value);
+                    window.customAlert(`Deseja realmente excluir o produto <strong>${produto.nome}</strong>?`, 'warning', true, async () => {
+                        window.showLoading('Excluindo da nuvem...');
+                        try {
+                            await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, id);
+                            estoque = estoque.filter(p => p.id != id);
+                            localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+                            renderEstoque(searchEstoque.value);
+                            window.hideLoading();
+                        } catch (err) {
+                            window.hideLoading();
+                            window.customAlert('Erro ao excluir na nuvem: ' + err.message, 'warning');
+                        }
                     });
                 }
             });
@@ -328,7 +329,7 @@
     if (inputPVenda) inputPVenda.addEventListener('input', calcGanho);
 
     if (btnSalvarProduto) {
-        btnSalvarProduto.addEventListener('click', (e) => {
+        btnSalvarProduto.addEventListener('click', async (e) => {
             e.preventDefault();
             const nome = inputPNome.value.trim();
             const custo = inputPCusto.value;
@@ -340,11 +341,9 @@
                 return;
             }
 
-            const id = inputPId.value || Date.now().toString();
-            const index = estoque.findIndex(p => p.id == id);
+            const id = inputPId.value;
             
             const novoProduto = {
-                id: id,
                 tipo: inputPTipo ? inputPTipo.value : 'produto',
                 ean: inputPEan.value.trim(),
                 nome: nome,
@@ -353,19 +352,39 @@
                 qtd: (inputPTipo && inputPTipo.value === 'servico') ? 999999 : parseInt(qtd)
             };
 
-            if (index >= 0) {
-                // Preserve qtd_inicial if exists, otherwise set it
-                novoProduto.qtd_inicial = estoque[index].qtd_inicial || estoque[index].qtd;
-                estoque[index] = novoProduto;
-            } else {
-                novoProduto.qtd_inicial = novoProduto.qtd;
-                estoque.push(novoProduto);
-            }
+            const btnText = btnSalvarProduto.innerHTML;
+            btnSalvarProduto.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvando...';
+            btnSalvarProduto.disabled = true;
 
-            localStorage.setItem('avence_estoque', JSON.stringify(estoque));
-            renderEstoque(searchEstoque.value);
-            closeModal(modalProduto);
-            window.customAlert('Produto salvo com sucesso!', 'success');
+            try {
+                if (id) { // Edição
+                    const index = estoque.findIndex(p => p.id == id);
+                    if(index >= 0) {
+                        novoProduto.qtd_inicial = estoque[index].qtd_inicial || estoque[index].qtd;
+                    }
+                    await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, id, novoProduto);
+                    novoProduto.id = id;
+                    if(index >= 0) estoque[index] = novoProduto;
+                } else { // Novo
+                    novoProduto.qtd_inicial = novoProduto.qtd;
+                    const docId = window.appwrite.ID.unique();
+                    const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, docId, novoProduto);
+                    novoProduto.id = created.$id;
+                    estoque.push(novoProduto);
+                }
+
+                // Sincronia Local (Offline Fallback)
+                localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+                renderEstoque(searchEstoque.value);
+                closeModal(modalProduto);
+                window.customAlert('Produto salvo com sucesso!', 'success');
+            } catch (err) {
+                console.error(err);
+                window.customAlert('Erro ao salvar na nuvem: ' + err.message, 'warning');
+            } finally {
+                btnSalvarProduto.innerHTML = btnText;
+                btnSalvarProduto.disabled = false;
+            }
         });
     }
 

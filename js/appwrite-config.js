@@ -97,14 +97,14 @@ window.bootAppwrite = async function() {
             window.appwrite.databases.listDocuments(window.appwrite.DB_ID, window.appwrite.COL_PONTOS, [window.appwrite.Query.limit(5000)])
         ]);
 
-        window.globalData.clientes = cli.documents;
-        window.globalData.estoque = est.documents;
-        window.globalData.config = cfg.documents[0] || {};
-        window.globalData.colaboradores = col.documents;
-        window.globalData.os = os.documents;
-        window.globalData.transacoes = tr.documents;
-        window.globalData.fechamentos = fec.documents;
-        window.globalData.pontos = pts.documents;
+        window.globalData.clientes = cli.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.estoque = est.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.config = cfg.documents[0] ? {...cfg.documents[0], id: cfg.documents[0].$id} : {};
+        window.globalData.colaboradores = col.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.os = os.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.transacoes = tr.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.fechamentos = fec.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.pontos = pts.documents.map(d => ({...d, id: d.$id}));
 
         window.hideLoading();
         document.dispatchEvent(new Event('appwriteReady'));

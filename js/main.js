@@ -721,7 +721,7 @@
 
 
     // Gravar Cliente (Step 1)
-    btnGravarCliente.addEventListener('click', (e) => {
+    btnGravarCliente.addEventListener('click', async (e) => {
         e.preventDefault();
         
         const nome = document.getElementById('c_nome').value;
@@ -734,7 +734,6 @@
 
         // Save data to currentFlowData
         currentFlowData.cliente = {
-            id: Date.now().toString(),
             nome: nome,
             telefone: contato,
             documento: document.getElementById('c_documento') ? document.getElementById('c_documento').value : '',
@@ -742,27 +741,47 @@
             email: document.getElementById('c_email') ? document.getElementById('c_email').value : ''
         };
 
-        // Persist to window.clientes
-        if (!window.clientes) window.clientes = [];
-        const existingIdx = window.clientes.findIndex(c => c.nome.toLowerCase() === nome.toLowerCase());
-        if (existingIdx >= 0) {
-            window.clientes[existingIdx] = { ...window.clientes[existingIdx], ...currentFlowData.cliente };
-        } else {
-            window.clientes.push(currentFlowData.cliente);
-        }
-        localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
-        if (typeof renderClientList === 'function') renderClientList();
+        const btnText = btnGravarCliente.innerHTML;
+        btnGravarCliente.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Gravando...';
+        btnGravarCliente.disabled = true;
 
-        closeModal(modalCadastro);
-        
-        if (modalIntake.classList.contains('active')) {
-            document.getElementById('intake-client-name').textContent = currentFlowData.cliente.nome || '-';
-            document.getElementById('intake-client-phone').textContent = currentFlowData.cliente.telefone || '-';
-            document.getElementById('intake-client-address').textContent = currentFlowData.cliente.endereco || '-';
-            document.getElementById('intake-client-doc').textContent = currentFlowData.cliente.documento || '-';
-            document.getElementById('intake-client-email').textContent = currentFlowData.cliente.email || '-';
-        } else {
-            setTimeout(() => openModal(modalAparelho), 300);
+        try {
+            // Persist to window.clientes (Appwrite)
+            if (!window.clientes) window.clientes = [];
+            const existingIdx = window.clientes.findIndex(c => c.nome.toLowerCase() === nome.toLowerCase());
+            
+            if (existingIdx >= 0) {
+                const id = window.clientes[existingIdx].id;
+                currentFlowData.cliente.id = id;
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, id, currentFlowData.cliente);
+                window.clientes[existingIdx] = { ...window.clientes[existingIdx], ...currentFlowData.cliente };
+            } else {
+                const docId = window.appwrite.ID.unique();
+                const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, docId, currentFlowData.cliente);
+                currentFlowData.cliente.id = created.$id;
+                window.clientes.push(currentFlowData.cliente);
+            }
+            
+            localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
+            if (typeof renderClientList === 'function') renderClientList();
+
+            closeModal(modalCadastro);
+            
+            if (modalIntake.classList.contains('active')) {
+                document.getElementById('intake-client-name').textContent = currentFlowData.cliente.nome || '-';
+                document.getElementById('intake-client-phone').textContent = currentFlowData.cliente.telefone || '-';
+                document.getElementById('intake-client-address').textContent = currentFlowData.cliente.endereco || '-';
+                document.getElementById('intake-client-doc').textContent = currentFlowData.cliente.documento || '-';
+                document.getElementById('intake-client-email').textContent = currentFlowData.cliente.email || '-';
+            } else {
+                setTimeout(() => openModal(modalAparelho), 300);
+            }
+        } catch (err) {
+            console.error(err);
+            window.customAlert('Erro ao gravar cliente na nuvem: ' + err.message, 'warning');
+        } finally {
+            btnGravarCliente.innerHTML = btnText;
+            btnGravarCliente.disabled = false;
         }
     });
 
@@ -822,7 +841,7 @@
     }
 
     // Finalizar e Imprimir (Step 3)
-    btnFinalizarImprimir.addEventListener('click', (e) => {
+    btnFinalizarImprimir.addEventListener('click', async (e) => {
         e.preventDefault();
         
         const marca = document.getElementById('a_marca').value;
@@ -840,7 +859,51 @@
             return;
         }
 
-        // Save data logic would go here
+        const btnText = btnFinalizarImprimir.innerHTML;
+        btnFinalizarImprimir.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Gravando...';
+        btnFinalizarImprimir.disabled = true;
+
+        try {
+            const osDoc = {
+                osNumber: currentFlowData.osNumber ? currentFlowData.osNumber.toString() : Math.floor(Math.random() * 10000) + 1000 + "",
+                status: 'Aberta',
+                cliente: document.getElementById('intake-client-name').textContent || (currentFlowData.cliente ? currentFlowData.cliente.nome : ''),
+                fones: document.getElementById('intake-client-phone').textContent || (currentFlowData.cliente ? currentFlowData.cliente.telefone : ''),
+                marca: marca,
+                modelo: modelo,
+                serie: serie,
+                acessorio: acessorio,
+                aparencia: aparencia,
+                defeito: defeito,
+                maodeobra: 0,
+                pecas: 0,
+                deslocamento: 0,
+                terceiros: 0,
+                outros: 0,
+                total: 0,
+                laudo: '',
+                relatorio: '',
+                dataIntake: document.getElementById('intake-entrada') ? document.getElementById('intake-entrada').value : '',
+                dataDelivery: document.getElementById('intake-previsao') ? document.getElementById('intake-previsao').value : ''
+            };
+
+            const docId = window.appwrite.ID.unique();
+            const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
+            
+            if(!window.globalData) window.globalData = {};
+            if(!window.globalData.os) window.globalData.os = [];
+            window.globalData.os.push({...osDoc, id: created.$id});
+            localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+        } catch (err) {
+            console.error(err);
+            window.customAlert('Erro ao gravar O.S na nuvem: ' + err.message, 'warning');
+            btnFinalizarImprimir.innerHTML = btnText;
+            btnFinalizarImprimir.disabled = false;
+            return; // Stop if failed to save
+        }
+        
+        btnFinalizarImprimir.innerHTML = btnText;
+        btnFinalizarImprimir.disabled = false;
         
         // Setup Print Intake data
         const config = window.lojaConfig || {};
@@ -913,25 +976,14 @@
     });
 
     window.clientes = [];
-    try {
-        const cliStr = localStorage.getItem('avence_clientes');
-        if (cliStr) window.clientes = JSON.parse(cliStr);
-    } catch (e) {
-        console.error('Erro ao ler clientes do localStorage:', e);
-    }
     
-    // CLEANUP TEMPORÁRIO DOS MOCKS
-    const mockClientIds = ['d1', 'd2', 'd3', 'd4', 'd5'];
-    const beforeCliLen = window.clientes.length;
-    window.clientes = window.clientes.filter(c => !mockClientIds.includes(c.id));
-    if (window.clientes.length !== beforeCliLen) {
-        localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
-    }
-    
-    if (!window.clientes || !Array.isArray(window.clientes)) {
-        window.clientes = [];
-        localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
-    }
+    document.addEventListener('appwriteReady', () => {
+        if (window.globalData && window.globalData.clientes) {
+            window.clientes = window.globalData.clientes;
+            localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
+            if (typeof renderClientList === 'function') renderClientList();
+        }
+    });
 
     function renderClientList() {
         const container = document.getElementById('client-list-container');
