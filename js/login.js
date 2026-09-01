@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             customAlert('Usuário não encontrado no sistema. Cadastre-o primeiro.', 'error');
             return;
         }
-        else if (colab.senhaLogin !== senha) {
+        else if ((colab.senhaLogin || colab.senha) !== senha) {
             customAlert('Senha incorreta!', 'error');
             inputSenha.value = '';
             return;

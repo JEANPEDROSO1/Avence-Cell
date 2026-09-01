@@ -1,0 +1,1 @@
+const sdk = require('node-appwrite'); const client = new sdk.Client().setEndpoint('https://sfo.cloud.appwrite.io/v1').setProject('6a959bb30013a97d1f1b'); const databases = new sdk.Databases(client); databases.listDocuments('avence_db', 'config').then(console.log).catch(console.error);

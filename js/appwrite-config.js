@@ -109,8 +109,8 @@ window.bootAppwrite = async function() {
         window.hideLoading();
         document.dispatchEvent(new Event('appwriteReady'));
     } catch (e) {
-        window.showLoading('Erro de conexão com Appwrite. Verifique a internet e as permissões.');
-        console.error(e);
+        window.showLoading('Erro Appwrite: ' + (e.message || e));
+        console.error('Appwrite connection error:', e);
     }
 };
 
