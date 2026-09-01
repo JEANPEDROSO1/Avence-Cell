@@ -189,6 +189,7 @@
                         pdvCart.push({ ...produto, qtd: 1 });
                     }
                     pdvSearch.value = '';
+                    pdvSearch.focus();
                     renderPdvCart();
                 } else {
                     window.customAlert('Produto não encontrado no estoque.', 'warning');

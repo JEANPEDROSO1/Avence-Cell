@@ -398,7 +398,7 @@ document.querySelectorAll('input, form').forEach(el => {
             if (targetId === 'pdv') {
                 if(typeof window.renderPdvCart === 'function') window.renderPdvCart();
                 if(typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
-                setTimeout(() => { document.getElementById('pdv-ean')?.focus(); }, 100);
+                setTimeout(() => { document.getElementById('pdv-search')?.focus(); }, 100);
             }
             if (targetId === 'relatorios') {
                 if (window.loggedUser && !(Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo]).includes('Dono')) {
