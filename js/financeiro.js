@@ -957,7 +957,7 @@
 
             try {
                 if (editingColabId) {
-                    const updateData = { nome, cargo, senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos };
+                    const updateData = { nome, cargo, senhaLogin, senha: senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos };
                     if(fotoBase64) updateData.foto = fotoBase64;
                     
                     await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_COLABS, editingColabId, updateData);
@@ -967,7 +967,7 @@
                         Object.assign(colab, updateData);
                     }
                 } else {
-                    const novoData = { nome, cargo, senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos, foto: fotoBase64 };
+                    const novoData = { nome, cargo, senhaLogin, senha: senhaLogin, senhaRetirada, comissaoVendas, comissaoServicos, foto: fotoBase64 };
                     const docId = window.appwrite.ID.unique();
                     const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_COLABS, docId, novoData);
                     novoData.id = created.$id;
