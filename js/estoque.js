@@ -25,6 +25,14 @@
         estoque = [];
     }
     
+    // CLEANUP TEMPORÁRIO DOS MOCKS
+    const mockNames = ['Tela Frontal iPhone 11', 'Bateria Samsung S20', 'Conector de Carga Moto G', 'Película de Vidro 3D'];
+    const beforeLen = estoque.length;
+    estoque = estoque.filter(p => !mockNames.includes(p.nome));
+    if (estoque.length !== beforeLen) {
+        localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+    }
+    
     let eanConfig = { linhas: 10, colunas: 3, tamanho: 'medio' };
     try {
         const storedConfig = localStorage.getItem('avence_ean_config');

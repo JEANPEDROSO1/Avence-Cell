@@ -920,6 +920,14 @@
         console.error('Erro ao ler clientes do localStorage:', e);
     }
     
+    // CLEANUP TEMPORÁRIO DOS MOCKS
+    const mockClientIds = ['d1', 'd2', 'd3', 'd4', 'd5'];
+    const beforeCliLen = window.clientes.length;
+    window.clientes = window.clientes.filter(c => !mockClientIds.includes(c.id));
+    if (window.clientes.length !== beforeCliLen) {
+        localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
+    }
+    
     if (!window.clientes || !Array.isArray(window.clientes)) {
         window.clientes = [];
         localStorage.setItem('avence_clientes', JSON.stringify(window.clientes));
