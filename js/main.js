@@ -448,15 +448,13 @@ document.querySelectorAll('input, form').forEach(el => {
                 return;
             }
 
-            // Popula os dados para o fluxo atual
-            currentFlowData = {
-                osNumber: selectedOS.osNumber,
-                cliente: { nome: selectedOS.cliente, telefone: selectedOS.fones },
-                aparelho: {
-                    marca: selectedOS.marca, modelo: selectedOS.modelo, serie: selectedOS.serie,
-                    acessorio: selectedOS.acessorio, aparencia: selectedOS.aparencia, defeito: selectedOS.defeito
-                }
-            };
+            if (selectedOS.status === 'Encerrada' || selectedOS.status === 'Finalizada') {
+                window.customAlert(`A O.S. Nº ${osNumber} já encontra-se Encerrada e não está mais disponível para alterações.`, 'warning');
+                return;
+            }
+
+            // Popula os dados para o fluxo atual mantendo o ID para reconhecer que é edição
+            currentFlowData = { ...selectedOS };
 
             const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
             
@@ -1326,6 +1324,10 @@ document.querySelectorAll('input, form').forEach(el => {
                 
                 const selectedOS = osList.find(o => (o.osNumber || o.numero) === osSelecionadaHistorico);
                 if (selectedOS) {
+                    if (selectedOS.status === 'Encerrada' || selectedOS.status === 'Finalizada') {
+                        window.customAlert(`A O.S. Nº ${osSelecionadaHistorico} já encontra-se Encerrada e não está mais disponível para alterações.`, 'warning');
+                        return;
+                    }
                     currentFlowData = { ...selectedOS };
                     
                     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
