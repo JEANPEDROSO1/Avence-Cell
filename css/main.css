@@ -956,7 +956,7 @@ textarea {
     }
 
     /* Print Barcode Specifics */
-    #print-barcode {
+    body.printing-ean #print-barcode {
         width: 100%;
         max-width: none;
         margin: 0;

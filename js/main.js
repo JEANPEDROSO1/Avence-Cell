@@ -622,6 +622,9 @@ document.querySelectorAll('input, form').forEach(el => {
                 pDelivery.classList.add('print-only');
                 pDelivery.style.display = 'block';
             }
+            
+            const pBarcode = document.getElementById('print-barcode');
+            if (pBarcode) pBarcode.innerHTML = '';
 
             document.body.classList.add('printing-os-delivery');
             window.print();
@@ -924,10 +927,12 @@ document.querySelectorAll('input, form').forEach(el => {
         btnFinalizarImprimir.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Gravando...';
         btnFinalizarImprimir.disabled = true;
 
+        let isEditing = !!(currentFlowData.id || currentFlowData.$id);
+
         try {
             const osDoc = {
                 osNumber: currentFlowData.osNumber !== undefined ? currentFlowData.osNumber.toString() : "0",
-                status: 'Aberta',
+                status: currentFlowData.status || 'Aberta',
                 cliente: document.getElementById('intake-client-name').textContent || (currentFlowData.cliente ? currentFlowData.cliente.nome : ''),
                 fones: document.getElementById('intake-client-phone').textContent || (currentFlowData.cliente ? currentFlowData.cliente.telefone : ''),
                 marca: marca,
@@ -936,25 +941,36 @@ document.querySelectorAll('input, form').forEach(el => {
                 acessorio: acessorio,
                 aparencia: aparencia,
                 defeito: defeito,
-                maodeobra: 0,
-                pecas: 0,
-                deslocamento: 0,
-                terceiros: 0,
-                outros: 0,
-                total: 0,
-                laudo: '',
-                relatorio: '',
+                maodeobra: parseFloat(document.getElementById('a_maodeobra')?.value) || 0,
+                pecas: parseFloat(document.getElementById('a_pecas')?.value) || 0,
+                deslocamento: parseFloat(document.getElementById('a_deslocamento')?.value) || 0,
+                terceiros: parseFloat(document.getElementById('a_terceiros')?.value) || 0,
+                outros: parseFloat(document.getElementById('a_outros')?.value) || 0,
+                adiantamento: parseFloat(document.getElementById('a_adiantamento')?.value) || 0,
+                total: calculateTotal(),
+                laudo: document.getElementById('a_laudo')?.value || '',
+                relatorio: currentFlowData.relatorio || '',
                 dataIntake: document.getElementById('intake-entrada') ? document.getElementById('intake-entrada').value : '',
                 dataDelivery: document.getElementById('intake-previsao') ? document.getElementById('intake-previsao').value : ''
             };
 
-            const docId = window.appwrite.ID.unique();
-            const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
-            
             if(!window.globalData) window.globalData = {};
             if(!window.globalData.os) window.globalData.os = [];
-            window.globalData.os.push({...osDoc, id: created.$id});
-            localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+
+            if (isEditing) {
+                const docId = currentFlowData.id || currentFlowData.$id;
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
+                const index = window.globalData.os.findIndex(o => o.id === docId || o.$id === docId);
+                if (index !== -1) {
+                    window.globalData.os[index] = {...window.globalData.os[index], ...osDoc};
+                }
+                localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+            } else {
+                const docId = window.appwrite.ID.unique();
+                const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
+                window.globalData.os.push({...osDoc, id: created.$id});
+                localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+            }
         } catch (err) {
             console.error(err);
             window.customAlert('Erro ao gravar O.S na nuvem: ' + err.message, 'warning');
@@ -965,6 +981,15 @@ document.querySelectorAll('input, form').forEach(el => {
         
         btnFinalizarImprimir.innerHTML = btnText;
         btnFinalizarImprimir.disabled = false;
+
+        if (isEditing) {
+            window.customAlert('O.S. atualizada com sucesso!', 'success');
+            const modalIntake = document.getElementById('modal-intake');
+            if (modalIntake) {
+                modalIntake.classList.remove('active');
+            }
+            return; // Não imprime quando é alteração
+        }
         
         // Setup Print Intake data
         const config = window.lojaConfig || {};
@@ -1020,6 +1045,9 @@ document.querySelectorAll('input, form').forEach(el => {
             pIntake.classList.add('print-only');
             pIntake.style.display = 'block';
         }
+        
+        const pBarcode = document.getElementById('print-barcode');
+        if (pBarcode) pBarcode.innerHTML = '';
 
         document.body.classList.add('printing-os-intake');
         window.print();
