@@ -545,6 +545,17 @@ textarea {
     transition: var(--transition);
 }
 
+.device-card h3 {
+    color: var(--text-main);
+    margin: 0;
+}
+
+.device-card p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.9em;
+}
+
 .device-card:hover {
     border-color: var(--primary);
     background: var(--bg-surface-hover);
