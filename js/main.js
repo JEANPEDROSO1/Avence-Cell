@@ -946,7 +946,6 @@ document.querySelectorAll('input, form').forEach(el => {
                 deslocamento: parseFloat(document.getElementById('a_deslocamento')?.value) || 0,
                 terceiros: parseFloat(document.getElementById('a_terceiros')?.value) || 0,
                 outros: parseFloat(document.getElementById('a_outros')?.value) || 0,
-                adiantamento: parseFloat(document.getElementById('a_adiantamento')?.value) || 0,
                 total: calculateTotal(),
                 laudo: document.getElementById('a_laudo')?.value || '',
                 relatorio: currentFlowData.relatorio || '',
