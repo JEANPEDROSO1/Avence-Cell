@@ -1,4 +1,4 @@
-// -- Desabilita autocomplete do navegador em todo o sistema --
+﻿// -- Desabilita autocomplete do navegador em todo o sistema --
 document.querySelectorAll('input, form').forEach(el => {
     el.setAttribute('autocomplete', 'off'); // Bloqueia auto-preenchimento
     if (el.tagName.toLowerCase() === 'input' && el.type !== 'password' && el.type !== 'email') {
@@ -489,6 +489,10 @@ document.querySelectorAll('input, form').forEach(el => {
                 document.getElementById('checkout-troco').textContent = 'R$ 0,00';
                 document.getElementById('checkout-pagamento').value = 'Dinheiro';
                 document.getElementById('checkout-calendario-container').style.display = 'none';
+                const pCont = document.getElementById('checkout-parcelas-container');
+                if (pCont) pCont.style.display = 'none';
+                const vCont = document.getElementById('checkout-valores-container');
+                if (vCont) vCont.style.display = 'grid';
                 openModal(document.getElementById('modal-checkout'));
                 setTimeout(() => document.getElementById('checkout-valorpago').focus(), 300);
             }
@@ -533,12 +537,29 @@ document.querySelectorAll('input, form').forEach(el => {
     const valorPagoInput = document.getElementById('checkout-valorpago');
     const trocoDiv = document.getElementById('checkout-troco');
 
+    const parcelasContainer = document.getElementById('checkout-parcelas-container');
+    const valoresContainer = document.getElementById('checkout-valores-container');
+
     if (selectPagamento) {
         selectPagamento.addEventListener('change', (e) => {
-            if (e.target.value === 'Notinha') {
+            const val = e.target.value;
+            
+            if (val === 'Notinha') {
                 calContainer.style.display = 'flex';
             } else {
                 calContainer.style.display = 'none';
+            }
+            
+            if (val === 'Cartão Crédito' || val === 'Cartão de Crédito' || val.includes('Crédito')) {
+                if (parcelasContainer) parcelasContainer.style.display = 'flex';
+            } else {
+                if (parcelasContainer) parcelasContainer.style.display = 'none';
+            }
+            
+            if (val !== 'Dinheiro') {
+                if (valoresContainer) valoresContainer.style.display = 'none';
+            } else {
+                if (valoresContainer) valoresContainer.style.display = 'grid';
             }
         });
     }
@@ -980,7 +1001,6 @@ document.querySelectorAll('input, form').forEach(el => {
         btnFinalizarImprimir.disabled = false;
 
         if (isEditing) {
-            window.customAlert('O.S. atualizada com sucesso!', 'success');
             const modalIntake = document.getElementById('modal-intake');
             if (modalIntake) {
                 modalIntake.classList.remove('active');
@@ -1414,3 +1434,4 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
         });
     });
 }
+

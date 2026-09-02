@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -205,11 +205,11 @@
                     <div class="section-header">
                         <div class="search-box">
                             <i class="ph ph-magnifying-glass search-icon"></i>
-                            <input type="text" id="produto-search" placeholder="Buscar por Nome ou código EAN..." autocomplete="off">
+                            <input type="text" id="produto-search" placeholder="Buscar por Nome ou cï¿½digo EAN..." autocomplete="off">
                         </div>
                         <div class="actions">
-                            <button class="btn btn-secondary" id="btn-config-ean" title="Configurar Impressão de EAN" style="display: flex; align-items: center; justify-content: center; padding: 0 12px;"><i class="ph ph-gear"></i></button>
-                            <button class="btn btn-secondary" id="btn-relatorio-compras" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-envelope-simple"></i> Relatório de Compras</button>
+                            <button class="btn btn-secondary" id="btn-config-ean" title="Configurar Impressï¿½o de EAN" style="display: flex; align-items: center; justify-content: center; padding: 0 12px;"><i class="ph ph-gear"></i></button>
+                            <button class="btn btn-secondary" id="btn-relatorio-compras" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-envelope-simple"></i> Relatï¿½rio de Compras</button>
                             <button class="btn btn-primary" id="btn-novo-produto" style="display: flex; align-items: center; gap: 6px;"><i class="ph ph-plus-circle"></i> Novo Produto</button>
                         </div>
                     </div>
@@ -435,7 +435,7 @@
 
                 <section id="relatorios" class="screen">
                     <div class="section-header">
-                        <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-chart-bar" style="color: var(--primary);"></i> Relatório de Desempenho (Equipe)</h2>
+                        <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-chart-bar" style="color: var(--primary);"></i> Relatï¿½rio de Desempenho (Equipe)</h2>
                         <div class="actions">
                             <button class="btn btn-secondary" id="btn-refresh-relatorios" style="padding: 8px 16px;"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
                         </div>
@@ -1534,7 +1534,24 @@
                     <input type="date" id="checkout-vencimento" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                <div class="form-group" id="checkout-parcelas-container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Parcelas</label>
+                    <select id="checkout-parcelas" style="font-size: 16px; padding: 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main);">
+                        <option value="1">1x</option>
+                        <option value="2">2x</option>
+                        <option value="3">3x</option>
+                        <option value="4">4x</option>
+                        <option value="5">5x</option>
+                        <option value="6">6x</option>
+                        <option value="7">7x</option>
+                        <option value="8">8x</option>
+                        <option value="9">9x</option>
+                        <option value="10">10x</option>
+                        <option value="11">11x</option>
+                        <option value="12">12x</option>
+                    </select>
+                </div>
+                <div id="checkout-valores-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                     <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="font-weight: bold;">Valor Pago</label>
                         <div style="position: relative;">
@@ -2441,6 +2458,8 @@
     </div>
 </body>
 </html>
+
+
 
 
 
