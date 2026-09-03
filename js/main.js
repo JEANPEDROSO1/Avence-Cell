@@ -484,7 +484,7 @@ document.querySelectorAll('input, form').forEach(el => {
                 openModal(document.getElementById('modal-intake'));
                 setTimeout(() => document.getElementById('a_marca').focus(), 300);
             } else if (currentOSAction === 'encerrar') {
-                calculateTotal();
+                calculateCheckoutTotal();
                 document.getElementById('checkout-valorpago').value = '';
                 document.getElementById('checkout-troco').textContent = 'R$ 0,00';
                 document.getElementById('checkout-pagamento').value = 'Dinheiro';
@@ -540,6 +540,42 @@ document.querySelectorAll('input, form').forEach(el => {
     const parcelasContainer = document.getElementById('checkout-parcelas-container');
     const valoresContainer = document.getElementById('checkout-valores-container');
 
+    function calculateCheckoutTotal() {
+        const baseTotal = calculateTotal();
+        let finalTotal = baseTotal;
+        const valPagamento = selectPagamento?.value || 'Dinheiro';
+        
+        if (valPagamento === 'Cartão Crédito' || valPagamento === 'Cartão de Crédito' || valPagamento.includes('Crédito')) {
+            const selectParcelas = document.getElementById('checkout-parcelas');
+            const parcelas = parseInt(selectParcelas?.value) || 1;
+            const taxasMaquininha = {
+                1: 0,
+                2: 0.0570,
+                3: 0.0652,
+                4: 0.07355,
+                5: 0.0819,
+                6: 0.09033,
+                7: 0.09877,
+                8: 0.10733,
+                9: 0.11588,
+                10: 0.12444,
+                11: 0.133,
+                12: 0.1415
+            };
+            
+            if (parcelas > 1) {
+                const jurosValor = baseTotal * (taxasMaquininha[parcelas] || 0);
+                finalTotal = baseTotal + jurosValor;
+            }
+        }
+        
+        const totalDiv = document.getElementById('checkout-total');
+        if (totalDiv) {
+            totalDiv.textContent = finalTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        return finalTotal;
+    }
+
     if (selectPagamento) {
         selectPagamento.addEventListener('change', (e) => {
             const val = e.target.value;
@@ -561,12 +597,19 @@ document.querySelectorAll('input, form').forEach(el => {
             } else {
                 if (valoresContainer) valoresContainer.style.display = 'grid';
             }
+            
+            calculateCheckoutTotal();
         });
+    }
+    
+    const selectParcelas = document.getElementById('checkout-parcelas');
+    if (selectParcelas) {
+        selectParcelas.addEventListener('change', calculateCheckoutTotal);
     }
 
     if (valorPagoInput) {
         valorPagoInput.addEventListener('input', (e) => {
-            const total = calculateTotal();
+            const total = calculateCheckoutTotal();
             const pago = parseFloat(e.target.value) || 0;
             const troco = pago - total;
             
@@ -580,8 +623,63 @@ document.querySelectorAll('input, form').forEach(el => {
 
     const btnFinalizarCheckout = document.getElementById('btn-finalizar-checkout');
     if (btnFinalizarCheckout) {
-        btnFinalizarCheckout.addEventListener('click', () => {
+        btnFinalizarCheckout.addEventListener('click', async () => {
             const osNumber = document.getElementById('input-pesquisa-os')?.value || currentFlowData.osNumber;
+            const btnText = btnFinalizarCheckout.innerHTML;
+            btnFinalizarCheckout.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Encerrando...';
+            btnFinalizarCheckout.disabled = true;
+
+            try {
+                // Update Appwrite OS to "Encerrada"
+                if (currentFlowData && (currentFlowData.id || currentFlowData.$id)) {
+                    const docId = currentFlowData.id || currentFlowData.$id;
+                    await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, {
+                        status: 'Encerrada'
+                    });
+                    
+                    const index = window.globalData.os.findIndex(o => o.id === docId || o.$id === docId);
+                    if (index !== -1) {
+                        window.globalData.os[index].status = 'Encerrada';
+                        localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+                    }
+                }
+
+                // Calculate final total and get payment info
+                const finalTotal = calculateCheckoutTotal();
+                const selectPagamento = document.getElementById('checkout-pagamento');
+                let formaPgto = 'dinheiro';
+                const pgtoValue = selectPagamento?.value || 'Dinheiro';
+                if (pgtoValue === 'Pix') formaPgto = 'pix';
+                else if (pgtoValue === 'Cartão Débito') formaPgto = 'debito';
+                else if (pgtoValue === 'Cartão Crédito' || pgtoValue === 'Cartão de Crédito') {
+                    const selectParcelas = document.getElementById('checkout-parcelas');
+                    const parcelas = parseInt(selectParcelas?.value) || 1;
+                    formaPgto = parcelas > 1 ? 'credito_parcelado' : 'credito_vista';
+                }
+                else if (pgtoValue === 'Notinha') formaPgto = 'notinha';
+
+                // Registrar no caixa
+                let motivoVenda = `Encerramento O.S. Nº ${osNumber}`;
+                const nomeCliente = document.getElementById('c_nome')?.value || currentFlowData?.cliente?.nome;
+                if (nomeCliente) {
+                    motivoVenda += ` - Cliente: ${nomeCliente}`;
+                }
+                
+                if (window.caixaAberto && window.registrarTransacaoCaixa) {
+                    await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto);
+                } else if (!window.caixaAberto) {
+                    window.customAlert('Aviso: O caixa está FECHADO. A O.S. foi encerrada mas não registrada no fluxo de caixa.', 'warning');
+                }
+
+            } catch (err) {
+                console.error(err);
+                window.customAlert('Erro ao encerrar O.S.: ' + err.message, 'warning');
+                btnFinalizarCheckout.innerHTML = btnText;
+                btnFinalizarCheckout.disabled = false;
+                return;
+            }
+
+            // --- Preencher Dados para Impressão ---
             document.getElementById('pd_os_number').textContent = 'OS Nº ' + osNumber;
             document.getElementById('pd_cliente').textContent = document.getElementById('c_nome')?.value || 'Nome do Cliente';
             document.getElementById('pd_fones').textContent = (document.getElementById('c_telefone')?.value || '') + ' ' + (document.getElementById('c_celular')?.value || '');
@@ -622,7 +720,7 @@ document.querySelectorAll('input, form').forEach(el => {
             document.getElementById('pd_v_deslocamento').textContent = formatMoney('a_deslocamento');
             document.getElementById('pd_v_terceiros').textContent = formatMoney('a_terceiros');
             document.getElementById('pd_v_outros').textContent = formatMoney('a_outros');
-            document.getElementById('pd_v_total').textContent = document.getElementById('a_total')?.textContent || 'R$ 0,00';
+            document.getElementById('pd_v_total').textContent = document.getElementById('checkout-total')?.textContent || document.getElementById('a_total')?.textContent || 'R$ 0,00';
             
             document.getElementById('pd_sig_client').textContent = document.getElementById('pd_cliente').textContent;
             document.getElementById('pd_sig_store').textContent = document.getElementById('p_store_name')?.textContent || 'AVENCE CELL';
@@ -648,6 +746,9 @@ document.querySelectorAll('input, form').forEach(el => {
             document.body.classList.add('printing-os-delivery');
             window.print();
             
+            btnFinalizarCheckout.innerHTML = btnText;
+            btnFinalizarCheckout.disabled = false;
+
             // Restore visibility after print dialog is closed
             setTimeout(() => {
                 document.body.classList.remove('printing-os-delivery');
@@ -659,7 +760,8 @@ document.querySelectorAll('input, form').forEach(el => {
                     pDelivery.style.display = '';
                     pDelivery.classList.add('print-only');
                 }
-            }, 1000);
+                window.location.reload(); // Reload to refresh tables and UI
+            }, 1500);
         });
     }
 
@@ -1173,7 +1275,7 @@ document.querySelectorAll('input, form').forEach(el => {
                     if (osStr) osList = JSON.parse(osStr);
                 } catch(e) {}
                 
-                const clientOs = osList.filter(os => os.cliente && os.cliente.nome === client.nome);
+                const clientOs = osList.filter(os => (typeof os.cliente === 'string' ? os.cliente : os.cliente?.nome) === client.nome);
                 
                 if (clientOs.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">Nenhuma O.S. anterior encontrada para este cliente.</td></tr>';
@@ -1434,4 +1536,7 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
         });
     });
 }
+
+
+
 
