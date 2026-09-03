@@ -1,4 +1,4 @@
-﻿// -- Desabilita autocomplete do navegador em todo o sistema --
+// -- Desabilita autocomplete do navegador em todo o sistema --
 document.querySelectorAll('input, form').forEach(el => {
     el.setAttribute('autocomplete', 'off'); // Bloqueia auto-preenchimento
     if (el.tagName.toLowerCase() === 'input' && el.type !== 'password' && el.type !== 'email') {
@@ -1646,16 +1646,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         filtrados.forEach(c => {
             const tr = document.createElement('tr');
-            tr.innerHTML = 
-                <td style="padding: 12px; border-bottom: 1px solid var(--border);"></td>
-                <td style="padding: 12px; border-bottom: 1px solid var(--border);"></td>
-                <td style="padding: 12px; border-bottom: 1px solid var(--border);"></td>
+            tr.innerHTML = `
+                <td style="padding: 12px; border-bottom: 1px solid var(--border);">${c.nome || '-'}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border);">${c.telefone || '-'}</td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border);">${c.cpf_cnpj || '-'}</td>
                 <td style="padding: 12px; border-bottom: 1px solid var(--border); text-align: center;">
-                    <button class="btn btn-secondary btn-historico-cliente-gestao" data-nome="+ (c.nome || '').replace(/"/g, '&quot;') + " style="padding: 6px 12px; font-size: 13px;" title="Ver Histórico">
+                    <button class="btn btn-secondary btn-historico-cliente-gestao" data-nome="`+ (c.nome || '').replace(/"/g, '&quot;') + `" style="padding: 6px 12px; font-size: 13px;" title="Ver Histórico">
                         <i class="ph ph-clock-counter-clockwise"></i> Histórico
                     </button>
                 </td>
-            ;
+            `;
             tbody.appendChild(tr);
         });
         
@@ -1711,13 +1711,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     else if (os.data) dataStr = os.data.split('T')[0].split('-').reverse().join('/');
                     const statusOs = os.status || 'Concluída';
                     
-                    tr.innerHTML = 
-                        <td>#</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td><span class="status-badge status-"></span></td>
-                    ;
+                    tr.innerHTML = `
+                        <td>#${osNum}</td>
+                        <td>${marcaModelo || '-'}</td>
+                        <td>${defeitoStr}</td>
+                        <td>${dataStr}</td>
+                        <td><span class="status-badge status-${statusOs.toLowerCase().replace(' ', '-')}">${statusOs}</span></td>
+                    `;
                     tr.addEventListener('click', () => {
                         window.osSelecionadaHistorico = os.osNumber || os.numero;
                         // Destaca a linha selecionada
