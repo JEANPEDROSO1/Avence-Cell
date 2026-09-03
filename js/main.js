@@ -489,6 +489,39 @@ document.querySelectorAll('input, form').forEach(el => {
             setVal('a_terceiros', ter || '0.00');
             setVal('a_outros', out || '0.00');
 
+            // --- Preencher tabelas visuais (mockup) ---
+            const servTbody = document.getElementById('os-servicos-tbody');
+            if (servTbody) {
+                if (parseFloat(mo) > 0) {
+                    servTbody.innerHTML = `<tr>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">Serviço Executado (Geral)</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">Unid</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">-</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">-</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">1</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">R$ ${parseFloat(mo).toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">Sistema</td>
+                    </tr>`;
+                } else {
+                    servTbody.innerHTML = `<tr><td colspan="7" style="border: 1px solid var(--border); padding: 4px 8px; text-align: center; color: var(--text-muted);">Nenhum serviço detalhado</td></tr>`;
+                }
+            }
+            
+            const pecasTbody = document.getElementById('os-pecas-tbody');
+            if (pecasTbody) {
+                if (parseFloat(pecas) > 0) {
+                    pecasTbody.innerHTML = `<tr>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">Peças Utilizadas (Geral)</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">1</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">R$ ${parseFloat(pecas).toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">R$ ${parseFloat(pecas).toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 4px 8px;">Sistema</td>
+                    </tr>`;
+                } else {
+                    pecasTbody.innerHTML = `<tr><td colspan="5" style="border: 1px solid var(--border); padding: 4px 8px; text-align: center; color: var(--text-muted);">Nenhuma peça detalhada</td></tr>`;
+                }
+            }
+
             closeModal(document.getElementById('modal-pesquisa-os'));
 
             if (currentOSAction === 'alterar') {
@@ -1515,12 +1548,48 @@ document.querySelectorAll('input, form').forEach(el => {
                     if (selectedOS.laudo) setVal('a_laudo', selectedOS.laudo);
                     
                     if (typeof calculateTotal === 'function') calculateTotal();
+                    
+                    // --- Preencher tabelas visuais (mockup) ---
+                    const servTbody3 = document.getElementById('os-servicos-tbody');
+                    if (servTbody3) {
+                        if (parseFloat(mo) > 0) {
+                            servTbody3.innerHTML = `<tr>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">Serviço Executado (Geral)</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">Unid</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">-</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">-</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">1</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">R$ ${parseFloat(mo).toFixed(2)}</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">Sistema</td>
+                            </tr>`;
+                        } else {
+                            servTbody3.innerHTML = `<tr><td colspan="7" style="border: 1px solid var(--border); padding: 4px 8px; text-align: center; color: var(--text-muted);">Nenhum serviço detalhado</td></tr>`;
+                        }
+                    }
+                    
+                    const pecasTbody3 = document.getElementById('os-pecas-tbody');
+                    if (pecasTbody3) {
+                        if (parseFloat(pecas) > 0) {
+                            pecasTbody3.innerHTML = `<tr>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">Peças Utilizadas (Geral)</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">1</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">R$ ${parseFloat(pecas).toFixed(2)}</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px; text-align: right;">R$ ${parseFloat(pecas).toFixed(2)}</td>
+                                <td style="border: 1px solid var(--border); padding: 4px 8px;">Sistema</td>
+                            </tr>`;
+                        } else {
+                            pecasTbody3.innerHTML = `<tr><td colspan="5" style="border: 1px solid var(--border); padding: 4px 8px; text-align: center; color: var(--text-muted);">Nenhuma peça detalhada</td></tr>`;
+                        }
+                    }
                 }
 
-                // Em vez de ir para a tela vazia, abre o modal-intake (onde ficam as abas de peças, serviços, etc.)
                 document.getElementById('intake-os-number').textContent = currentFlowData.osNumber !== undefined ? currentFlowData.osNumber : (currentFlowData.numero || '-');
                 document.getElementById('intake-client-name').textContent = typeof currentFlowData.cliente === 'string' ? currentFlowData.cliente : (currentFlowData.cliente?.nome || '-');
                 document.getElementById('intake-client-phone').textContent = currentFlowData.fones || currentFlowData.cliente?.telefone || '-';
+                
+                const tabAparelho = document.querySelector('.os-tab[data-target="tab-aparelho"]');
+                if (tabAparelho) tabAparelho.click();
+                
                 openModal(document.getElementById('modal-intake'));
                 setTimeout(() => document.getElementById('a_marca')?.focus(), 300);
             }
@@ -1574,6 +1643,10 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
         });
     });
 }
+
+
+
+
 
 
 
