@@ -469,11 +469,25 @@ document.querySelectorAll('input, form').forEach(el => {
             setVal('a_defeito', selectedOS.defeito || selectedOS.aparelho?.defeito);
             setVal('a_laudo', selectedOS.laudo || selectedOS.orcamento?.laudo);
             setVal('a_adiantamento', selectedOS.adiantamento || selectedOS.orcamento?.adiantamento || '0.00');
-            setVal('a_maodeobra', selectedOS.maodeobra || selectedOS.orcamento?.maodeobra || '0.00');
-            setVal('a_pecas', selectedOS.pecas || selectedOS.orcamento?.pecas || '0.00');
-            setVal('a_deslocamento', selectedOS.deslocamento || selectedOS.orcamento?.deslocamento || '0.00');
-            setVal('a_terceiros', selectedOS.terceiros || selectedOS.orcamento?.terceiros || '0.00');
-            setVal('a_outros', selectedOS.outros || selectedOS.orcamento?.outros || '0.00');
+            
+            let mo = selectedOS.maodeobra || selectedOS.orcamento?.maodeobra || 0;
+            const pecas = selectedOS.pecas || selectedOS.orcamento?.pecas || 0;
+            const des = selectedOS.deslocamento || selectedOS.orcamento?.deslocamento || 0;
+            const ter = selectedOS.terceiros || selectedOS.orcamento?.terceiros || 0;
+            const out = selectedOS.outros || selectedOS.orcamento?.outros || 0;
+            
+            const totalOS = selectedOS.total || 0;
+            
+            // Fallback para O.S. muito antigas que s tinham o total e no tinham os servios preenchidos
+            if (mo == 0 && pecas == 0 && des == 0 && ter == 0 && out == 0 && totalOS > 0) {
+                mo = totalOS;
+            }
+
+            setVal('a_maodeobra', mo || '0.00');
+            setVal('a_pecas', pecas || '0.00');
+            setVal('a_deslocamento', des || '0.00');
+            setVal('a_terceiros', ter || '0.00');
+            setVal('a_outros', out || '0.00');
 
             closeModal(document.getElementById('modal-pesquisa-os'));
 
@@ -1478,12 +1492,25 @@ document.querySelectorAll('input, form').forEach(el => {
                     setVal('a_prioridade', selectedOS.prioridade || selectedOS.aparelho?.prioridade);
                     setVal('a_senha', selectedOS.senha || selectedOS.aparelho?.senha);
                     
-                    setVal('a_adiantamento', selectedOS.adiantamento || '0.00');
-                    setVal('a_maodeobra', selectedOS.maodeobra || '0.00');
-                    setVal('a_pecas', selectedOS.pecas || '0.00');
-                    setVal('a_deslocamento', selectedOS.deslocamento || '0.00');
-                    setVal('a_terceiros', selectedOS.terceiros || '0.00');
-                    setVal('a_outros', selectedOS.outros || '0.00');
+                    setVal('a_adiantamento', selectedOS.adiantamento || selectedOS.orcamento?.adiantamento || '0.00');
+                    
+                    let mo = selectedOS.maodeobra || selectedOS.orcamento?.maodeobra || 0;
+                    const pecas = selectedOS.pecas || selectedOS.orcamento?.pecas || 0;
+                    const des = selectedOS.deslocamento || selectedOS.orcamento?.deslocamento || 0;
+                    const ter = selectedOS.terceiros || selectedOS.orcamento?.terceiros || 0;
+                    const out = selectedOS.outros || selectedOS.orcamento?.outros || 0;
+                    
+                    const totalOS = selectedOS.total || selectedOS.orcamento?.total || 0;
+                    
+                    if (mo == 0 && pecas == 0 && des == 0 && ter == 0 && out == 0 && totalOS > 0) {
+                        mo = totalOS;
+                    }
+                    
+                    setVal('a_maodeobra', mo || '0.00');
+                    setVal('a_pecas', pecas || '0.00');
+                    setVal('a_deslocamento', des || '0.00');
+                    setVal('a_terceiros', ter || '0.00');
+                    setVal('a_outros', out || '0.00');
                     
                     if (selectedOS.laudo) setVal('a_laudo', selectedOS.laudo);
                     
@@ -1547,6 +1574,9 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
         });
     });
 }
+
+
+
 
 
 
