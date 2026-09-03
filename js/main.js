@@ -461,19 +461,19 @@ document.querySelectorAll('input, form').forEach(el => {
             // Popula campos de Cliente e Aparelho (caso Alterar)
             setVal('c_nome', selectedOS.cliente);
             setVal('c_telefone', selectedOS.fones);
-            setVal('a_marca', selectedOS.marca);
-            setVal('a_modelo', selectedOS.modelo);
-            setVal('a_serie', selectedOS.serie);
-            setVal('a_acessorio', selectedOS.acessorio);
-            setVal('a_aparencia', selectedOS.aparencia);
-            setVal('a_defeito', selectedOS.defeito);
-            setVal('a_laudo', selectedOS.laudo);
-            setVal('a_adiantamento', selectedOS.adiantamento || '0.00');
-            setVal('a_maodeobra', selectedOS.maodeobra || '0.00');
-            setVal('a_pecas', selectedOS.pecas || '0.00');
-            setVal('a_deslocamento', selectedOS.deslocamento || '0.00');
-            setVal('a_terceiros', selectedOS.terceiros || '0.00');
-            setVal('a_outros', selectedOS.outros || '0.00');
+            setVal('a_marca', selectedOS.marca || selectedOS.aparelho?.marca);
+            setVal('a_modelo', selectedOS.modelo || selectedOS.aparelho?.modelo);
+            setVal('a_serie', selectedOS.serie || selectedOS.aparelho?.serie);
+            setVal('a_acessorio', selectedOS.acessorio || selectedOS.aparelho?.acessorio);
+            setVal('a_aparencia', selectedOS.aparencia || selectedOS.aparelho?.aparencia);
+            setVal('a_defeito', selectedOS.defeito || selectedOS.aparelho?.defeito);
+            setVal('a_laudo', selectedOS.laudo || selectedOS.orcamento?.laudo);
+            setVal('a_adiantamento', selectedOS.adiantamento || selectedOS.orcamento?.adiantamento || '0.00');
+            setVal('a_maodeobra', selectedOS.maodeobra || selectedOS.orcamento?.maodeobra || '0.00');
+            setVal('a_pecas', selectedOS.pecas || selectedOS.orcamento?.pecas || '0.00');
+            setVal('a_deslocamento', selectedOS.deslocamento || selectedOS.orcamento?.deslocamento || '0.00');
+            setVal('a_terceiros', selectedOS.terceiros || selectedOS.orcamento?.terceiros || '0.00');
+            setVal('a_outros', selectedOS.outros || selectedOS.orcamento?.outros || '0.00');
 
             closeModal(document.getElementById('modal-pesquisa-os'));
 
@@ -481,7 +481,12 @@ document.querySelectorAll('input, form').forEach(el => {
                 document.getElementById('intake-os-number').textContent = currentFlowData.osNumber !== undefined ? currentFlowData.osNumber : (currentFlowData.numero || '-');
                 document.getElementById('intake-client-name').textContent = typeof currentFlowData.cliente === 'string' ? currentFlowData.cliente : (currentFlowData.cliente?.nome || '-');
                 document.getElementById('intake-client-phone').textContent = currentFlowData.fones || currentFlowData.cliente?.telefone || '-';
+                
                 openModal(document.getElementById('modal-intake'));
+                
+                const tabAparelho = document.querySelector('.os-tab[data-target="tab-aparelho"]');
+                if (tabAparelho) tabAparelho.click();
+                
                 setTimeout(() => document.getElementById('a_marca').focus(), 300);
             } else if (currentOSAction === 'encerrar') {
                 calculateCheckoutTotal();
@@ -1281,16 +1286,22 @@ document.querySelectorAll('input, form').forEach(el => {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">Nenhuma O.S. anterior encontrada para este cliente.</td></tr>';
                 } else {
                     clientOs.reverse().forEach(os => {
-                        const aparelhoStr = os.aparelho ? `${os.aparelho.marca} ${os.aparelho.modelo}` : '-';
-                        const defeitoStr = os.aparelho ? os.aparelho.defeito : '-';
+                        const aparelhoStr = (os.marca || os.aparelho?.marca || '') + ' ' + (os.modelo || os.aparelho?.modelo || '');
+                        const defeitoStr = os.defeito || os.aparelho?.defeito || '-';
                         const statusOs = os.status || 'Concluída';
                         const tr = document.createElement('tr');
                         tr.style.cursor = 'pointer';
+                        const osNum = os.osNumber || os.numero || '-';
+                        let dataStr = '-';
+                        if (os.dataIntake) dataStr = os.dataIntake.split('-').reverse().join('/');
+                        else if (os.data_entrada) dataStr = os.data_entrada;
+                        else if (os.data) dataStr = os.data.split('T')[0].split('-').reverse().join('/');
+                        
                         tr.innerHTML = `
-                            <td style="font-weight: bold; color: var(--primary);">#${os.numero || '-'}</td>
-                            <td>${aparelhoStr}</td>
+                            <td style="font-weight: bold; color: var(--primary);">#${osNum}</td>
+                            <td>${aparelhoStr.trim() || '-'}</td>
                             <td>${defeitoStr}</td>
-                            <td>${os.data_entrada || '-'}</td>
+                            <td>${dataStr}</td>
                             <td><span style="background: var(--bg-surface-hover); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">${statusOs}</span></td>
                         `;
                         
@@ -1536,6 +1547,10 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
         });
     });
 }
+
+
+
+
 
 
 
