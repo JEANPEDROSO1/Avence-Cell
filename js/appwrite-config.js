@@ -1,4 +1,4 @@
-const client = new Appwrite.Client();
+﻿const client = new Appwrite.Client();
 
 client
     .setEndpoint('https://sfo.cloud.appwrite.io/v1')
@@ -105,6 +105,16 @@ window.bootAppwrite = async function() {
         window.globalData.fechamentos = fec.documents.map(d => ({...d, id: d.$id}));
         window.globalData.pontos = pts.documents.map(d => ({...d, id: d.$id}));
 
+        // Atualizar localStorage para manter sincronia com o banco em nuvem
+        localStorage.setItem('avence_clientes', JSON.stringify(window.globalData.clientes));
+        localStorage.setItem('avence_estoque', JSON.stringify(window.globalData.estoque));
+        localStorage.setItem('avence_config', JSON.stringify(window.globalData.config));
+        localStorage.setItem('avence_colaboradores', JSON.stringify(window.globalData.colaboradores));
+        localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+        localStorage.setItem('avence_transacoes', JSON.stringify(window.globalData.transacoes));
+        localStorage.setItem('avence_fechamentos', JSON.stringify(window.globalData.fechamentos));
+        localStorage.setItem('avence_pontos', JSON.stringify(window.globalData.pontos));
+
         document.dispatchEvent(new Event('appwriteReady'));
     } catch (e) {
         window.showLoading('Erro Appwrite: ' + (e.message || e));
@@ -166,3 +176,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
