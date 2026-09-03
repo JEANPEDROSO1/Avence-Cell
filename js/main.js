@@ -1585,3 +1585,173 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
 
 
 
+
+// ==========================================
+// GESTÃO DO SISTEMA LOGIC
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Lista de Clientes
+    const btnGestaoClientes = document.getElementById('btn-gestao-clientes');
+    const modalListaClientes = document.getElementById('modal-lista-clientes');
+    
+    if (btnGestaoClientes && modalListaClientes) {
+        btnGestaoClientes.addEventListener('click', () => {
+            renderGestaoClientes();
+            openModal(modalListaClientes);
+        });
+        
+        const inputPesquisaClientes = document.getElementById('input-pesquisa-gestao-clientes');
+        if (inputPesquisaClientes) {
+            inputPesquisaClientes.addEventListener('input', (e) => {
+                renderGestaoClientes(e.target.value);
+            });
+        }
+    }
+    
+    function renderGestaoClientes(filtro = '') {
+        const tbody = document.getElementById('gestao-clientes-tbody');
+        const contador = document.getElementById('contador-gestao-clientes');
+        if (!tbody || !contador) return;
+        
+        tbody.innerHTML = '';
+        
+        let clientes = window.globalData?.clientes || window.clientes || [];
+        if (clientes.length === 0) {
+            try {
+                const cliStr = localStorage.getItem('avence_clientes');
+                if (cliStr) clientes = JSON.parse(cliStr);
+            } catch(e) {}
+        }
+        
+        let filtrados = clientes;
+        if (filtro) {
+            const termo = filtro.toLowerCase();
+            filtrados = clientes.filter(c => 
+                (c.nome && c.nome.toLowerCase().includes(termo)) || 
+                (c.telefone && c.telefone.includes(termo)) ||
+                (c.cpf_cnpj && c.cpf_cnpj.includes(termo))
+            );
+        }
+        
+        contador.textContent = filtrados.length;
+        
+        if (filtrados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum cliente encontrado.</td></tr>';
+            return;
+        }
+        
+        // Sort alphabetically
+        filtrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        
+        filtrados.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = 
+                <td style="padding: 12px; border-bottom: 1px solid var(--border);"></td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border);"></td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border);"></td>
+                <td style="padding: 12px; border-bottom: 1px solid var(--border); text-align: center;">
+                    <button class="btn btn-secondary btn-historico-cliente-gestao" data-nome="+ (c.nome || '').replace(/"/g, '&quot;') + " style="padding: 6px 12px; font-size: 13px;" title="Ver Histórico">
+                        <i class="ph ph-clock-counter-clockwise"></i> Histórico
+                    </button>
+                </td>
+            ;
+            tbody.appendChild(tr);
+        });
+        
+        document.querySelectorAll('.btn-historico-cliente-gestao').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const nome = e.currentTarget.getAttribute('data-nome');
+                closeModal(modalListaClientes);
+                
+                // Abre o historico do cliente via logic existente em index.html/main.js
+                const btnHistOld = document.getElementById('btn-historico-cliente');
+                if (btnHistOld) {
+                    // Força um nome no campo de pesquisa ou apenas injeta
+                    const event = new CustomEvent('abrirHistoricoCliente', { detail: { nome: nome } });
+                    document.dispatchEvent(event);
+                }
+            });
+        });
+    }
+    
+    // Escutador global para abrir o histrico passando o nome (reaproveitando modal-historico-cliente)
+    document.addEventListener('abrirHistoricoCliente', (e) => {
+        const clienteAtual = e.detail.nome;
+        document.getElementById('historico-cliente-nome').textContent = clienteAtual;
+        
+        let osList = [];
+        try {
+            const osStr = localStorage.getItem('avence_os');
+            if (osStr) osList = JSON.parse(osStr);
+        } catch(e) {}
+        
+        const myOs = osList.filter(o => {
+            const osName = (typeof o.cliente === 'string' ? o.cliente : (o.cliente?.nome || '')).toLowerCase().trim();
+            return osName === clienteAtual.toLowerCase().trim();
+        });
+        
+        myOs.sort((a, b) => b.osNumber - a.osNumber);
+        
+        const tbody = document.getElementById('historico-cliente-tbody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            if (myOs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 16px;">Nenhuma O.S. encontrada.</td></tr>';
+            } else {
+                myOs.forEach(os => {
+                    const tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+                    
+                    const osNum = os.osNumber || os.numero || '-';
+                    const marcaModelo = (os.marca || os.aparelho?.marca || '') + ' ' + (os.modelo || os.aparelho?.modelo || '');
+                    const defeitoStr = os.defeito || os.aparelho?.defeito || '-';
+                    let dataStr = '-';
+                    if (os.dataIntake) dataStr = os.dataIntake.split('-').reverse().join('/');
+                    else if (os.data) dataStr = os.data.split('T')[0].split('-').reverse().join('/');
+                    const statusOs = os.status || 'Concluída';
+                    
+                    tr.innerHTML = 
+                        <td>#</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><span class="status-badge status-"></span></td>
+                    ;
+                    tr.addEventListener('click', () => {
+                        window.osSelecionadaHistorico = os.osNumber || os.numero;
+                        // Destaca a linha selecionada
+                        tbody.querySelectorAll('tr').forEach(t => t.style.background = 'transparent');
+                        tr.style.background = 'rgba(59, 130, 246, 0.2)';
+                    });
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+        openModal(document.getElementById('modal-historico-cliente'));
+    });
+
+    // Lista de O.S. (Abre a pesquisa que já existe)
+    const btnGestaoOs = document.getElementById('btn-gestao-os');
+    if (btnGestaoOs) {
+        btnGestaoOs.addEventListener('click', () => {
+            const btnPesquisa = document.getElementById('btn-pesquisar-os');
+            if (btnPesquisa) btnPesquisa.click();
+        });
+    }
+
+    // Controle de Colab (Abre relatorios ou modal se existir)
+    const btnGestaoColab = document.getElementById('btn-gestao-colab');
+    if (btnGestaoColab) {
+        btnGestaoColab.addEventListener('click', () => {
+            const btnRelColab = document.getElementById('btn-relatorio-colab');
+            if (btnRelColab) {
+                btnRelColab.click();
+            } else if (document.getElementById('modal-relatorio-colab')) {
+                openModal(document.getElementById('modal-relatorio-colab'));
+            } else {
+                window.customAlert('Módulo de Controle de Ponto em desenvolvimento.', 'info');
+            }
+        });
+    }
+});

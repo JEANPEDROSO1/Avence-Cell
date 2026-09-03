@@ -103,6 +103,14 @@
                     <i class="ph ph-chart-bar"></i>
                     <span>Relatórios</span>
                 </button>
+                <button class="menu-btn" data-target="gestao">
+                    <i class="ph ph-briefcase"></i>
+                    <span>Gestão</span>
+                </button>
+                <button class="menu-btn" data-target="gestao">
+                    <i class="ph ph-briefcase"></i>
+                    <span>Gestão</span>
+                </button>
                 <div class="spacer" style="flex:1"></div>
                 <button class="menu-btn" data-modal="modal-configuracoes" id="btn-config">
                     <i class="ph ph-gear"></i>
@@ -445,6 +453,55 @@
                         <!-- Cards injetados via JS -->
                     </div>
                 </section>
+                
+                <section id="gestao" class="screen" style="display: none;">
+                    <div class="section-header">
+                        <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-briefcase" style="color: var(--primary);"></i> Gestão do Sistema</h2>
+                    </div>
+                    
+                    <div id="gestao-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding-top: 10px;">
+                        
+                        <!-- Card Lista de Clientes -->
+                        <div class="card" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;" onclick="document.getElementById('btn-gestao-clientes').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-users" style="font-size: 32px; color: #3b82f6;"></i>
+                            </div>
+                            <h3 style="font-size: 18px; margin: 0; color: var(--text-main);">Lista de Clientes</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); margin: 0;">Consulte e gerencie a carteira de clientes cadastrados.</p>
+                            <button id="btn-gestao-clientes" style="display: none;"></button>
+                        </div>
+                        
+                        <!-- Card Lista de O.S. -->
+                        <div class="card" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;" onclick="document.getElementById('btn-gestao-os').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-wrench" style="font-size: 32px; color: #10b981;"></i>
+                            </div>
+                            <h3 style="font-size: 18px; margin: 0; color: var(--text-main);">Lista de O.S.</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); margin: 0;">Pesquise e altere as Ordens de Serviço cadastradas.</p>
+                            <button id="btn-gestao-os" style="display: none;"></button>
+                        </div>
+                        
+                        <!-- Card Controle de Colaboradores -->
+                        <div class="card" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;" onclick="document.getElementById('btn-gestao-colab').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-identification-card" style="font-size: 32px; color: #f59e0b;"></i>
+                            </div>
+                            <h3 style="font-size: 18px; margin: 0; color: var(--text-main);">Controle de Colab.</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); margin: 0;">Verifique relatórios e desempenho da equipe.</p>
+                            <button id="btn-gestao-colab" style="display: none;"></button>
+                        </div>
+                        
+                        <!-- Card Configurações -->
+                        <div class="card" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;" onclick="document.getElementById('btn-config').click()" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(139, 92, 246, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-gear" style="font-size: 32px; color: #8b5cf6;"></i>
+                            </div>
+                            <h3 style="font-size: 18px; margin: 0; color: var(--text-main);">Configurações</h3>
+                            <p style="font-size: 14px; color: var(--text-muted); margin: 0;">Ajuste os dados da loja, e-mails e preferências.</p>
+                        </div>
+                        
+                    </div>
+                </section>
                 <!-- Removed configuracoes section to use modal instead -->
             </div>
         </main>
@@ -723,6 +780,78 @@
     </div>
 
     <!-- Modal: Cadastro de Cliente -->
+    <!-- MODAL LISTA DE CLIENTES (GESTAO) -->
+    <div class="modal-overlay no-print" id="modal-lista-clientes" style="z-index: 115;">
+        <div class="modal-content" style="max-width: 900px; display: flex; flex-direction: column; height: 80vh;">
+            <div class="modal-header">
+                <h2><i class="ph ph-users"></i> Lista Geral de Clientes</h2>
+                <button class="btn-close" onclick="closeModal(document.getElementById('modal-lista-clientes'))"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; min-height: 0; gap: 16px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <i class="ph ph-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;"></i>
+                        <input type="text" id="input-pesquisa-gestao-clientes" placeholder="Pesquisar por nome ou telefone..." style="width: 100%; padding: 12px 12px 12px 40px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 15px;">
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-muted);">Total: <span id="contador-gestao-clientes">0</span></div>
+                </div>
+                
+                <div style="flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-dark);">
+                    <table class="table" style="width: 100%; border-collapse: collapse;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-surface-light); z-index: 1;">
+                            <tr>
+                                <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border);">Nome do Cliente</th>
+                                <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border); width: 180px;">Telefone</th>
+                                <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border); width: 200px;">CPF/CNPJ</th>
+                                <th style="text-align: center; padding: 12px; border-bottom: 1px solid var(--border); width: 100px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gestao-clientes-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LISTA DE CLIENTES (GESTAO) -->
+    <div class="modal-overlay no-print" id="modal-lista-clientes" style="z-index: 115;">
+        <div class="modal-content" style="max-width: 900px; display: flex; flex-direction: column; height: 80vh;">
+            <div class="modal-header">
+                <h2><i class="ph ph-users"></i> Lista Geral de Clientes</h2>
+                <button class="btn-close" onclick="closeModal(document.getElementById('modal-lista-clientes'))"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; min-height: 0; gap: 16px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <i class="ph ph-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;"></i>
+                        <input type="text" id="input-pesquisa-gestao-clientes" placeholder="Pesquisar por nome ou telefone..." style="width: 100%; padding: 12px 12px 12px 40px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 15px;">
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-muted);">Total: <span id="contador-gestao-clientes">0</span></div>
+                </div>
+                
+                <div style="flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-dark);">
+                    <table class="table" style="width: 100%; border-collapse: collapse;">
+                        <thead style="position: sticky; top: 0; background: var(--bg-surface-light); z-index: 1;">
+                            <tr>
+                                <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border);">Nome do Cliente</th>
+                                <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border); width: 180px;">Telefone</th>
+                                <th style="text-align: left; padding: 12px; border-bottom: 1px solid var(--border); width: 200px;">CPF/CNPJ</th>
+                                <th style="text-align: center; padding: 12px; border-bottom: 1px solid var(--border); width: 100px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gestao-clientes-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay no-print" id="modal-cadastro" style="z-index: 110;">
         <div class="modal-container large-modal" style="height: 85vh; max-height: 900px; max-width: 1200px; width: 95vw;">
             <div class="modal-header">
@@ -2458,6 +2587,9 @@
     </div>
 </body>
 </html>
+
+
+
 
 
 
