@@ -115,9 +115,15 @@ document.querySelectorAll('input, form').forEach(el => {
     const btnEditarClienteOS = document.getElementById('btn-editar-cliente-os');
     
     // In-memory data store for the current flow
-    let currentFlowData = JSON.parse(localStorage.getItem('avence_current_flow')) || {
-        cliente: {},
-        aparelho: {}
+    let storedFlow = {};
+    try {
+        storedFlow = JSON.parse(localStorage.getItem('avence_current_flow')) || {};
+    } catch(e) {}
+    
+    let currentFlowData = {
+        cliente: storedFlow.cliente || {},
+        aparelho: storedFlow.aparelho || {},
+        ...storedFlow
     };
 
     // Auto-save currentFlowData when modified by proxy or manually
@@ -455,6 +461,9 @@ document.querySelectorAll('input, form').forEach(el => {
 
             // Popula os dados para o fluxo atual mantendo o ID para reconhecer que é edição
             currentFlowData = { ...selectedOS };
+            if (!currentFlowData.aparelho) currentFlowData.aparelho = {};
+            if (!currentFlowData.cliente) currentFlowData.cliente = {};
+            if (typeof currentFlowData.cliente === 'string') currentFlowData.cliente = { nome: currentFlowData.cliente };
 
             const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
             
@@ -1476,6 +1485,9 @@ document.querySelectorAll('input, form').forEach(el => {
                         return;
                     }
                     currentFlowData = { ...selectedOS };
+                    if (!currentFlowData.aparelho) currentFlowData.aparelho = {};
+                    if (!currentFlowData.cliente) currentFlowData.cliente = {};
+                    if (typeof currentFlowData.cliente === 'string') currentFlowData.cliente = { nome: currentFlowData.cliente };
                     
                     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
                     
