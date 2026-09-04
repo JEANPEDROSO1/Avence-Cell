@@ -1590,7 +1590,6 @@ if(mobileMenuBtn && sidebar && sidebarOverlay) {
 // GESTÃO DO SISTEMA LOGIC
 // ==========================================
 
-document.addEventListener('DOMContentLoaded', () => {
     // Lista de Clientes
     const btnGestaoClientes = document.getElementById('btn-gestao-clientes');
     const modalListaClientes = document.getElementById('modal-lista-clientes');
@@ -1754,4 +1753,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+
