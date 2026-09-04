@@ -1342,7 +1342,7 @@ document.querySelectorAll('input, form').forEach(el => {
                             tr.classList.add('selected-os-row');
                             
                             // Habilitar botão
-                            osSelecionadaHistorico = os.numero;
+                            osSelecionadaHistorico = osNum;
                             const btnAlt = document.getElementById('btn-alterar-os-historico');
                             if (btnAlt) {
                                 btnAlt.disabled = false;
