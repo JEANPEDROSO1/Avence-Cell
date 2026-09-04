@@ -26,10 +26,14 @@
         }
     });
     
-    let eanConfig = { linhas: 10, colunas: 3, tamanho: 'medio' };
+    let eanConfig = { linhas: 13, colunas: 5, tamanho: 'pimaco-6180' };
     try {
         const storedConfig = localStorage.getItem('avence_ean_config');
-        if (storedConfig) eanConfig = JSON.parse(storedConfig);
+        if (storedConfig) {
+            // Força o padrão Pimaco 6180 para todos
+            eanConfig = { linhas: 13, colunas: 5, tamanho: 'pimaco-6180' };
+            localStorage.setItem('avence_ean_config', JSON.stringify(eanConfig));
+        }
     } catch(e) {}
     
     const btnConfigEan = document.getElementById('btn-config-ean');
@@ -498,9 +502,9 @@
     window.updateEanPreview = function() {
         const produto = window.currentEanProduct;
         if(!produto) return;
-        const linhas = parseInt(document.getElementById('ean-linhas').value) || 10;
-        const colunas = parseInt(document.getElementById('ean-colunas').value) || 3;
-        const tamanho = document.getElementById('ean-tamanho').value;
+        const linhas = 13;
+        const colunas = 5;
+        const tamanho = 'pimaco-6180';
         
         let qtd = parseInt(document.getElementById('ean-qtd').value);
         if (isNaN(qtd) || qtd < 1) qtd = 1;
@@ -511,12 +515,12 @@
         const printBarcode = document.getElementById('print-barcode');
         
         previewContainer.innerHTML = '';
-        previewContainer.className = (tamanho === 'pimaco-6180') ? 'pimaco-6180' : '';
-        previewContainer.style.gridTemplateColumns = (tamanho === 'pimaco-6180') ? '' : `repeat(${colunas}, 1fr)`;
+        previewContainer.className = 'pimaco-6180';
+        previewContainer.style.gridTemplateColumns = '';
         
         printBarcode.innerHTML = '';
-        printBarcode.className = (tamanho === 'pimaco-6180') ? 'pimaco-6180' : '';
-        printBarcode.style.gridTemplateColumns = (tamanho === 'pimaco-6180') ? '' : `repeat(${colunas}, 1fr)`;
+        printBarcode.className = 'pimaco-6180';
+        printBarcode.style.gridTemplateColumns = '';
         
         const storeConfig = JSON.parse(localStorage.getItem('avence_config')) || {};
         const storeName = storeConfig.nome || 'Sua Loja';
@@ -568,9 +572,9 @@
     
     document.getElementById('btn-salvar-config-ean')?.addEventListener('click', () => {
         eanConfig = {
-            linhas: parseInt(document.getElementById('ean-linhas').value) || 10,
-            colunas: parseInt(document.getElementById('ean-colunas').value) || 3,
-            tamanho: document.getElementById('ean-tamanho').value || 'medio'
+            linhas: 13,
+            colunas: 5,
+            tamanho: 'pimaco-6180'
         };
         localStorage.setItem('avence_ean_config', JSON.stringify(eanConfig));
         

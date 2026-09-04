@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <script>window.onerror = function(msg, url, line) { alert("Error: " + msg + "\nLine: " + line); };</script>
@@ -1869,26 +1869,23 @@
             <div class="modal-body" style="padding: 24px; display: flex; gap: 24px; max-height: 70vh;">
                 <!-- Configurações (Esquerda) -->
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label>Etiquetas por Linha (Colunas)</label>
-                        <input type="number" id="ean-colunas" value="3" min="1" max="10">
+                        <input type="number" id="ean-colunas" value="5" min="1" max="10">
                     </div>
                     <div class="form-group">
                         <label>Quantidade a Imprimir</label>
                         <input type="number" id="ean-qtd" value="1" min="1" max="1000">
                         <small style="color: var(--text-muted); font-size: 11px;">(Sua qtde em estoque)</small>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label>Quantidade de Linhas</label>
-                        <input type="number" id="ean-linhas" value="10" min="1" max="100">
+                        <input type="number" id="ean-linhas" value="13" min="1" max="100">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label>Tamanho da Etiqueta</label>
                         <select id="ean-tamanho">
-                            <option value="pequeno">Pequena</option>
-                            <option value="medio" selected>Média</option>
-                            <option value="grande">Grande</option>
-                            <option value="pimaco-6180">Folha A4 - 65 Etiquetas (Pimaco 6180)</option>
+                            <option value="pimaco-6180" selected>Folha A4 - 65 Etiquetas (Pimaco 6180)</option>
                         </select>
                     </div>
                     <button class="btn btn-primary" id="btn-salvar-config-ean" style="margin-top: auto; padding: 16px; font-size: 16px; justify-content: center; background-color: #22c55e; border-color: #22c55e;">

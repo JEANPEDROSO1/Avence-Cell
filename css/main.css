@@ -955,41 +955,46 @@ textarea {
         margin: 0;
     }
 
-    /* Print Barcode Specifics */
+    /* Print Barcode Specifics - Padrão 5x13 (65 etiquetas A4) */
     body.printing-ean #print-barcode {
-        width: 100%;
-        max-width: none;
+        width: 210mm;
+        height: 297mm;
         margin: 0;
-        padding: 10px 0;
+        padding: 10.7mm 4.75mm;
         display: grid !important;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        justify-content: center;
+        grid-template-columns: repeat(5, 38.1mm) !important;
+        grid-template-rows: repeat(13, 21.2mm) !important;
+        gap: 0 2.53mm !important;
+        justify-content: start;
+        align-content: start;
+        box-sizing: border-box;
     }
     
     .barcode-container {
-        text-align: center;
-        width: 100%;
-        box-sizing: border-box;
+        width: 38.1mm;
+        height: 21.2mm;
+        padding: 1mm;
+        border: none;
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 12px;
-        border: 1px dashed #ccc;
+        justify-content: center;
+        box-sizing: border-box;
+        overflow: hidden;
         page-break-inside: avoid;
     }
     
     .barcode-container .store-name {
-        font-size: 14px;
+        font-size: 6px !important;
+        margin-bottom: 0px;
         font-weight: bold;
-        margin-bottom: 4px;
         text-transform: uppercase;
     }
     
     .barcode-container .product-name {
-        font-size: 12px;
-        margin-bottom: 8px;
-        max-width: 90%;
+        font-size: 5px !important;
+        margin-bottom: 0px;
+        max-width: 100%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1001,9 +1006,9 @@ textarea {
     }
     
     .barcode-container .product-price {
-        font-size: 16px;
+        font-size: 7px !important;
         font-weight: bold;
-        margin-top: 6px;
+        margin-top: 0px;
     }
     
     /* O.S. Print Intake (Half A4 Landscape / A5) */
@@ -1157,48 +1162,9 @@ textarea {
             margin: 0;
             size: A4 portrait;
         }
-        body.printing-ean #print-barcode.pimaco-6180 {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 10.7mm 4.75mm;
-            display: grid !important;
-            grid-template-columns: repeat(5, 38.1mm) !important;
-            grid-template-rows: repeat(13, 21.2mm) !important;
-            gap: 0 2.53mm !important;
-            justify-content: start;
-            align-content: start;
-            box-sizing: border-box;
-        }
-        body.printing-ean #print-barcode.pimaco-6180 .barcode-container {
-            width: 38.1mm;
-            height: 21.2mm;
-            padding: 1mm;
-            border: none; /* No border for real labels */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            overflow: hidden;
-            page-break-inside: avoid;
-        }
-        body.printing-ean #print-barcode.pimaco-6180 .store-name {
-            font-size: 6px !important;
-            margin-bottom: 0px;
-        }
-        body.printing-ean #print-barcode.pimaco-6180 .product-name {
-            font-size: 5px !important;
-            margin-bottom: 0px;
-            max-width: 100%;
-        }
-        body.printing-ean #print-barcode.pimaco-6180 .product-price {
-            font-size: 7px !important;
-            margin-top: 0px;
-        }
     }
     
-    #ean-preview-container.pimaco-6180 {
+    #ean-preview-container {
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
@@ -1215,7 +1181,7 @@ textarea {
         transform-origin: top center;
         box-sizing: border-box;
     }
-    #ean-preview-container.pimaco-6180 .barcode-container {
+    #ean-preview-container .barcode-container {
         width: 38.1mm;
         height: 21.2mm;
         padding: 1mm;
@@ -1227,17 +1193,23 @@ textarea {
         justify-content: center;
         box-sizing: border-box;
     }
-    #ean-preview-container.pimaco-6180 .store-name {
+    #ean-preview-container .store-name {
         font-size: 6px !important;
         margin-bottom: 0px;
+        font-weight: bold;
+        text-transform: uppercase;
     }
-    #ean-preview-container.pimaco-6180 .product-name {
+    #ean-preview-container .product-name {
         font-size: 5px !important;
         margin-bottom: 0px;
         max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    #ean-preview-container.pimaco-6180 .product-price {
+    #ean-preview-container .product-price {
         font-size: 7px !important;
+        font-weight: bold;
         margin-top: 0px;
     }
 
