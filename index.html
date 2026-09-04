@@ -1874,6 +1874,11 @@
                         <input type="number" id="ean-colunas" value="3" min="1" max="10">
                     </div>
                     <div class="form-group">
+                        <label>Quantidade a Imprimir</label>
+                        <input type="number" id="ean-qtd" value="1" min="1" max="1000">
+                        <small style="color: var(--text-muted); font-size: 11px;">(Sua qtde em estoque)</small>
+                    </div>
+                    <div class="form-group">
                         <label>Quantidade de Linhas</label>
                         <input type="number" id="ean-linhas" value="10" min="1" max="100">
                     </div>
@@ -2449,12 +2454,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
-    <script src="js/appwrite-config.js?v=6"></script>
-    <script src="js/main.js?v=6"></script>
-    <script src="js/estoque.js?v=6"></script>
-    <script src="js/pdv.js?v=6"></script>
-    <script src="js/os.js?v=6"></script>
-    <script src="js/financeiro.js?v=6"></script>
+    <script src="js/appwrite-config.js?v=7"></script>
+    <script src="js/main.js?v=7"></script>
+    <script src="js/estoque.js?v=7"></script>
+    <script src="js/pdv.js?v=7"></script>
+    <script src="js/os.js?v=7"></script>
+    <script src="js/financeiro.js?v=7"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Iniciar sincronização do Appwrite
@@ -2553,6 +2558,7 @@
     </div>
 </body>
 </html>
+
 
 
 

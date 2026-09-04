@@ -160,6 +160,12 @@
                     document.getElementById('ean-colunas').value = eanConfig.colunas;
                     document.getElementById('ean-tamanho').value = eanConfig.tamanho;
                     
+                    // Definir quantidade para imprimir com base no estoque
+                    const qtdInput = document.getElementById('ean-qtd');
+                    if(qtdInput) {
+                        qtdInput.value = parseInt(produto.qtd) || 1;
+                    }
+                    
                     updateEanPreview();
                     
                     document.body.classList.add('printing-ean');
@@ -487,13 +493,19 @@
         window.updateEanPreview();
     });
 
+    document.getElementById('ean-qtd')?.addEventListener('input', window.updateEanPreview);
+
     window.updateEanPreview = function() {
         const produto = window.currentEanProduct;
         if(!produto) return;
         const linhas = parseInt(document.getElementById('ean-linhas').value) || 10;
         const colunas = parseInt(document.getElementById('ean-colunas').value) || 3;
-        const qtd = linhas * colunas;
         const tamanho = document.getElementById('ean-tamanho').value;
+        
+        let qtd = parseInt(document.getElementById('ean-qtd').value);
+        if (isNaN(qtd) || qtd < 1) qtd = 1;
+        
+        const maxPageQtd = linhas * colunas;
         
         const previewContainer = document.getElementById('ean-preview-container');
         const printBarcode = document.getElementById('print-barcode');
