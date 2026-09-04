@@ -479,6 +479,14 @@
 
     // EAN Editor Logic
     // EAN Editor Logic
+    document.getElementById('ean-tamanho')?.addEventListener('change', (e) => {
+        if(e.target.value === 'pimaco-6180') {
+            document.getElementById('ean-colunas').value = 5;
+            document.getElementById('ean-linhas').value = 13;
+        }
+        window.updateEanPreview();
+    });
+
     window.updateEanPreview = function() {
         const produto = window.currentEanProduct;
         if(!produto) return;
@@ -491,10 +499,12 @@
         const printBarcode = document.getElementById('print-barcode');
         
         previewContainer.innerHTML = '';
-        previewContainer.style.gridTemplateColumns = `repeat(${colunas}, 1fr)`;
+        previewContainer.className = (tamanho === 'pimaco-6180') ? 'pimaco-6180' : '';
+        previewContainer.style.gridTemplateColumns = (tamanho === 'pimaco-6180') ? '' : `repeat(${colunas}, 1fr)`;
         
         printBarcode.innerHTML = '';
-        printBarcode.style.gridTemplateColumns = `repeat(${colunas}, 1fr)`;
+        printBarcode.className = (tamanho === 'pimaco-6180') ? 'pimaco-6180' : '';
+        printBarcode.style.gridTemplateColumns = (tamanho === 'pimaco-6180') ? '' : `repeat(${colunas}, 1fr)`;
         
         const storeConfig = JSON.parse(localStorage.getItem('avence_config')) || { nome: 'Sua Loja' };
         
@@ -504,6 +514,7 @@
         
         if(tamanho === 'pequeno') { bcWidth = 1; bcHeight = 30; fontSize = 10; }
         if(tamanho === 'grande') { bcWidth = 2; bcHeight = 70; fontSize = 16; }
+        if(tamanho === 'pimaco-6180') { bcWidth = 1; bcHeight = 25; fontSize = 8; }
         
         for (let i = 0; i < qtd; i++) {
             const container = document.createElement('div');

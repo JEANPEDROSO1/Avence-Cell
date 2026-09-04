@@ -1151,3 +1151,68 @@ textarea {
         width: 100% !important;
     }
 }
+
+    @media print {
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+        body.printing-ean #print-barcode.pimaco-6180 {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            padding: 10.7mm 4.5mm;
+            display: grid !important;
+            grid-template-columns: repeat(5, 38.1mm) !important;
+            grid-template-rows: repeat(13, 21.2mm) !important;
+            gap: 0 2.5mm !important;
+            justify-content: start;
+            align-content: start;
+            box-sizing: border-box;
+        }
+        body.printing-ean #print-barcode.pimaco-6180 .barcode-container {
+            width: 38.1mm;
+            height: 21.2mm;
+            padding: 1mm;
+            border: none; /* No border for real labels */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+        body.printing-ean #print-barcode.pimaco-6180 .store-name {
+            font-size: 6px !important;
+            margin-bottom: 0px;
+        }
+        body.printing-ean #print-barcode.pimaco-6180 .product-name {
+            font-size: 5px !important;
+            margin-bottom: 0px;
+            max-width: 100%;
+        }
+        body.printing-ean #print-barcode.pimaco-6180 .product-price {
+            font-size: 7px !important;
+            margin-top: 0px;
+        }
+    }
+    
+    #ean-preview-container.pimaco-6180 {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 10.7mm 4.5mm;
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        grid-auto-rows: minmax(40px, auto);
+        gap: 0 2.5mm !important;
+        background: white;
+        border: 1px solid #ccc;
+    }
+    #ean-preview-container.pimaco-6180 .barcode-container {
+        padding: 2px;
+        border: 1px dashed #ddd;
+        overflow: hidden;
+    }
+
