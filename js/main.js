@@ -837,7 +837,8 @@ document.querySelectorAll('input, form').forEach(el => {
 
         if (document.getElementById('modal-abrir-os').classList.contains('active')) {
             if (e.key === 'F2') {
-                e.preventDefault(); 
+                e.preventDefault();
+                currentFlowData = { cliente: {}, aparelho: {} };
                 const searchInputEl = document.getElementById('client-search');
                 const searchValue = searchInputEl ? searchInputEl.value.trim() : '';
                 const nomeInput = document.getElementById('c_nome');
@@ -867,6 +868,7 @@ document.querySelectorAll('input, form').forEach(el => {
     });
 
     document.getElementById('btn-novo-cliente-header').addEventListener('click', () => {
+        currentFlowData = { cliente: {}, aparelho: {} };
         const searchInputEl = document.getElementById('client-search');
         const searchValue = searchInputEl ? searchInputEl.value.trim() : '';
         const nomeInput = document.getElementById('c_nome');
@@ -1387,6 +1389,10 @@ document.querySelectorAll('input, form').forEach(el => {
     const btnNovaOsHistorico = document.getElementById('btn-nova-os-historico');
     if (btnNovaOsHistorico) {
         btnNovaOsHistorico.addEventListener('click', () => {
+            currentFlowData = {
+                cliente: currentFlowData.cliente || {},
+                aparelho: {}
+            };
             closeModal(document.getElementById('modal-historico-cliente'));
             openModal(document.getElementById('modal-aparelho'));
         });
