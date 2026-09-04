@@ -518,7 +518,8 @@
         printBarcode.className = (tamanho === 'pimaco-6180') ? 'pimaco-6180' : '';
         printBarcode.style.gridTemplateColumns = (tamanho === 'pimaco-6180') ? '' : `repeat(${colunas}, 1fr)`;
         
-        const storeConfig = JSON.parse(localStorage.getItem('avence_config')) || { nome: 'Sua Loja' };
+        const storeConfig = JSON.parse(localStorage.getItem('avence_config')) || {};
+        const storeName = storeConfig.nome || 'Sua Loja';
         
         let bcWidth = 2;
         let bcHeight = 50;
@@ -531,7 +532,7 @@
         for (let i = 0; i < qtd; i++) {
             const container = document.createElement('div');
             container.className = 'barcode-container';
-            container.innerHTML = `<div class="store-name" style="font-size:${fontSize}px">${storeConfig.nome}</div>
+            container.innerHTML = `<div class="store-name" style="font-size:${fontSize}px">${storeName}</div>
                 <div class="product-name" style="font-size:${fontSize-2}px">${produto.nome}</div>
                 <svg class="barcode-svg-${i}"></svg>
                 <div class="product-price" style="font-size:${fontSize+2}px">${formatMoney(produto.venda)}</div>`;
