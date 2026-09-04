@@ -268,8 +268,8 @@ document.querySelectorAll('input, form').forEach(el => {
         document.getElementById('p_store_name').textContent = config.nome;
         document.getElementById('p_store_address').textContent = config.endereco;
         document.getElementById('p_store_phone').textContent = config.telefone;
-        document.getElementById('p_store_email').textContent = config.email;
-        document.getElementById('p_sig_store').textContent = config.nome.toUpperCase();
+        document.getElementById('p_store_email').textContent = config.email || '';
+        document.getElementById('p_sig_store').textContent = (config.nome || '').toUpperCase();
 
         if (config.bgImage) {
             document.body.style.backgroundImage = `url(${config.bgImage})`;
