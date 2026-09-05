@@ -1063,7 +1063,7 @@ if (btnConfig && modalConfig) {
         if (document.getElementById('config-loja')) document.getElementById('config-loja').value = config.nome || 'Avence Cell';
         if (document.getElementById('config-telefone')) document.getElementById('config-telefone').value = config.telefone || '(43) 9900-4377';
         if (document.getElementById('config-endereco')) document.getElementById('config-endereco').value = config.endereco || 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR';
-        if (document.getElementById('config-email')) document.getElementById('config-email').value = config.email || 'contato@avencecell.com';
+        if (document.getElementById('config-email')) document.getElementById('config-email').value = config.email || 'avencecellivp@gmail.com';
         if (document.getElementById('config-email-relatorio')) document.getElementById('config-email-relatorio').value = config.emailRelatorio || '';
         if (document.getElementById('config-tecnico')) document.getElementById('config-tecnico').value = config.tecnico ? config.tecnico : 'Não definido';
         if (document.getElementById('config-tema')) document.getElementById('config-tema').value = config.tema || 'dark';
