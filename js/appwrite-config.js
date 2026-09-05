@@ -101,8 +101,24 @@ window.bootAppwrite = async function() {
         window.globalData.config = cfg.documents[0] ? {...cfg.documents[0], id: cfg.documents[0].$id} : {};
         window.globalData.colaboradores = col.documents.map(d => ({...d, id: d.$id}));
         window.globalData.os = os.documents.map(d => ({...d, id: d.$id}));
-        window.globalData.transacoes = tr.documents.map(d => ({...d, id: d.$id}));
-        window.globalData.fechamentos = fec.documents.map(d => ({...d, id: d.$id}));
+        window.globalData.transacoes = tr.documents.map(d => ({
+            ...d,
+            id: d.$id,
+            motivo: d.motivo || d.descricao || '',
+            descricao: d.descricao || d.motivo || '',
+            formaPgto: d.formaPgto || d.forma || 'dinheiro',
+            forma: d.forma || d.formaPgto || 'dinheiro'
+        }));
+        window.globalData.fechamentos = fec.documents.map(d => ({
+            ...d,
+            id: d.$id,
+            valorFechado: d.valorFechado !== undefined ? d.valorFechado : (d.saldoCalculado || 0),
+            saldoCalculado: d.saldoCalculado !== undefined ? d.saldoCalculado : (d.valorFechado || 0),
+            responsavel: d.responsavel || d.responsavelFechamento || '',
+            responsavelFechamento: d.responsavelFechamento || d.responsavel || '',
+            data: d.data || d.dataFechamento || '',
+            dataFechamento: d.dataFechamento || d.data || ''
+        }));
         window.globalData.pontos = pts.documents.map(d => ({...d, id: d.$id}));
 
         // Atualizar localStorage para manter sincronia com o banco em nuvem
@@ -112,6 +128,7 @@ window.bootAppwrite = async function() {
         localStorage.setItem('avence_colaboradores', JSON.stringify(window.globalData.colaboradores));
         localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
         localStorage.setItem('avence_transacoes', JSON.stringify(window.globalData.transacoes));
+        localStorage.setItem('avence_transacoes_caixa', JSON.stringify(window.globalData.transacoes));
         localStorage.setItem('avence_fechamentos', JSON.stringify(window.globalData.fechamentos));
         localStorage.setItem('avence_pontos', JSON.stringify(window.globalData.pontos));
 

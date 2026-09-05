@@ -158,12 +158,15 @@ function renderFinanceiro() {
 window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto = 'dinheiro') {
     if (!caixaAberto) return false;
 
+    const dataIso = new Date().toISOString();
     const newTx = {
         tipo: tipo,
         valor: parseFloat(valor),
         motivo: motivo,
+        descricao: motivo,
         formaPgto: formaPgto,
-        data: new Date().toISOString()
+        forma: formaPgto,
+        data: dataIso
     };
 
     try {
@@ -171,13 +174,26 @@ window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto 
         const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, docId, newTx);
         newTx.id = created.$id;
         transacoesCaixa.push(newTx);
+        if (window.globalData && Array.isArray(window.globalData.transacoes)) {
+            window.globalData.transacoes.push(newTx);
+        }
         localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+        localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));
         renderFinanceiro();
         return true;
     } catch (err) {
         console.error('Erro ao registrar transação na nuvem:', err);
-        window.customAlert('Erro ao registrar transação financeira na nuvem: ' + err.message, 'warning');
-        return false;
+        // Garante registro local para não perder o fluxo de caixa
+        newTx.id = 'local_' + Date.now();
+        transacoesCaixa.push(newTx);
+        if (window.globalData && Array.isArray(window.globalData.transacoes)) {
+            window.globalData.transacoes.push(newTx);
+        }
+        localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+        localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));
+        renderFinanceiro();
+        window.customAlert('Aviso: Movimentação salva localmente. Erro ao sincronizar na nuvem: ' + err.message, 'warning');
+        return true;
     }
 };
 
@@ -649,10 +665,14 @@ window.processarFechamentoCaixa = async function () {
     fundoCaixa = 0;
 
     const nomeFechamento = (isMaster && !colabResp) ? 'Administrador/Dono' : responsavelNome;
+    const nowIso = new Date().toISOString();
     const fechamentoData = {
         valorFechado: parseFloat(informadoStr) || 0,
+        saldoCalculado: parseFloat(informadoStr) || 0,
         responsavel: nomeFechamento,
-        data: new Date().toISOString()
+        responsavelFechamento: nomeFechamento,
+        data: nowIso,
+        dataFechamento: nowIso
     };
 
     try {

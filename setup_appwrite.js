@@ -87,7 +87,9 @@ const collectionsToCreate = [
             { key: 'valor', type: 'float', required: true },
             { key: 'tipo', type: 'string', size: 50, required: true }, // Entrada, Saida
             { key: 'forma', type: 'string', size: 100, required: false }, // Dinheiro, PIX, etc
+            { key: 'formaPgto', type: 'string', size: 100, required: false },
             { key: 'descricao', type: 'string', size: 500, required: false },
+            { key: 'motivo', type: 'string', size: 1000, required: false },
             { key: 'vendedor', type: 'string', size: 255, required: false },
             { key: 'osNumber', type: 'string', size: 50, required: false }
         ]
@@ -96,9 +98,12 @@ const collectionsToCreate = [
         id: 'fechamentos', name: 'Fechamentos de Caixa',
         attributes: [
             { key: 'dataFechamento', type: 'string', size: 100, required: true },
+            { key: 'data', type: 'string', size: 100, required: false },
             { key: 'fundoInicial', type: 'float', required: false },
+            { key: 'valorFechado', type: 'float', required: false },
             { key: 'responsavelAbertura', type: 'string', size: 255, required: false },
             { key: 'responsavelFechamento', type: 'string', size: 255, required: false },
+            { key: 'responsavel', type: 'string', size: 255, required: false },
             { key: 'saldoCalculado', type: 'float', required: false },
             { key: 'totalEntradas', type: 'float', required: false },
             { key: 'totalSaidas', type: 'float', required: false }
