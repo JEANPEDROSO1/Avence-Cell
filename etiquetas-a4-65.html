@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impressão Milimétrica de Etiquetas - 65 por Folha A4 (Pimaco 6180)</title>
+    <!-- JsBarcode para gerar o código de barras vetorial nítido -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           1. VARIÁVEIS DE CALIBRAÇÃO MILIMÉTRICA (AJUSTE FINO COM A RÉGUA AQUI)
+           ========================================================================== */
+        :root {
+            /* DIMENSÕES DA ETIQUETA INDIVIDUAL */
+            --etiqueta-largura: 38.2mm;   /* Largura de cada etiqueta (38.2mm) */
+            --etiqueta-altura: 21.2mm;    /* Altura de cada etiqueta (21.2mm) */
+
+            /* MARGENS DA FOLHA DE PAPEL A4 */
+            --margem-superior: 10.7mm;    /* Do topo da folha até a 1ª etiqueta */
+            --margem-esquerda: 4.5mm;     /* Da borda esquerda até a 1ª etiqueta */
+
+            /* ESPAÇAMENTOS ENTRE ETIQUETAS */
+            --vazio-horizontal: 2.5mm;    /* Espaço entre colunas */
+            --vazio-vertical: 0.0mm;      /* Espaço entre linhas */
+
+            /* GRADE */
+            --colunas: 5;
+            --linhas: 13;
+        }
+
+        /* ==========================================================================
+           2. REGRAS GLOBAIS E DE IMPRESSÃO (@page & @media print)
+           ========================================================================== */
+        @page {
+            size: A4 portrait;
+            margin: 0; /* Zera margens do driver do navegador */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        html, body {
+            width: 210mm;
+            background-color: #f1f5f9;
+            font-family: 'Inter', Arial, sans-serif;
+            color: #000;
+        }
+
+        /* ==========================================================================
+           3. FOLHA A4 E GRADE CSS GRID
+           ========================================================================== */
+        .folha-a4 {
+            width: 210mm;
+            height: 297mm;
+            margin: 20px auto;
+            background: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            
+            /* Posicionamento exato milimétrico */
+            padding-top: var(--margem-superior);
+            padding-left: var(--margem-esquerda);
+            
+            display: grid;
+            grid-template-columns: repeat(var(--colunas), var(--etiqueta-largura));
+            grid-template-rows: repeat(var(--linhas), var(--etiqueta-altura));
+            column-gap: var(--vazio-horizontal);
+            row-gap: var(--vazio-vertical);
+            
+            align-content: start;
+            justify-content: start;
+            page-break-after: always;
+            overflow: hidden;
+        }
+
+        /* ==========================================================================
+           4. ESTRUTURA INTERNA DA ETIQUETA
+           ========================================================================== */
+        .etiqueta {
+            width: var(--etiqueta-largura);
+            height: var(--etiqueta-altura);
+            max-width: var(--etiqueta-largura);
+            max-height: var(--etiqueta-altura);
+            padding: 0.8mm 1.2mm 0.6mm 1.2mm;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            
+            overflow: hidden;
+            box-sizing: border-box;
+            background-color: #fff;
+            position: relative;
+        }
+
+        /* Bordas de visualização em tela (removidas na impressão) */
+        body.mostrar-bordas .etiqueta {
+            outline: 0.5px dashed #94a3b8;
+        }
+
+        /* Topo: Nome do produto (opcional, compacto) */
+        .etiqueta-topo {
+            width: 100%;
+            font-size: 5.8pt;
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1;
+            margin-bottom: 0.2mm;
+            color: #111;
+        }
+
+        /* Centro: Código de barras */
+        .etiqueta-centro {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .etiqueta-centro svg {
+            width: 100%;
+            max-width: 35.5mm;
+            height: 11.5mm;
+            display: block;
+        }
+
+        /* Rodapé: Preço e Quantidade */
+        .etiqueta-rodape {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0.5mm;
+            line-height: 1;
+            margin-top: 0.2mm;
+        }
+
+        .etiqueta-preco {
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .etiqueta-qtd {
+            font-size: 6.2pt;
+            font-weight: 600;
+            color: #333;
+            background: #f1f5f9;
+            padding: 0.5mm 1mm;
+            border-radius: 1mm;
+        }
+
+        /* ==========================================================================
+           5. PAINEL DE CONTROLE EM TELA (NÃO IMPRESSO)
+           ========================================================================== */
+        .painel-controle {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .painel-titulo {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .painel-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .painel-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .painel-campo label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .painel-campo input {
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .painel-campo input:focus {
+            border-color: #38bdf8;
+        }
+
+        .painel-acoes {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-imprimir {
+            background-color: #22c55e;
+            color: #ffffff;
+        }
+        .btn-imprimir:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-atualizar {
+            background-color: #38bdf8;
+            color: #0f172a;
+        }
+        .btn-atualizar:hover {
+            background-color: #0284c7;
+            color: #fff;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+            color: #cbd5e1;
+        }
+
+        /* ==========================================================================
+           6. REGRAS ESPECÍFICAS DE IMPRESSÃO (@media print)
+           ========================================================================== */
+        @media print {
+            body {
+                background: transparent !important;
+            }
+
+            .painel-controle, .no-print {
+                display: none !important;
+            }
+
+            .folha-a4 {
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                /* Impede que o navegador empurre a folha para baixo */
+                page-break-before: avoid !important;
+                page-break-after: avoid !important;
+            }
+
+            /* Remove qualquer borda visível de teste no momento da impressão */
+            .etiqueta {
+                outline: none !important;
+                border: none !important;
+            }
+
+            .etiqueta-qtd {
+                background: transparent !important;
+                border: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="mostrar-bordas">
+
+    <!-- PAINEL DE CONTROLE (Ocultado automaticamente na impressão) -->
+    <div class="painel-controle no-print">
+        <div class="painel-titulo">
+            <span>🏷️ Impressão 65 Etiquetas A4 (Pimaco 6180)</span>
+        </div>
+
+        <div class="painel-inputs">
+            <div class="painel-campo">
+                <label>Nome do Produto</label>
+                <input type="text" id="input-nome" value="PELICULA 3D IPHONE 13" style="width: 170px;">
+            </div>
+            <div class="painel-campo">
+                <label>Código de Barras</label>
+                <input type="text" id="input-ean" value="7898523691234" style="width: 125px;">
+            </div>
+            <div class="painel-campo">
+                <label>Preço Venda (R$)</label>
+                <input type="text" id="input-preco" value="25,00" style="width: 80px;">
+            </div>
+            <div class="painel-campo">
+                <label>Qtd. por Etiqueta</label>
+                <input type="text" id="input-qtd" value="1 un" style="width: 70px;">
+            </div>
+            <div class="painel-campo">
+                <label>Total Etiquetas</label>
+                <input type="number" id="input-total" value="65" min="1" max="65" style="width: 65px;">
+            </div>
+        </div>
+
+        <div class="painel-acoes">
+            <label class="toggle-label" title="Mostra linhas tracejadas na tela para conferir contra a luz da folha adesiva">
+                <input type="checkbox" id="chk-bordas" checked>
+                Gabarito na tela
+            </label>
+            <button class="btn btn-atualizar" onclick="gerarEtiquetas()">
+                🔄 Atualizar
+            </button>
+            <button class="btn btn-imprimir" onclick="window.print()">
+                🖨️ Imprimir Folha
+            </button>
+        </div>
+    </div>
+
+    <!-- FOLHA A4 COM AS 65 ETIQUETAS (5 colunas x 13 linhas) -->
+    <div class="folha-a4" id="folha-a4">
+        <!-- Injetado dinamicamente pelo JavaScript -->
+    </div>
+
+    <script>
+        /**
+         * Gera as etiquetas na folha respeitando rigorosamente a grade de 5 x 13 (total 65)
+         */
+        function gerarEtiquetas() {
+            const folha = document.getElementById('folha-a4');
+            const nome = document.getElementById('input-nome').value.trim() || 'PRODUTO';
+            const ean = document.getElementById('input-ean').value.trim() || '7891234567890';
+            const preco = document.getElementById('input-preco').value.trim() || '0,00';
+            const qtd = document.getElementById('input-qtd').value.trim() || '1 un';
+            let total = parseInt(document.getElementById('input-total').value, 10);
+
+            if (isNaN(total) || total < 1) total = 65;
+            if (total > 65) total = 65; // Máximo que cabe em 1 folha A4 (5x13)
+
+            folha.innerHTML = '';
+
+            for (let i = 0; i < total; i++) {
+                const tag = document.createElement('div');
+                tag.className = 'etiqueta';
+                tag.innerHTML = `
+                    <div class="etiqueta-topo" title="${nome}">${nome}</div>
+                    <div class="etiqueta-centro">
+                        <svg id="barcode-${i}"></svg>
+                    </div>
+                    <div class="etiqueta-rodape">
+                        <span class="etiqueta-preco">R$ ${preco}</span>
+                        <span class="etiqueta-qtd">Qtd: ${qtd}</span>
+                    </div>
+                `;
+                folha.appendChild(tag);
+
+                // Renderiza o código de barras no SVG
+                try {
+                    // Tenta EAN13 se for numérico com 12 ou 13 dígitos
+                    const isEan13 = /^\d{12,13}$/.test(ean);
+                    JsBarcode(`#barcode-${i}`, ean, {
+                        format: isEan13 ? "EAN13" : "CODE128",
+                        width: 1.15,
+                        height: 25,
+                        displayValue: true,
+                        fontSize: 8.5,
+                        fontOptions: "bold",
+                        font: "Arial",
+                        margin: 0,
+                        textMargin: 1
+                    });
+                } catch (e) {
+                    // Fallback para CODE128 em caso de erro no dígito verificador do EAN
+                    try {
+                        JsBarcode(`#barcode-${i}`, ean, {
+                            format: "CODE128",
+                            width: 1.1,
+                            height: 25,
+                            displayValue: true,
+                            fontSize: 8.5,
+                            fontOptions: "bold",
+                            font: "Arial",
+                            margin: 0,
+                            textMargin: 1
+                        });
+                    } catch (err) {
+                        console.error('Erro ao renderizar código de barras:', err);
+                    }
+                }
+            }
+        }
+
+        // Alterna visualização do gabarito tracejado na tela
+        document.getElementById('chk-bordas').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                document.body.classList.add('mostrar-bordas');
+            } else {
+                document.body.classList.remove('mostrar-bordas');
+            }
+        });
+
+        // Inicializa automaticamente com as 65 etiquetas renderizadas ou dados recebidos por parâmetro
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('nome')) document.getElementById('input-nome').value = params.get('nome');
+            if (params.get('ean')) document.getElementById('input-ean').value = params.get('ean');
+            if (params.get('preco')) document.getElementById('input-preco').value = params.get('preco');
+            if (params.get('total')) document.getElementById('input-total').value = params.get('total');
+            if (params.get('qtd')) document.getElementById('input-qtd').value = params.get('qtd');
+
+            gerarEtiquetas();
+        });
+    </script>
+</body>
+</html>

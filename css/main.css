@@ -955,61 +955,7 @@ textarea {
         margin: 0;
     }
 
-    /* Print Barcode Specifics - Padrão 5x13 (65 etiquetas A4) */
-    body.printing-ean #print-barcode {
-        width: 210mm;
-        height: 297mm;
-        margin: 0;
-        padding: 10.7mm 4.75mm;
-        display: grid !important;
-        grid-template-columns: repeat(5, 38.1mm) !important;
-        grid-template-rows: repeat(13, 21.2mm) !important;
-        gap: 0 2.53mm !important;
-        justify-content: start;
-        align-content: start;
-        box-sizing: border-box;
-    }
-    
-    .barcode-container {
-        width: 38.1mm;
-        height: 21.2mm;
-        padding: 1mm;
-        border: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        overflow: hidden;
-        page-break-inside: avoid;
-    }
-    
-    .barcode-container .store-name {
-        font-size: 6px !important;
-        margin-bottom: 0px;
-        font-weight: bold;
-        text-transform: uppercase;
-    }
-    
-    .barcode-container .product-name {
-        font-size: 5px !important;
-        margin-bottom: 0px;
-        max-width: 100%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .barcode-container svg {
-        max-width: 100%;
-        height: auto;
-    }
-    
-    .barcode-container .product-price {
-        font-size: 7px !important;
-        font-weight: bold;
-        margin-top: 0px;
-    }
+    /* Barcode container and print rules are managed below in the unified Pimaco 6180 section */
     
     /* O.S. Print Intake (Half A4 Landscape / A5) */
     #print-intake, #print-delivery {
@@ -1164,52 +1110,566 @@ textarea {
         }
     }
     
-    #ean-preview-container {
-        width: 210mm;
-        min-height: 297mm;
-        margin: 0 auto;
-        padding: 10.7mm 4.75mm;
-        display: grid !important;
-        grid-template-columns: repeat(5, 38.1mm) !important;
-        grid-template-rows: repeat(13, 21.2mm);
-        grid-auto-rows: 21.2mm;
-        gap: 0 2.53mm !important;
-        background: white;
-        border: 1px solid #ccc;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-        transform: scale(0.7);
-        transform-origin: top center;
-        box-sizing: border-box;
+    /* Estilos do Estúdio de Etiquetas A4 */
+    .ean-tab-btn {
+        background: var(--bg-surface-light) !important;
+        color: var(--text-muted) !important;
+        border: 1px solid var(--border) !important;
+        transition: all 0.2s ease;
     }
-    #ean-preview-container .barcode-container {
-        width: 38.1mm;
-        height: 21.2mm;
-        padding: 1mm;
-        border: 1px dashed #ddd;
-        overflow: hidden;
+    .ean-tab-btn:hover {
+        color: var(--text-main) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    .ean-tab-btn.active {
+        background: var(--primary) !important;
+        color: #fff !important;
+        border-color: var(--primary) !important;
+    }
+
+    .ean-prod-card {
+        background: var(--bg-surface-light);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
         display: flex;
         flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.2s;
+    }
+    .ean-prod-card:hover {
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+    .ean-prod-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .ean-prod-card-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+    .ean-prod-card-info {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-muted);
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .ean-prod-card-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .ean-qtd-control {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ean-qtd-btn {
+        width: 28px;
+        height: 28px;
+        background: var(--bg-dark);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        border-radius: 4px;
+        display: flex;
         align-items: center;
         justify-content: center;
-        box-sizing: border-box;
-    }
-    #ean-preview-container .store-name {
-        font-size: 6px !important;
-        margin-bottom: 0px;
+        cursor: pointer;
+        font-size: 14px;
         font-weight: bold;
-        text-transform: uppercase;
+        transition: 0.15s;
     }
-    #ean-preview-container .product-name {
-        font-size: 5px !important;
-        margin-bottom: 0px;
-        max-width: 100%;
+    .ean-qtd-btn:hover {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+    .ean-qtd-input {
+        width: 50px;
+        height: 28px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--bg-dark);
+        color: var(--text-main);
+        outline: none;
+    }
+
+    /* Itens da Busca Rápida de Produtos */
+    .ean-busca-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .ean-busca-item:hover {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: #22c55e;
+        transform: translateY(-1px);
+    }
+    .ean-busca-item-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        overflow: hidden;
+    }
+    .ean-busca-item-nome {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-main);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    #ean-preview-container .product-price {
-        font-size: 7px !important;
-        font-weight: bold;
-        margin-top: 0px;
+    .ean-busca-item-meta {
+        display: flex;
+        gap: 10px;
+        font-size: 11px;
+        color: var(--text-muted);
+        align-items: center;
+    }
+
+    /* Cards de Blocos do Esquema de Layout */
+    .esquema-bloco-card {
+        background: var(--bg-dark);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.2s;
+    }
+    .esquema-bloco-card:hover {
+        border-color: rgba(56, 189, 248, 0.4);
+    }
+    .esquema-bloco-card.inativo {
+        opacity: 0.5;
+        background: rgba(0, 0, 0, 0.25);
+    }
+    .esquema-bloco-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .esquema-bloco-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    .esquema-bloco-nav {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+    .esquema-nav-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        border-radius: 4px;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 11px;
+        transition: 0.15s;
+    }
+    .esquema-nav-btn:hover:not(:disabled) {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+    .esquema-nav-btn:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
+    .esquema-bloco-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 11px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 6px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .esquema-ctrl-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .esquema-ctrl-label {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    .esquema-ctrl-select, .esquema-ctrl-input {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-size: 11px;
+        outline: none;
+    }
+
+    /* Pílulas de Seleção de Grid Box */
+    .grid-box-pills {
+        display: inline-flex;
+        gap: 3px;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 4px;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .grid-box-pill-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .grid-box-pill-btn:hover {
+        color: var(--text-main);
+        border-color: #38bdf8;
+    }
+    .grid-box-pill-btn.active {
+        background: rgba(56, 189, 248, 0.2) !important;
+        color: #38bdf8 !important;
+        border-color: #38bdf8 !important;
+    }
+
+    /* Steppers Finos de Deslocamento em Pixels */
+    .px-stepper-container {
+        display: inline-flex;
+        align-items: center;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .px-stepper-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .px-stepper-btn:hover {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+    }
+    .px-stepper-val {
+        font-size: 11px;
+        font-weight: 700;
+        min-width: 34px;
+        text-align: center;
+        color: var(--text-main);
+        user-select: none;
+    }
+
+    /* Elementos Interativos na Prévia Individual (Arrastar e Redimensionar no Grid) */
+    #esquema-preview-individual .grid-box-item {
+        cursor: grab;
+        user-select: none;
+        position: relative;
+        transition: outline 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+        border-radius: 3px;
+        box-sizing: border-box;
+    }
+    #esquema-preview-individual .grid-box-item:hover {
+        outline: 1.5px dashed #0284c7 !important;
+        background: rgba(56, 189, 248, 0.08) !important;
+    }
+    #esquema-preview-individual .grid-box-item.selected {
+        outline: 2px solid #0284c7 !important;
+        background: rgba(56, 189, 248, 0.12) !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+        z-index: 25 !important;
+    }
+    #esquema-preview-individual .grid-box-item.is-dragging {
+        cursor: grabbing !important;
+        opacity: 0.85;
+        z-index: 100 !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Alça de Redimensionamento do Grid (Borda Direita) */
+    .grid-resize-handle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 12px;
+        height: 100%;
+        cursor: ew-resize !important;
+        background: rgba(2, 132, 199, 0.2);
+        border-right: 3px solid #0284c7;
+        border-radius: 0 3px 3px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        opacity: 0;
+        transition: opacity 0.15s, background 0.15s;
+    }
+    #esquema-preview-individual .grid-box-item:hover .grid-resize-handle,
+    #esquema-preview-individual .grid-box-item.selected .grid-resize-handle {
+        opacity: 1;
+    }
+    .grid-resize-handle:hover,
+    .grid-resize-handle.is-resizing {
+        background: rgba(2, 132, 199, 0.6) !important;
+        opacity: 1 !important;
+    }
+    .grid-resize-handle::after {
+        content: "↔";
+        font-size: 10px;
+        font-weight: 800;
+        color: #0284c7;
+        line-height: 1;
+        pointer-events: none;
+    }
+
+    /* Mini Barra de Ações Rápidas Flutuante na Seleção */
+    .grid-item-action-bar {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 4px;
+        background: #0f172a;
+        border: 1px solid #38bdf8;
+        border-radius: 20px;
+        padding: 2px 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        z-index: 120;
+        white-space: nowrap;
+        pointer-events: auto;
+    }
+    #esquema-preview-individual .grid-box-item.selected .grid-item-action-bar {
+        display: flex;
+    }
+    .grid-action-btn {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #f8fafc;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        line-height: 1.2;
+        transition: all 0.15s;
+    }
+    .grid-action-btn:hover {
+        background: #38bdf8;
+        color: #0f172a;
+        border-color: #38bdf8;
+    }
+
+    /* Linhas de Guia de Snap Visual do Grid */
+    .grid-snap-guide-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        border-left: 1px dashed rgba(56, 189, 248, 0.5);
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    /* Card em Destaque na Lista de Configurações */
+    .esquema-bloco-card.card-em-foco {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3) !important;
+        background: rgba(56, 189, 248, 0.05) !important;
+    }
+
+    /* ==========================================================================
+       PIMACO 6180 / A4 - SISTEMA UNIFICADO WYSIWYG (PRÉVIA INDIVIDUAL + FOLHA + IMPRESSÃO)
+       ========================================================================== */
+
+    /* Dimensões base exatas de cada etiqueta (38.2mm x 21.2mm no padrão Pimaco 6180) */
+    .barcode-container {
+        width: var(--regua-largura, 38.2mm) !important;
+        height: var(--regua-altura, 21.2mm) !important;
+        max-width: var(--regua-largura, 38.2mm) !important;
+        max-height: var(--regua-altura, 21.2mm) !important;
+        min-width: var(--regua-largura, 38.2mm) !important;
+        min-height: var(--regua-altura, 21.2mm) !important;
+        padding: 0.6mm 0.8mm !important;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box !important;
+        overflow: hidden;
+        page-break-inside: avoid;
+        background: #ffffff;
+        position: relative;
+    }
+
+    /* Modo Editor / Prévia Individual (Zoom visual sem alterar geometria física) */
+    .barcode-container.label-editor-mode {
+        border: 1px dashed #38bdf8 !important;
+        background: #ffffff !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+        overflow: visible !important; /* Permite visualizar alças e caixas de seleção */
+        border-radius: 2px;
+    }
+
+    /* Fluxo flexível interno do layout da etiqueta */
+    .etiqueta-layout-flow {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        height: 100%;
+        align-content: space-between;
+        justify-content: space-between;
+        box-sizing: border-box;
+        position: relative;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* SVGs de código de barras: respeitam proporcionalmente a altura definida sem overrides forçados */
+    .barcode-container svg.barcode-item-svg,
+    .barcode-container svg.barcode-preview-svg {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+    }
+
+    /* Container da Folha A4 Completa (65 Etiquetas) - Prévia Realista */
+    #ean-preview-container {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        padding-top: var(--regua-topo, 10.7mm);
+        padding-left: var(--regua-esq, 4.5mm);
+        padding-right: var(--regua-esq, 4.5mm);
+        padding-bottom: var(--regua-topo, 10.7mm);
+        display: grid !important;
+        grid-template-columns: repeat(5, var(--regua-largura, 38.2mm)) !important;
+        grid-template-rows: repeat(13, var(--regua-altura, 21.2mm)) !important;
+        column-gap: var(--regua-gap-h, 2.5mm) !important;
+        row-gap: var(--regua-gap-v, 0mm) !important;
+        background: #ffffff;
+        border: 1px solid #94a3b8;
+        box-shadow: 0px 8px 25px rgba(0,0,0,0.35);
+        transform: scale(0.65);
+        transform-origin: top center;
+        box-sizing: border-box;
+        align-content: start;
+        justify-content: start;
+        color: #000;
+        margin-bottom: -100px;
+    }
+
+    #ean-preview-container .barcode-container {
+        border: 0.5px dashed #94a3b8;
+    }
+
+    #ean-preview-container .barcode-container.empty-slot {
+        background: #f8fafc;
+        border: 0.5px dashed #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 8px;
+        font-weight: 500;
+    }
+
+    /* Regras de Impressão Final (@media print) */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 0 !important;
+        }
+
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body.printing-ean {
+            background: transparent !important;
+        }
+
+        body.printing-ean #print-barcode {
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding-top: var(--regua-topo, 10.7mm) !important;
+            padding-left: var(--regua-esq, 4.5mm) !important;
+            padding-right: var(--regua-esq, 4.5mm) !important;
+            padding-bottom: var(--regua-topo, 10.7mm) !important;
+            display: grid !important;
+            grid-template-columns: repeat(5, var(--regua-largura, 38.2mm)) !important;
+            grid-template-rows: repeat(13, var(--regua-altura, 21.2mm)) !important;
+            column-gap: var(--regua-gap-h, 2.5mm) !important;
+            row-gap: var(--regua-gap-v, 0mm) !important;
+            justify-content: start;
+            align-content: start;
+            box-sizing: border-box;
+            overflow: hidden;
+            page-break-before: avoid !important;
+            page-break-after: avoid !important;
+        }
+
+        body.printing-ean .barcode-container {
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        body.printing-ean .empty-slot {
+            visibility: hidden !important;
+            border: none !important;
+        }
     }
 

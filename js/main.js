@@ -765,7 +765,6 @@ document.querySelectorAll('input, form').forEach(el => {
             }
             if (pDelivery) {
                 pDelivery.classList.add('print-only');
-                pDelivery.style.display = 'block';
             }
             
             const pBarcode = document.getElementById('print-barcode');
@@ -815,6 +814,9 @@ document.querySelectorAll('input, form').forEach(el => {
             setTimeout(() => document.getElementById('client-search').focus(), 300);
         }
     }
+
+    window.openModal = openModal;
+    window.closeModal = closeModal;
 
     closeBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1192,7 +1194,6 @@ document.querySelectorAll('input, form').forEach(el => {
         
         if (pIntake) {
             pIntake.classList.add('print-only');
-            pIntake.style.display = 'block';
         }
         
         const pBarcode = document.getElementById('print-barcode');

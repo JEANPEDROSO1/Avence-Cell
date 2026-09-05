@@ -1,4 +1,4 @@
-﻿const client = new Appwrite.Client();
+const client = new Appwrite.Client();
 
 client
     .setEndpoint('https://sfo.cloud.appwrite.io/v1')
@@ -117,8 +117,21 @@ window.bootAppwrite = async function() {
 
         document.dispatchEvent(new Event('appwriteReady'));
     } catch (e) {
-        window.showLoading('Erro Appwrite: ' + (e.message || e));
-        console.error('Appwrite connection error:', e);
+        console.warn('Appwrite indisponível ou falha de conexão (operando no modo offline local):', e);
+        try {
+            window.globalData.clientes = JSON.parse(localStorage.getItem('avence_clientes') || '[]');
+            window.globalData.estoque = JSON.parse(localStorage.getItem('avence_estoque') || '[]');
+            window.globalData.config = JSON.parse(localStorage.getItem('avence_config') || '{}');
+            window.globalData.colaboradores = JSON.parse(localStorage.getItem('avence_colaboradores') || '[]');
+            window.globalData.os = JSON.parse(localStorage.getItem('avence_os') || '[]');
+            window.globalData.transacoes = JSON.parse(localStorage.getItem('avence_transacoes') || '[]');
+            window.globalData.fechamentos = JSON.parse(localStorage.getItem('avence_fechamentos') || '[]');
+            window.globalData.pontos = JSON.parse(localStorage.getItem('avence_pontos') || '[]');
+        } catch(err) {
+            console.error('Erro ao recuperar cache local:', err);
+        }
+        window.hideLoading();
+        document.dispatchEvent(new Event('appwriteReady'));
     }
 };
 
