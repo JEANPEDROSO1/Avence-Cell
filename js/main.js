@@ -718,7 +718,7 @@ if (btnFinalizarCheckout) {
         document.getElementById('pd_aparencia').textContent = document.getElementById('a_aparencia')?.value || '';
 
         // Store Config
-        const config = JSON.parse(localStorage.getItem('avence_config')) || {};
+        const config = window.lojaConfig || JSON.parse(localStorage.getItem('avence_config')) || {};
         if (document.getElementById('pd_store_name')) document.getElementById('pd_store_name').textContent = config.osTitulo || 'AVENCE CELL';
         if (document.getElementById('pd_store_address')) document.getElementById('pd_store_address').textContent = config.osEndereco || 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR';
         if (document.getElementById('pd_store_phone')) document.getElementById('pd_store_phone').textContent = config.osTelefone || '(43) 99969-1521';
