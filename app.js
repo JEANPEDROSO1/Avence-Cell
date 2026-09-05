@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const config = JSON.parse(localStorage.getItem('avence_config')) || {
             nome: 'AVENCE CELL',
             endereco: 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR',
-            telefone: '(43) 9900-4377',
+            telefone: '(43) 99969-1521',
             email: 'avencecellivp@gmail.com',
             tecnico: 'Não definido'
         };

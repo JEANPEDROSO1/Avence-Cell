@@ -1061,7 +1061,7 @@ if (btnConfig && modalConfig) {
         const config = window.lojaConfig || {};
 
         if (document.getElementById('config-loja')) document.getElementById('config-loja').value = config.nome || 'Avence Cell';
-        if (document.getElementById('config-telefone')) document.getElementById('config-telefone').value = config.telefone || '(43) 9900-4377';
+        if (document.getElementById('config-telefone')) document.getElementById('config-telefone').value = config.telefone || '(43) 99969-1521';
         if (document.getElementById('config-endereco')) document.getElementById('config-endereco').value = config.endereco || 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR';
         if (document.getElementById('config-email')) document.getElementById('config-email').value = config.email || 'avencecellivp@gmail.com';
         if (document.getElementById('config-email-relatorio')) document.getElementById('config-email-relatorio').value = config.emailRelatorio || '';
