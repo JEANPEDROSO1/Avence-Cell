@@ -126,7 +126,16 @@
 
         document.querySelectorAll('.btn-pdv-plus').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const idx = e.currentTarget.getAttribute('data-index');
+                const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+                const item = pdvCart[idx];
+                const conf = window.lojaConfig || {};
+                if (conf.bloquearVendaSemEstoque && item && item.tipo !== 'servico' && item.tipo !== 'Serviço') {
+                    const maxQtd = item.estoqueMax !== undefined ? item.estoqueMax : (item.qtd !== undefined ? item.qtd : 999999);
+                    if (item.qtd + 1 > maxQtd) {
+                        window.customAlert(`Estoque insuficiente! Saldo disponível: ${maxQtd}`, 'warning');
+                        return;
+                    }
+                }
                 pdvCart[idx].qtd++;
                 renderPdvCart();
             });
@@ -165,46 +174,118 @@
         pdvParcelas.addEventListener('change', renderPdvCart);
     }
 
+    function processarItemPdv() {
+        if (!pdvSearch) return;
+        const rawVal = pdvSearch.value.trim();
+        if (!rawVal) return;
+
+        const term = rawVal.toLowerCase();
+        const numOnly = rawVal.replace(/\D/g, '');
+
+        // Obter lista atualizada do estoque de forma segura
+        let listaEstoque = [];
+        if (Array.isArray(window.estoque) && window.estoque.length > 0) {
+            listaEstoque = window.estoque;
+        } else {
+            try {
+                if (typeof estoque !== 'undefined' && Array.isArray(estoque)) listaEstoque = estoque;
+            } catch(err) {}
+            if (!listaEstoque || listaEstoque.length === 0) {
+                try {
+                    listaEstoque = JSON.parse(localStorage.getItem('avence_estoque') || '[]');
+                } catch(err) {
+                    listaEstoque = [];
+                }
+            }
+        }
+
+        // 1. Tentar EAN exato (string exata ou dígitos puros)
+        let produto = listaEstoque.find(p => {
+            if (!p.ean) return false;
+            const pEanStr = String(p.ean).trim();
+            const pEanDigits = pEanStr.replace(/\D/g, '');
+            if (pEanStr.toLowerCase() === term) return true;
+            if (numOnly && pEanDigits === numOnly) return true;
+            return false;
+        });
+
+        // 2. Tentar EAN parcial (caso leitor corte ou complete) ou nome exato
+        if (!produto) {
+            produto = listaEstoque.find(p => {
+                const pNome = (p.nome || '').trim().toLowerCase();
+                const pEanStr = String(p.ean || '').trim().toLowerCase();
+                const pEanDigits = pEanStr.replace(/\D/g, '');
+                if (pNome === term) return true;
+                if (numOnly && numOnly.length >= 4 && pEanDigits.includes(numOnly)) return true;
+                if (pEanStr && term.length >= 4 && pEanStr.includes(term)) return true;
+                return false;
+            });
+        }
+
+        // 3. Tentar busca parcial de nome (apenas se achar 1 resultado claro, senão alerta)
+        if (!produto) {
+            const matches = listaEstoque.filter(p => (p.nome || '').toLowerCase().includes(term));
+            if (matches.length === 1) {
+                produto = matches[0];
+            } else if (matches.length > 1) {
+                window.customAlert('Múltiplos produtos encontrados. Digite o EAN ou nome mais específico.', 'warning');
+                return;
+            }
+        }
+
+        if (produto) {
+            const conf = window.lojaConfig || {};
+            const qtdDisp = Number(produto.qtd !== undefined ? produto.qtd : 0);
+            
+            // Verificar regra de bloquear venda sem estoque se ativada
+            if (conf.bloquearVendaSemEstoque && produto.tipo !== 'servico' && produto.tipo !== 'Serviço') {
+                const existItem = pdvCart.find(item => item.id === produto.id);
+                const qtdNoCarrinho = existItem ? existItem.qtd : 0;
+                if (qtdNoCarrinho + 1 > qtdDisp) {
+                    window.customAlert(`Estoque insuficiente para "${produto.nome}"! Saldo disponível: ${qtdDisp}`, 'warning');
+                    return;
+                }
+            }
+
+            // Adicionar ou incrementar no carrinho
+            const existIdx = pdvCart.findIndex(item => item.id === produto.id);
+            if (existIdx >= 0) {
+                pdvCart[existIdx].qtd++;
+                if (pdvCart[existIdx].estoqueMax === undefined) {
+                    pdvCart[existIdx].estoqueMax = qtdDisp;
+                }
+            } else {
+                pdvCart.push({ ...produto, qtd: 1, estoqueMax: qtdDisp });
+            }
+            pdvSearch.value = '';
+            renderPdvCart();
+            setTimeout(() => {
+                if (pdvSearch) pdvSearch.focus();
+            }, 80);
+        } else {
+            window.customAlert('Produto não encontrado no estoque.', 'warning');
+        }
+    }
+
+    const btnPdvSearchAdd = document.getElementById('btn-pdv-search-add');
+    if (btnPdvSearchAdd) {
+        btnPdvSearchAdd.addEventListener('click', (e) => {
+            e.preventDefault();
+            processarItemPdv();
+        });
+    }
+
     if (pdvSearch) {
         pdvSearch.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' || e.key === 'Tab' || e.keyCode === 13 || e.keyCode === 9) {
                 e.preventDefault();
-                const term = e.target.value.trim().toLowerCase();
-                if (!term) return;
+                processarItemPdv();
+            }
+        });
 
-                // 1. Tentar EAN exato
-                let produto = estoque.find(p => p.ean === term);
-                
-                // 2. Tentar EAN parcial (caso leitor corte) ou nome exato
-                if (!produto) {
-                    produto = estoque.find(p => (p.ean && p.ean.includes(term)) || p.nome.toLowerCase() === term);
-                }
-                
-                // 3. Tentar busca parcial de nome (apenas se achar 1 resultado claro, senão alerta)
-                if (!produto) {
-                    const matches = estoque.filter(p => p.nome.toLowerCase().includes(term));
-                    if (matches.length === 1) {
-                        produto = matches[0];
-                    } else if (matches.length > 1) {
-                        window.customAlert('Múltiplos produtos encontrados. Digite o EAN ou nome mais específico.', 'warning');
-                        return;
-                    }
-                }
-
-                if (produto) {
-                    // Verificar se já está no carrinho
-                    const existIdx = pdvCart.findIndex(item => item.id === produto.id);
-                    if (existIdx >= 0) {
-                        pdvCart[existIdx].qtd++;
-                    } else {
-                        pdvCart.push({ ...produto, qtd: 1 });
-                    }
-                    pdvSearch.value = '';
-                    pdvSearch.focus();
-                    renderPdvCart();
-                } else {
-                    window.customAlert('Produto não encontrado no estoque.', 'warning');
-                }
+        pdvSearch.addEventListener('change', () => {
+            if (pdvSearch.value.trim()) {
+                processarItemPdv();
             }
         });
     }

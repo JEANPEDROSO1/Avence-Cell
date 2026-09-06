@@ -254,6 +254,17 @@ function loadConfig() {
         document.getElementById('config-horario-bloqueio').value = config.horarioBloqueio || '18:30';
     }
 
+    // Configurações de Estoque
+    if (document.getElementById('config-estoque-minimo')) {
+        document.getElementById('config-estoque-minimo').value = config.estoqueMinimoAlerta !== undefined ? config.estoqueMinimoAlerta : 2;
+    }
+    if (document.getElementById('config-bloquear-estoque-zerado')) {
+        document.getElementById('config-bloquear-estoque-zerado').value = config.bloquearVendaSemEstoque ? 'sim' : 'nao';
+    }
+    if (document.getElementById('config-gerar-ean-auto')) {
+        document.getElementById('config-gerar-ean-auto').value = config.gerarEanAuto !== false ? 'sim' : 'nao';
+    }
+
     // OS Fields
     if (document.getElementById('config-os-titulo')) document.getElementById('config-os-titulo').value = config.osTitulo || 'AVENCE CELL';
     if (document.getElementById('config-os-assinatura')) document.getElementById('config-os-assinatura').value = config.osAssinatura || 'AVENCE CELL';
@@ -330,11 +341,15 @@ btnSalvarConfig.addEventListener('click', async () => {
         osTelefone: document.getElementById('config-os-telefone') ? document.getElementById('config-os-telefone').value : '(43) 99969-1521',
         osEmail: document.getElementById('config-os-email') ? document.getElementById('config-os-email').value : 'avencecellivp@gmail.com',
         osTermos: document.getElementById('config-os-termos') ? document.getElementById('config-os-termos').value : '1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;\n2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);\n3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).\n4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO',
+        estoqueMinimoAlerta: document.getElementById('config-estoque-minimo') ? (parseInt(document.getElementById('config-estoque-minimo').value) || 0) : 2,
+        bloquearVendaSemEstoque: document.getElementById('config-bloquear-estoque-zerado') ? (document.getElementById('config-bloquear-estoque-zerado').value === 'sim') : false,
+        gerarEanAuto: document.getElementById('config-gerar-ean-auto') ? (document.getElementById('config-gerar-ean-auto').value === 'sim') : true,
         logoImage: logoImage
     };
 
     localStorage.setItem('avence_config', JSON.stringify(config));
     loadConfig();
+    if (typeof renderEstoque === 'function') renderEstoque();
     window.customAlert('Configurações salvas com sucesso!', 'success');
 });
 

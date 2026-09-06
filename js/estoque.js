@@ -111,8 +111,9 @@
             const ganho = vendaProd - custoProd;
             const tr = document.createElement('tr');
             
-            // Alerta vermelho se qtd <= 2 e não for serviço
-            if (qtdProd <= 2 && produto.tipo !== 'servico') {
+            // Alerta vermelho se qtd <= alertaMinimo e não for serviço
+            const minAlerta = (window.lojaConfig && window.lojaConfig.estoqueMinimoAlerta !== undefined) ? Number(window.lojaConfig.estoqueMinimoAlerta) : 2;
+            if (qtdProd <= minAlerta && produto.tipo !== 'servico' && produto.tipo !== 'Serviço') {
                 tr.classList.add('estoque-alerta');
             }
             
@@ -405,9 +406,20 @@
 
             const id = inputPId.value;
             
+            let finalEan = inputPEan.value.trim();
+            const configLoja = window.lojaConfig || {};
+            const autoEan = configLoja.gerarEanAuto !== false;
+            if (!finalEan && autoEan) {
+                let base = '789' + Math.floor(100000000 + Math.random() * 900000000).toString();
+                let sum = 0;
+                for (let i = 0; i < 12; i++) sum += parseInt(base[i]) * (i % 2 === 0 ? 1 : 3);
+                const check = (10 - (sum % 10)) % 10;
+                finalEan = base + check;
+            }
+
             const novoProduto = {
                 tipo: inputPTipo ? inputPTipo.value : 'produto',
-                ean: inputPEan.value.trim(),
+                ean: finalEan,
                 nome: nome,
                 custo: parseFloat(custo),
                 venda: parseFloat(venda),

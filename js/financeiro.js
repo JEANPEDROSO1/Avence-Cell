@@ -767,37 +767,71 @@ function renderCustomEstoqueTipos() {
         'PC Montado (KIT)'
     ];
 
+    const badgeCount = document.getElementById('contagem-categorias-badge');
+    const totalCount = defaultTypes.length + customEstoqueTipos.length;
+    if (badgeCount) {
+        badgeCount.textContent = `${totalCount} categoria${totalCount === 1 ? '' : 's'}`;
+    }
+
     defaultTypes.forEach(tipo => {
         const tr = document.createElement('tr');
-        tr.style.background = 'var(--bg-surface-light)';
+        tr.style.borderBottom = '1px solid var(--border)';
         tr.innerHTML = `
-                <td style="padding: 10px; border-bottom: 1px solid var(--border); font-weight: 500;">${tipo}</td>
-                <td style="padding: 10px; text-align: center; border-bottom: 1px solid var(--border);">
-                    <button type="button" class="btn btn-secondary" disabled style="padding: 4px; color: var(--text-muted); opacity: 0.5; cursor: not-allowed;" title="Categoria padrão não pode ser excluída"><i class="ph ph-lock"></i></button>
-                </td>
-            `;
+            <td style="padding: 10px 14px; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ph ph-folder" style="color: var(--primary); font-size: 16px;"></i>
+                    <span>${tipo}</span>
+                </div>
+            </td>
+            <td style="padding: 10px 14px; text-align: center;">
+                <span style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ph ph-lock-key"></i> Sistema
+                </span>
+            </td>
+            <td style="padding: 10px 14px; text-align: center;">
+                <button type="button" class="btn btn-secondary" disabled style="padding: 4px 8px; color: var(--text-muted); opacity: 0.4; cursor: not-allowed;" title="Categoria padrão do sistema (bloqueada)">
+                    <i class="ph ph-lock"></i>
+                </button>
+            </td>
+        `;
         lista.appendChild(tr);
     });
 
     // Render Custom Types
     customEstoqueTipos.forEach((tipo, index) => {
         const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border)';
         tr.innerHTML = `
-                <td style="padding: 10px; border-bottom: 1px solid var(--border);">${tipo}</td>
-                <td style="padding: 10px; text-align: center; border-bottom: 1px solid var(--border);">
-                    <button type="button" class="btn btn-secondary btn-del-tipo" data-index="${index}" style="padding: 4px; color: #ef4444;" title="Excluir Categoria"><i class="ph ph-trash"></i></button>
-                </td>
-            `;
+            <td style="padding: 10px 14px; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ph ph-tag" style="color: #22c55e; font-size: 16px;"></i>
+                    <span>${tipo}</span>
+                </div>
+            </td>
+            <td style="padding: 10px 14px; text-align: center;">
+                <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="ph ph-sparkle"></i> Personalizada
+                </span>
+            </td>
+            <td style="padding: 10px 14px; text-align: center;">
+                <button type="button" class="btn btn-secondary btn-del-tipo" data-index="${index}" style="padding: 4px 8px; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Excluir Categoria">
+                    <i class="ph ph-trash"></i>
+                </button>
+            </td>
+        `;
         lista.appendChild(tr);
     });
 
     document.querySelectorAll('.btn-del-tipo').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-            customEstoqueTipos.splice(idx, 1);
-            localStorage.setItem('avence_tipos_estoque', JSON.stringify(customEstoqueTipos));
-            renderCustomEstoqueTipos();
-            updateProductTypesDropdown();
+            const nomeExcluir = customEstoqueTipos[idx];
+            window.customAlert(`Deseja remover a categoria "${nomeExcluir}"?`, 'warning', true, () => {
+                customEstoqueTipos.splice(idx, 1);
+                localStorage.setItem('avence_tipos_estoque', JSON.stringify(customEstoqueTipos));
+                renderCustomEstoqueTipos();
+                updateProductTypesDropdown();
+            });
         });
     });
 }
@@ -826,10 +860,22 @@ function updateProductTypesDropdown() {
     });
 }
 
+const inputNovoTipo = document.getElementById('config-novo-tipo');
+if (inputNovoTipo) {
+    inputNovoTipo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const btnAdd = document.getElementById('btn-add-tipo-estoque');
+            if (btnAdd) btnAdd.click();
+        }
+    });
+}
+
 const btnAddTipoEstoque = document.getElementById('btn-add-tipo-estoque');
 if (btnAddTipoEstoque) {
     btnAddTipoEstoque.addEventListener('click', () => {
         const input = document.getElementById('config-novo-tipo');
+        if (!input) return;
         const val = input.value.trim();
         if (val) {
             // Check for duplicates
@@ -842,6 +888,7 @@ if (btnAddTipoEstoque) {
             input.value = '';
             renderCustomEstoqueTipos();
             updateProductTypesDropdown();
+            window.customAlert('Categoria adicionada com sucesso!', 'success');
         }
     });
 }
