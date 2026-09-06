@@ -4,7 +4,7 @@
 <head>
     <script>window.onerror = function (msg, url, line) { alert("Error: " + msg + "\nLine: " + line); };</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Avence Cell - OS</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="css/main.css">
@@ -495,7 +495,7 @@
                     </div>
 
                     <!-- Gráficos e Histórico -->
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; height: 400px;">
+                    <div class="fin-charts-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; min-height: 400px;">
                         <div
                             style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
                             <h3 style="font-size: 16px; margin-bottom: 16px;">Fluxo dos Últimos 7 Dias</h3>
@@ -623,8 +623,7 @@
 
     <!-- Modal: Abrir O.S (Busca) -->
     <div class="modal-overlay no-print" id="modal-abrir-os">
-        <div class="modal-container large-modal"
-            style="height: 700px; max-width: 1200px; width: 95vw; display: flex; flex-direction: column;">
+        <div class="modal-container large-modal modal-abrir-os-container">
             <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
                 <h2><i class="ph ph-folder-plus"></i> Abrir O.S</h2>
                 <div style="display: flex; gap: 16px; align-items: center;">
@@ -705,7 +704,7 @@
                 <button class="close-btn" data-close="modal-configuracoes"><i class="ph ph-x"></i></button>
             </div>
             <div class="modal-body" style="padding: 0;">
-                <div
+                <div class="config-tabs-nav"
                     style="display: flex; background: var(--bg-surface-light); border-bottom: 1px solid var(--border);">
                     <button class="config-tab-btn active" data-target="config-loja-tab"
                         style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-main); font-weight: bold; cursor: pointer; border-bottom: 2px solid var(--primary);">Loja</button>
@@ -999,8 +998,7 @@
     </div>
 
     <div class="modal-overlay no-print" id="modal-cadastro" style="z-index: 110;">
-        <div class="modal-container large-modal"
-            style="height: 85vh; max-height: 900px; max-width: 1200px; width: 95vw;">
+        <div class="modal-container large-modal modal-cadastro-container">
             <div class="modal-header">
                 <h2><i class="ph ph-user-plus"></i> Novo Cliente</h2>
                 <button class="close-btn" data-close="modal-cadastro"><i class="ph ph-x"></i></button>
@@ -1165,8 +1163,7 @@
 
     <!-- Modal: Histórico do Cliente -->
     <div class="modal-overlay no-print" id="modal-historico-cliente" style="z-index: 105;">
-        <div class="modal-container large-modal"
-            style="height: 700px; max-width: 1000px; width: 95vw; display: flex; flex-direction: column;">
+        <div class="modal-container large-modal modal-historico-cliente-container">
             <div class="modal-header">
                 <h2><i class="ph ph-clock-counter-clockwise"></i> Histórico de Serviços: <span
                         id="historico-cliente-nome" style="color: var(--primary);"></span></h2>
@@ -1238,11 +1235,10 @@
 
     <!-- Modal: Detalhes do Aparelho (Device Intake) -->
     <div class="modal-overlay no-print" id="modal-intake">
-        <div class="modal-container large-modal"
-            style="max-width: 1400px; width: 95vw; height: 95vh; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="modal-container large-modal modal-intake-container">
 
             <!-- Header (OS Title & Buttons) -->
-            <div
+            <div class="intake-header"
                 style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 16px 16px 16px; border-bottom: 2px solid var(--border);">
                 <div>
                     <h4 style="color: var(--text-muted); margin: 0; font-weight: normal; font-size: 20px;">Ordem de
@@ -1286,7 +1282,7 @@
                     </div>
 
                     <!-- 2 Columns Row -->
-                    <div style="display: grid; grid-template-columns: 1fr 300px;">
+                    <div class="intake-main-grid" style="display: grid; grid-template-columns: 1fr 300px;">
 
                         <!-- Col 1: Contact Info + OS Meta -->
                         <div border-right: 1px solid var(--border); style="display: flex; flex-direction: column;">
@@ -1323,7 +1319,7 @@
                             </div>
 
                             <!-- OS Meta (Below e-Mail) -->
-                            <div
+                            <div class="intake-dates-grid"
                                 style="padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1;">
                                 <div style="display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -1374,7 +1370,7 @@
 
                         <!-- Col 2: Finance -->
                         <div style="padding: 12px; display: flex; flex-direction: column;">
-                            <div
+                            <div class="intake-finance-grid"
                                 style="display: grid; grid-template-columns: 1fr 100px; gap: 8px; font-size: 15px; flex: 1; align-items: center;">
                                 <div style="text-align: right; color: var(--primary); font-weight: bold;">Adiantamento
                                 </div>
@@ -1434,7 +1430,7 @@
                         style="display: flex; flex-direction: column; gap: 8px; height: 100%; margin: 0; min-height: 0;">
 
                         <!-- Tab Content (Aparelho) -->
-                        <div id="tab-aparelho" class="os-tab-content active"
+                        <div id="tab-aparelho" class="os-tab-content active intake-tab-grid"
                             style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; min-height: 0;">
                             <!-- Coluna Esquerda -->
                             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -1501,7 +1497,7 @@
                         <div id="tab-servicos" class="os-tab-content"
                             style="display: none; flex-direction: column; gap: 8px; flex: 1; min-height: 0;">
                             <div style="font-size: 14px; font-weight: bold;">Lista de Serviços executados nesta OS</div>
-                            <div style="display: flex; gap: 16px; flex: 1; min-height: 0;">
+                            <div class="intake-tab-two-col" style="display: flex; gap: 16px; flex: 1; min-height: 0;">
                                 <!-- Left Column (Table + Obs) -->
                                 <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;">
                                     <!-- Table Area -->
@@ -1560,7 +1556,7 @@
                                 </div>
 
                                 <!-- Sidebar Actions -->
-                                <div
+                                <div class="intake-tab-side-col"
                                     style="width: 140px; min-width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
                                     <button type="button" id="btn-add-servico-padrao-os" class="btn btn-secondary"
                                         style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px;"><i
@@ -1600,7 +1596,7 @@
                         <div id="tab-pecas" class="os-tab-content"
                             style="display: none; flex-direction: column; gap: 8px; flex: 1; min-height: 0;">
                             <div style="font-size: 14px; font-weight: bold;">Lista de Peças utilizadas nesta OS</div>
-                            <div style="display: flex; gap: 16px; flex: 1; min-height: 0;">
+                            <div class="intake-tab-two-col" style="display: flex; gap: 16px; flex: 1; min-height: 0;">
                                 <!-- Left Column (Table) -->
                                 <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;">
                                     <!-- Table Area -->
@@ -1647,7 +1643,7 @@
                                 </div>
 
                                 <!-- Sidebar Actions -->
-                                <div
+                                <div class="intake-tab-side-col"
                                     style="width: 140px; min-width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
                                     <button type="button" id="btn-add-peca-estoque-os" class="btn btn-secondary"
                                         style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 6px 12px; background: transparent; border: none; color: var(--text-main); font-size: 14px; text-align: left;"><i
@@ -1680,7 +1676,7 @@
                             </div>
                         </div>
 
-                        <div
+                        <div class="intake-footer-grid"
                             style="display: flex; justify-content: flex-start; align-items: flex-end; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 4px; gap: 24px; flex-shrink: 0;">
                             <div style="width: 250px;">
                                 <label
@@ -2288,8 +2284,7 @@
 
     <!-- Modal: Estúdio de Etiquetas A4 -->
     <div class="modal-overlay no-print" id="modal-editar-ean">
-        <div class="modal-container large-modal"
-            style="max-width: 1280px; width: 96vw; height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div class="modal-container large-modal modal-editar-ean-container">
             <div class="modal-header"
                 style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -2306,10 +2301,9 @@
                 <button class="close-btn" data-close="modal-editar-ean"><i class="ph ph-x"></i></button>
             </div>
 
-            <div class="modal-body"
-                style="padding: 18px 24px; display: flex; gap: 24px; flex: 1; overflow: hidden; background: var(--bg-surface);">
+            <div class="modal-body ean-studio-body">
                 <!-- PAINEL ESQUERDO: CONTROLES, PRODUTOS E CALIBRAÇÃO -->
-                <div style="flex: 1.1; display: flex; flex-direction: column; min-width: 380px; overflow: hidden;">
+                <div class="ean-panel-left">
                     <!-- Abas de Navegação -->
                     <div
                         style="display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 14px;">
@@ -2658,8 +2652,7 @@
                 </div>
 
                 <!-- PAINEL DIREITO: PRÉVIA VISUAL DA FOLHA A4 -->
-                <div
-                    style="flex: 1.4; border: 1px solid var(--border); border-radius: var(--radius-md); background: #1e293b; overflow: auto; padding: 16px; display: flex; flex-direction: column; align-items: center;">
+                <div class="ean-panel-right">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; color: #94a3b8; font-size: 12px; font-weight: 700; text-transform: uppercase;">
                         <span><i class="ph ph-eye"></i> Prévia Real da Folha A4 (65 Etiquetas)</span>
@@ -2678,8 +2671,7 @@
 
     <!-- Modal: Relatório de Compras -->
     <div class="modal-overlay no-print" id="modal-relatorio-compras">
-        <div class="modal-container large-modal"
-            style="max-width: 1200px; width: 95vw; height: 80vh; display: flex; flex-direction: column;">
+        <div class="modal-container large-modal modal-relatorio-compras-container">
             <div class="modal-header">
                 <h2><i class="ph ph-envelope-simple"></i> Relatório Avançado de Estoque (Alto Giro & Estoque Parado)
                 </h2>
@@ -2809,7 +2801,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                <div class="colab-relat-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
                     <!-- Histórico Ponto -->
                     <div
                         style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
