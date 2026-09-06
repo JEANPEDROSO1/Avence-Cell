@@ -852,6 +852,102 @@ textarea {
     width: 100%;
     max-width: 800px;
 }
+
+/* ==========================================================================
+   FORM CADASTRO CLIENTE RESPONSIVO
+   ========================================================================== */
+.cliente-form {
+    width: 100%;
+    box-sizing: border-box;
+}
+.cliente-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.cliente-form .form-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+.cliente-form .form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.cliente-form .form-group label {
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+.cliente-form .form-group input,
+.cliente-form .form-group select,
+.cliente-form .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--bg-dark);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+.cliente-form .form-group input:focus,
+.cliente-form .form-group select:focus,
+.cliente-form .form-group textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.cliente-form .input-destaque {
+    background: #fcd34d !important;
+    color: #000 !important;
+    font-weight: 600;
+}
+.cliente-form .flex-1 {
+    flex: 1;
+}
+
+/* Larguras Proporcionais no Desktop */
+.cliente-form .col-cep { width: 140px; flex-shrink: 0; }
+.cliente-form .col-endereco { flex: 2; }
+.cliente-form .col-numero { width: 90px; flex-shrink: 0; }
+.cliente-form .col-complemento { flex: 1; }
+
+.cliente-form .col-bairro { flex: 1.2; }
+.cliente-form .col-cidade { flex: 1.5; }
+.cliente-form .col-uf { width: 70px; flex-shrink: 0; }
+.cliente-form .col-email { flex: 1.8; }
+
+.cliente-footer-row {
+    justify-content: space-between;
+    align-items: flex-end !important;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+.cliente-meta-fields {
+    display: flex;
+    gap: 12px;
+    width: 40%;
+}
+.cliente-actions {
+    display: flex;
+    gap: 12px;
+}
+.cliente-actions .btn {
+    min-width: 110px;
+    justify-content: center;
+}
+
 .modal-historico-cliente-container {
     width: 100%;
     max-width: 850px;
@@ -1214,22 +1310,41 @@ textarea {
         gap: 16px !important;
     }
     
-    /* Client Registration Form on Mobile */
-    #form-cadastro > div[style*="display: flex"],
-    #form-cadastro > div[style*="display:flex"] {
+    /* Client Registration Form on Tablet/Mobile */
+    .cliente-form .form-row {
         flex-wrap: wrap !important;
         gap: 10px !important;
     }
-    #form-cadastro .form-group {
-        flex: 1 1 140px !important;
+    .cliente-form .col-cep,
+    .cliente-form .col-endereco,
+    .cliente-form .col-numero,
+    .cliente-form .col-complemento,
+    .cliente-form .col-bairro,
+    .cliente-form .col-cidade,
+    .cliente-form .col-uf,
+    .cliente-form .col-email,
+    .cliente-form .flex-1 {
+        flex: 1 1 calc(50% - 10px) !important;
         min-width: 140px !important;
+        width: auto !important;
     }
-    #form-cadastro > div:last-child {
+    .cliente-footer-row {
         flex-direction: column !important;
         align-items: stretch !important;
+        gap: 16px !important;
     }
-    #form-cadastro > div:last-child > div {
+    .cliente-meta-fields {
         width: 100% !important;
+    }
+    .cliente-actions {
+        width: 100% !important;
+        display: flex !important;
+        gap: 10px !important;
+    }
+    .cliente-actions .btn {
+        flex: 1 !important;
+        min-height: 44px !important;
+        justify-content: center !important;
     }
     
     /* Config Modal Form Grids */
@@ -1297,9 +1412,38 @@ textarea {
         width: 100%;
     }
 
-    #form-cadastro .form-group {
+    /* Client Registration Form on Smartphones */
+    .cliente-form-body {
+        gap: 8px !important;
+    }
+    .cliente-form .form-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    .cliente-form .col-cep,
+    .cliente-form .col-endereco,
+    .cliente-form .col-numero,
+    .cliente-form .col-complemento,
+    .cliente-form .col-bairro,
+    .cliente-form .col-cidade,
+    .cliente-form .col-uf,
+    .cliente-form .col-email,
+    .cliente-form .flex-1,
+    .cliente-form .form-group {
+        width: 100% !important;
         flex: 1 1 100% !important;
+        max-width: 100% !important;
         min-width: 100% !important;
+    }
+    .cliente-meta-fields {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    .cliente-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    .cliente-actions .btn {
         width: 100% !important;
     }
     
