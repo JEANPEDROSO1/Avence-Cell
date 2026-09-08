@@ -2517,5 +2517,27 @@ textarea {
     display: block;
 }
 
+/* Cards de Sintomas do Diagnóstico Antivírus */
+.av-sintoma-card {
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition: var(--transition);
+}
+.av-sintoma-card:hover {
+    border-color: var(--primary);
+}
+.av-sintoma-card.active {
+    border-color: var(--primary);
+    background: rgba(212, 175, 55, 0.08);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+
 
 

@@ -775,6 +775,50 @@
                                 </button>
                             </div>
 
+                            <!-- Seletor de Condição / Diagnóstico de Bancada -->
+                            <div style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+                                <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                    <span style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="ph ph-stethoscope" style="color: var(--primary); font-size: 18px;"></i> Condição do Aparelho & Perfil de Análise:
+                                    </span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Defina o estado real do celular na bancada</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                                    <label class="av-sintoma-card active" data-sintoma="formatado">
+                                        <input type="radio" name="av-sintoma" value="formatado" checked style="margin-top: 2px; accent-color: var(--primary);">
+                                        <div>
+                                            <strong style="font-size: 12px; color: #22c55e; display: block;">Aparelho Formatado / Limpo</strong>
+                                            <span style="font-size: 11px; color: var(--text-muted); line-height: 1.3; display: block;">Recém-formatado ou sem queixas. Verifica integridade e atesta ZERO ameaças.</span>
+                                        </div>
+                                    </label>
+                                    <label class="av-sintoma-card" data-sintoma="notificacoes">
+                                        <input type="radio" name="av-sintoma" value="notificacoes" style="margin-top: 2px; accent-color: var(--primary);">
+                                        <div>
+                                            <strong style="font-size: 12px; color: #eab308; display: block;">Vírus de Notificações</strong>
+                                            <span style="font-size: 11px; color: var(--text-muted); line-height: 1.3; display: block;">Pop-ups frequentes e avisos falsos de vírus no navegador (Chrome/Safari).</span>
+                                        </div>
+                                    </label>
+                                    <label class="av-sintoma-card" data-sintoma="adwares">
+                                        <input type="radio" name="av-sintoma" value="adwares" style="margin-top: 2px; accent-color: var(--primary);">
+                                        <div>
+                                            <strong style="font-size: 12px; color: #ef4444; display: block;">Adwares / Apps Invasivos</strong>
+                                            <span style="font-size: 11px; color: var(--text-muted); line-height: 1.3; display: block;">Propagandas na tela bloqueada e APKs desconhecidos em 2º plano.</span>
+                                        </div>
+                                    </label>
+                                    <label class="av-sintoma-card" data-sintoma="ios_spam">
+                                        <input type="radio" name="av-sintoma" value="ios_spam" style="margin-top: 2px; accent-color: var(--primary);">
+                                        <div>
+                                            <strong style="font-size: 12px; color: #a855f7; display: block;">Spam Calendário (iPhone)</strong>
+                                            <span style="font-size: 11px; color: var(--text-muted); line-height: 1.3; display: block;">Subscrições de calendários falsos com eventos apitando na agenda.</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-dark); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                    <i class="ph ph-magnifying-glass" style="color: var(--primary); font-size: 16px;"></i>
+                                    <input type="text" id="av-input-ameaca-custom" placeholder="App ou site suspeito específico visto no celular (Opcional, ex: Super Cleaner, alerta-virus.top)..." style="flex: 1; background: transparent; border: none; outline: none; color: var(--text-main); font-size: 12px;">
+                                </div>
+                            </div>
+
                             <!-- Radar e Barra de Progresso -->
                             <div style="text-align: center; margin-bottom: 24px;">
                                 <div class="av-radar-box">
@@ -797,9 +841,36 @@
 
                             <!-- Terminal de Execução de Varredura -->
                             <div style="margin-bottom: 20px;">
-                                <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                                    <i class="ph ph-terminal"></i> Console de Diagnóstico & Limpeza em Tempo Real
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                                        <i class="ph ph-terminal"></i> Console de Diagnóstico & Limpeza em Tempo Real
+                                    </div>
+                                    <button type="button" id="btn-toggle-guia-bancada" style="background: transparent; border: none; color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                        <i class="ph ph-info"></i> Guia Técnico de Bancada
+                                    </button>
                                 </div>
+                                
+                                <!-- Box do Guia de Bancada (Oculto inicialmente) -->
+                                <div id="box-guia-bancada" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; font-size: 12px; line-height: 1.4; color: var(--text-main);">
+                                    <strong style="color: #60a5fa; display: block; margin-bottom: 6px;"><i class="ph ph-wrench"></i> Procedimento Físico Recomendado na Bancada:</strong>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                        <div>
+                                            <span style="color: #22c55e; font-weight: bold;">● No Android:</span>
+                                            <ul style="margin: 4px 0 0 16px; padding: 0; color: var(--text-muted);">
+                                                <li><strong>Notificações no Chrome:</strong> Abra o Chrome &gt; 3 pontinhos &gt; Configurações &gt; Configurações do Site &gt; Notificações &gt; toque no site suspeito e clique em <em>"Limpar e Redefinir"</em>.</li>
+                                                <li><strong>APKs Ocultos:</strong> Configurações &gt; Aplicativos &gt; Ver todos &gt; procure apps sem ícone ou com nomes genéricos (Cleaner, Flashlight) e clique em <em>"Desinstalar"</em>.</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <span style="color: #a855f7; font-weight: bold;">● No iPhone (iOS):</span>
+                                            <ul style="margin: 4px 0 0 16px; padding: 0; color: var(--text-muted);">
+                                                <li><strong>Spam de Calendário:</strong> Ajustes &gt; Calendário &gt; Contas &gt; Calendários Assinados &gt; selecione a conta suspeita e clique em <em>"Apagar Conta"</em>.</li>
+                                                <li><strong>Safari:</strong> Ajustes &gt; Safari &gt; clique em <em>"Limpar Histórico e Dados dos Sites"</em>.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div id="av-terminal-logs" class="av-terminal">
                                     <!-- Logs adicionados via JS -->
                                 </div>
@@ -814,14 +885,14 @@
 
                         <!-- Painel 3: Relatório e Laudo Técnico de Desinfecção (Oculto inicialmente) -->
                         <div id="av-painel-relatorio" class="av-card" style="display: none;">
-                            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: var(--radius-md); padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
-                                <div style="width: 56px; height: 56px; border-radius: 50%; background: #22c55e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0;">
+                            <div id="laudo-header-box" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: var(--radius-md); padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                                <div id="laudo-status-icone" style="width: 56px; height: 56px; border-radius: 50%; background: #22c55e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0;">
                                     <i class="ph ph-check-bold"></i>
                                 </div>
                                 <div>
-                                    <h3 style="margin: 0 0 4px 0; color: #22c55e; font-size: 20px;">Aparelho 100% Limpo e Desinfectado!</h3>
-                                    <p style="margin: 0; color: var(--text-main); font-size: 14px;">
-                                        Todas as notificações maliciosas, adwares e registros invasivos foram eliminados com sucesso.
+                                    <h3 id="laudo-status-titulo" style="margin: 0 0 4px 0; color: #22c55e; font-size: 20px;">Aparelho 100% Limpo e Íntegro!</h3>
+                                    <p id="laudo-status-desc" style="margin: 0; color: var(--text-main); font-size: 14px;">
+                                        A auditoria confirmou que o dispositivo está totalmente livre de vírus, adwares e registros invasivos.
                                     </p>
                                 </div>
                             </div>
@@ -841,14 +912,14 @@
                                     <div id="laudo-disp-serial" style="font-weight: 700; color: var(--text-main); font-size: 14px;">-</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Ameaças Eliminadas</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Status das Ameaças</div>
                                     <div id="laudo-qtd-removida" style="font-weight: 700; color: #22c55e; font-size: 16px;">0</div>
                                 </div>
                             </div>
 
-                            <!-- Tabela de Ameaças Eliminadas -->
-                            <h4 style="margin: 0 0 12px 0; color: var(--text-main); font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                                <i class="ph ph-trash" style="color: #ef4444;"></i> Detalhamento das Ameaças Eliminadas:
+                            <!-- Tabela de Ameaças / Camadas Auditadas -->
+                            <h4 id="laudo-tabela-titulo" style="margin: 0 0 12px 0; color: var(--text-main); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                                <i class="ph ph-shield-check" style="color: #22c55e;"></i> Resultado da Auditoria de Segurança:
                             </h4>
                             <div style="border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 28px;">
                                 <table class="estoque-table" style="width: 100%;">
