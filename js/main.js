@@ -987,9 +987,19 @@ btnGravarCliente.addEventListener('click', async (e) => {
         if (existingIdx >= 0) {
             const id = window.clientes[existingIdx].id;
             const updatePayload = { ...currentFlowData.cliente };
-            delete updatePayload.id;
-            await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, id, updatePayload);
-            currentFlowData.cliente.id = id;
+            try {
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, id, updatePayload);
+                currentFlowData.cliente.id = id;
+            } catch (cliErr) {
+                if (cliErr.code === 404 || (cliErr.message && cliErr.message.toLowerCase().includes('could not be found'))) {
+                    console.warn('[Cliente] Documento não encontrado na nuvem. Criando novo registro...', id);
+                    const docId = window.appwrite.ID.unique();
+                    const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_CLIENTES, docId, updatePayload);
+                    currentFlowData.cliente.id = created.$id;
+                } else {
+                    throw cliErr;
+                }
+            }
             window.clientes[existingIdx] = { ...window.clientes[existingIdx], ...currentFlowData.cliente };
         } else {
             const docId = window.appwrite.ID.unique();
@@ -1144,8 +1154,21 @@ btnFinalizarImprimir.addEventListener('click', async (e) => {
         if (!window.globalData.os) window.globalData.os = [];
 
         if (isEditing) {
-            const docId = currentFlowData.id || currentFlowData.$id;
-            await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
+            try {
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
+            } catch (osErr) {
+                if (osErr.code === 404 || (osErr.message && osErr.message.toLowerCase().includes('could not be found'))) {
+                    console.warn('[OS] Documento não encontrado na nuvem para atualização. Criando novo registro...', docId);
+                    const newId = window.appwrite.ID.unique();
+                    const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, newId, osDoc);
+                    if (currentFlowData) {
+                        currentFlowData.id = created.$id;
+                        currentFlowData.$id = created.$id;
+                    }
+                } else {
+                    throw osErr;
+                }
+            }
             const index = window.globalData.os.findIndex(o => o.id === docId || o.$id === docId);
             if (index !== -1) {
                 window.globalData.os[index] = { ...window.globalData.os[index], ...osDoc };

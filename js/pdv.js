@@ -472,9 +472,13 @@
                             estItem.qtd -= itemCart.qtd;
                             alterouEstoque = true;
                             // Update cloud stock
-                            await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, estItem.id, {
-                                qtd: estItem.qtd
-                            });
+                            try {
+                                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, estItem.id, {
+                                    qtd: estItem.qtd
+                                });
+                            } catch (stockErr) {
+                                console.warn('[PDV] Aviso ao sincronizar estoque na nuvem para', estItem.id, stockErr);
+                            }
                         }
                     }
                 }

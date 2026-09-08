@@ -166,13 +166,22 @@
                 const produto = estoque.find(p => p.id == id);
                 if (produto) {
                     window.customAlert(`Deseja realmente excluir o produto <strong>${produto.nome}</strong>?`, 'warning', true, async () => {
-                        window.showLoading('Excluindo da nuvem...');
                         try {
-                            await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, id);
+                            try {
+                                await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, id);
+                            } catch (delErr) {
+                                // Se o documento já não existia na nuvem, ignora o 404 e limpa localmente
+                                if (delErr.code !== 404 && !(delErr.message && delErr.message.toLowerCase().includes('could not be found'))) {
+                                    throw delErr;
+                                }
+                                console.warn('[Estoque] Documento já removido ou não encontrado na nuvem:', id);
+                            }
                             estoque = estoque.filter(p => p.id != id);
                             localStorage.setItem('avence_estoque', JSON.stringify(estoque));
-                            renderEstoque(searchEstoque.value);
+                            if (window.globalData) window.globalData.estoque = estoque;
+                            renderEstoque(searchEstoque ? searchEstoque.value : '');
                             window.hideLoading();
+                            window.customAlert('Produto excluído com sucesso!', 'success');
                         } catch (err) {
                             window.hideLoading();
                             window.customAlert('Erro ao excluir na nuvem: ' + err.message, 'warning');
@@ -433,12 +442,26 @@
             try {
                 if (id) { // Edição
                     const index = estoque.findIndex(p => p.id == id);
-                    if(index >= 0) {
+                    if (index >= 0) {
                         novoProduto.qtd_inicial = estoque[index].qtd_inicial || estoque[index].qtd;
                     }
-                    await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, id, novoProduto);
-                    novoProduto.id = id;
-                    if(index >= 0) estoque[index] = novoProduto;
+                    try {
+                        await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, id, novoProduto);
+                        novoProduto.id = id;
+                        if (index >= 0) estoque[index] = novoProduto;
+                    } catch (updateErr) {
+                        // Se o documento não existe mais na nuvem (404 / could not be found), recria na nuvem automaticamente!
+                        if (updateErr.code === 404 || (updateErr.message && updateErr.message.toLowerCase().includes('could not be found'))) {
+                            console.warn('[Estoque] Documento ID ' + id + ' não encontrado na nuvem para atualização. Criando novo registro para sincronizar...', updateErr);
+                            const docId = window.appwrite.ID.unique();
+                            const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_ESTOQUE, docId, novoProduto);
+                            novoProduto.id = created.$id;
+                            if (index >= 0) estoque[index] = novoProduto;
+                            else estoque.push(novoProduto);
+                        } else {
+                            throw updateErr;
+                        }
+                    }
                 } else { // Novo
                     novoProduto.qtd_inicial = novoProduto.qtd;
                     const docId = window.appwrite.ID.unique();
@@ -449,12 +472,27 @@
 
                 // Sincronia Local (Offline Fallback)
                 localStorage.setItem('avence_estoque', JSON.stringify(estoque));
-                renderEstoque(searchEstoque.value);
+                if (window.globalData) window.globalData.estoque = estoque;
+                renderEstoque(searchEstoque ? searchEstoque.value : '');
                 closeModal(modalProduto);
                 window.customAlert('Produto salvo com sucesso!', 'success');
             } catch (err) {
-                console.error(err);
-                window.customAlert('Erro ao salvar na nuvem: ' + err.message, 'warning');
+                console.error('[Estoque] Falha na comunicação com a nuvem:', err);
+                // Fallback seguro: persiste localmente para não perder os dados digitados
+                if (id) {
+                    const index = estoque.findIndex(p => p.id == id);
+                    novoProduto.id = id;
+                    if (index >= 0) estoque[index] = novoProduto;
+                    else estoque.push(novoProduto);
+                } else {
+                    novoProduto.id = novoProduto.id || ('local_' + Date.now());
+                    estoque.push(novoProduto);
+                }
+                localStorage.setItem('avence_estoque', JSON.stringify(estoque));
+                if (window.globalData) window.globalData.estoque = estoque;
+                renderEstoque(searchEstoque ? searchEstoque.value : '');
+                closeModal(modalProduto);
+                window.customAlert('Produto salvo no sistema local! (Aviso de nuvem: ' + err.message + ')', 'warning');
             } finally {
                 btnSalvarProduto.innerHTML = btnText;
                 btnSalvarProduto.disabled = false;
