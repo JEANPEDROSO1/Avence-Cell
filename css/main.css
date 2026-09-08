@@ -885,7 +885,28 @@ textarea {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.35);
+    border-radius: 3px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.6);
 }
 
 /* Tabs Horizontal Nav */
@@ -1428,13 +1449,25 @@ textarea {
         width: 100% !important;
     }
     
-    /* Tables on Mobile */
-    .table-wrapper, .estoque-table, table {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    /* Tables on Mobile: Apenas o .table-wrapper faz o scroll X, a tabela mantém display: table para não gerar duplo scroll */
+    .table-wrapper {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-x: contain !important;
+        touch-action: pan-x pan-y !important;
+    }
+    
+    .estoque-table, table {
+        display: table !important;
+        width: 100% !important;
+        min-width: 680px !important;
+        max-width: none !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
         white-space: nowrap;
     }
     
