@@ -418,6 +418,12 @@ menuBtns.forEach(btn => {
             if (typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
             setTimeout(() => { document.getElementById('pdv-search')?.focus(); }, 100);
         }
+        if (targetId === 'clientes') {
+            if (typeof window.renderClientes === 'function') window.renderClientes();
+        }
+        if (targetId === 'todas-os') {
+            if (typeof window.renderTodasOS === 'function') window.renderTodasOS();
+        }
         if (targetId === 'relatorios') {
             if (window.loggedUser && !(Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo]).includes('Dono')) {
                 window.customAlert('Acesso Restrito:<br>Apenas o administrador (Dono) pode acessar os relatórios.', 'error');
