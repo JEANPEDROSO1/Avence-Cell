@@ -12,13 +12,15 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PROTEÇÃO DE SESSÃO -->
+    <!-- AUTENTICAÇÃO JWT E PROTEÇÃO DE SESSÃO -->
+    <script src="js/jwt-auth.js"></script>
     <script>
-        if (!sessionStorage.getItem('avence_session_logged')) {
+        const authUser = (window.jwtAuth && window.jwtAuth.getUser()) || (sessionStorage.getItem('avence_session_logged') ? JSON.parse(sessionStorage.getItem('avence_session_logged')) : null);
+        if (!authUser) {
             window.location.href = 'login.html';
         } else {
             // Torna o usuário logado disponível globalmente
-            window.loggedUser = JSON.parse(sessionStorage.getItem('avence_session_logged'));
+            window.loggedUser = authUser;
 
             // Controle de Acesso (RBAC) - Esconde botões baseados no Cargo
             window.addEventListener('DOMContentLoaded', () => {
@@ -160,8 +162,12 @@
                     const btnConfirmLogout = document.getElementById('btn-confirm-logout');
                     if (btnConfirmLogout) {
                         btnConfirmLogout.addEventListener('click', () => {
-                            sessionStorage.removeItem('avence_session_logged');
-                            window.location.href = 'login.html';
+                            if (window.jwtAuth) {
+                                window.jwtAuth.logout();
+                            } else {
+                                sessionStorage.removeItem('avence_session_logged');
+                                window.location.href = 'login.html';
+                            }
                         });
                     }
                 });

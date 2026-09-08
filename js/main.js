@@ -188,9 +188,8 @@ window.updateVendedorDropdowns = function () {
         vendedorSelect.appendChild(opt);
     });
 
-    const loggedUserStr = sessionStorage.getItem('avence_session_logged');
-    if (loggedUserStr) {
-        const loggedUser = JSON.parse(loggedUserStr);
+    const loggedUser = (window.jwtAuth && window.jwtAuth.getUser()) || window.loggedUser || (sessionStorage.getItem('avence_session_logged') ? JSON.parse(sessionStorage.getItem('avence_session_logged')) : null);
+    if (loggedUser) {
         setTimeout(() => {
             const sel = document.getElementById('pdv-vendedor');
             if (sel) {

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem('avence_session_logged')) {
+    // Redireciona se o usuário já estiver autenticado via JWT (Access/Refresh Token) ou sessão
+    if ((window.jwtAuth && window.jwtAuth.isAuthenticated()) || sessionStorage.getItem('avence_session_logged')) {
         window.location.href = 'index.html';
         return;
     }
@@ -113,7 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            sessionStorage.setItem('avence_session_logged', JSON.stringify(userToLog));
+            // Emite e persiste JWT Access Token e Refresh Token
+            const rememberEl = document.getElementById('lembrar-login');
+            const remember = rememberEl ? rememberEl.checked : true;
+            if (window.jwtAuth) {
+                window.jwtAuth.login(userToLog, remember);
+            } else {
+                sessionStorage.setItem('avence_session_logged', JSON.stringify(userToLog));
+            }
             
             if (userToLog.id !== 'master') {
                 const pontos = JSON.parse(localStorage.getItem('avence_pontos')) || [];

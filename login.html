@@ -166,6 +166,13 @@
                     <button type="button" class="toggle-password" onclick="const p = document.getElementById('senha'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<i class=\'ph ph-eye\'></i>' : '<i class=\'ph ph-eye-slash\'></i>';" style="position: absolute; right: 10px; top: 38px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 5px;"><i class="ph ph-eye"></i></button>
                 </div>
                 
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: var(--text-muted);">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="lembrar-login" checked style="accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer;">
+                        <span>Manter conectado neste dispositivo</span>
+                    </label>
+                </div>
+                
                 <button type="submit" class="btn-login" id="btn-entrar">
                     Entrar no Sistema
                 </button>
@@ -175,6 +182,7 @@
 
     <div id="toast-container"></div>
 
+    <script src="js/jwt-auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
     <script src="js/appwrite-config.js"></script>
     <script src="js/login.js"></script>
