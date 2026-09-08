@@ -281,21 +281,86 @@ input[type=number] {
     font-size: 22px;
     color: var(--text-muted);
     transition: var(--transition);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .search-box:focus-within .search-icon {
     color: var(--primary);
 }
 
-#client-search, #produto-search {
+.search-box input,
+.search-box input[type="text"],
+.search-box input[type="search"],
+#client-search,
+#produto-search,
+#cliente-search-input,
+#os-search-input,
+#pdv-search,
+#servico-search,
+#peca-search,
+#kit-montado-search {
     width: 100%;
+    flex: 1;
+    min-width: 0;
     padding: 14px 20px 14px 54px;
-    background: transparent;
-    border: none;
-    color: var(--text-main);
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-main) !important;
     font-size: 15px;
     font-family: inherit;
-    outline: none;
+    outline: none !important;
+    box-shadow: none !important;
+    border-radius: 30px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search-box input::placeholder,
+#client-search::placeholder,
+#produto-search::placeholder,
+#cliente-search-input::placeholder,
+#os-search-input::placeholder,
+#pdv-search::placeholder,
+#servico-search::placeholder,
+#peca-search::placeholder,
+#kit-montado-search::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.75;
+}
+
+.search-box input:focus {
+    outline: none !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Evita que o preenchimento automático do navegador aplique fundo branco ou azul claro */
+.search-box input:-webkit-autofill,
+.search-box input:-webkit-autofill:hover, 
+.search-box input:-webkit-autofill:focus, 
+.search-box input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text-main) !important;
+    -webkit-box-shadow: 0 0 0px 1000px #292929 inset !important;
+    box-shadow: 0 0 0px 1000px #292929 inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Remove 'x' e decorações nativas do navegador em campos de busca */
+.search-box input::-webkit-search-decoration,
+.search-box input::-webkit-search-cancel-button,
+.search-box input::-webkit-search-results-button,
+.search-box input::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+}
+
+#input-pesquisa-gestao-clientes:focus,
+#input-pesquisa-os:focus,
+#ean-busca-produto-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-glow) !important;
+    outline: none !important;
 }
 
 .shortcut-hint {
@@ -1192,7 +1257,12 @@ textarea {
         width: 100% !important;
     }
     
-    #client-search, #produto-search {
+    .search-box input,
+    #client-search, 
+    #produto-search,
+    #cliente-search-input,
+    #os-search-input,
+    #pdv-search {
         font-size: 15px;
         padding: 12px 16px 12px 48px;
     }
