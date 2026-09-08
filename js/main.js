@@ -85,6 +85,13 @@ if (lastScreenId && lastScreenId !== 'dashboard') {
         const targetScreen = document.getElementById(lastScreenId);
         if (targetScreen) targetScreen.classList.add('active');
         pageTitle.textContent = lastBtn.querySelector('span').textContent;
+        if (lastScreenId === 'gestao') {
+            const activeTab = document.querySelector('.mais-opcoes-tab-btn.active');
+            const paneId = activeTab ? activeTab.getAttribute('data-pane') : 'pane-clientes';
+            if (typeof window.switchMaisOpcoesTab === 'function') {
+                window.switchMaisOpcoesTab(paneId);
+            }
+        }
     }
 }
 
@@ -423,6 +430,13 @@ menuBtns.forEach(btn => {
         }
         if (targetId === 'todas-os') {
             if (typeof window.renderTodasOS === 'function') window.renderTodasOS();
+        }
+        if (targetId === 'gestao') {
+            const activeTab = document.querySelector('.mais-opcoes-tab-btn.active');
+            const paneId = activeTab ? activeTab.getAttribute('data-pane') : 'pane-clientes';
+            if (typeof window.switchMaisOpcoesTab === 'function') {
+                window.switchMaisOpcoesTab(paneId);
+            }
         }
         if (targetId === 'relatorios') {
             if (window.loggedUser && !(Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo]).includes('Dono')) {
@@ -1792,4 +1806,47 @@ if (btnGestaoColab) {
         }
     });
 }
+
+// ==========================================
+// TELA MAIS OPÇÕES - GESTÃO DE ABAS INTERNAS
+// ==========================================
+window.switchMaisOpcoesTab = function (paneId) {
+    const tabs = document.querySelectorAll('.mais-opcoes-tab-btn');
+    const panes = document.querySelectorAll('.mais-opcoes-pane');
+
+    tabs.forEach(t => {
+        if (t.getAttribute('data-pane') === paneId) {
+            t.classList.add('active');
+        } else {
+            t.classList.remove('active');
+        }
+    });
+
+    panes.forEach(p => {
+        if (p.id === paneId) {
+            p.classList.add('active');
+        } else {
+            p.classList.remove('active');
+        }
+    });
+
+    if (paneId === 'pane-clientes' && typeof window.renderClientes === 'function') {
+        window.renderClientes();
+    }
+    if (paneId === 'pane-todas-os' && typeof window.renderTodasOS === 'function') {
+        window.renderTodasOS();
+    }
+};
+
+// Vincula cliques nas abas de Mais Opções
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mais-opcoes-tab-btn');
+    if (btn) {
+        const paneId = btn.getAttribute('data-pane');
+        if (paneId && typeof window.switchMaisOpcoesTab === 'function') {
+            window.switchMaisOpcoesTab(paneId);
+        }
+    }
+});
+
 
