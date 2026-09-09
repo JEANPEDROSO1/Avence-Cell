@@ -560,18 +560,33 @@
                 finalTotal = baseTotal + jurosValor;
             }
 
-            // Preencher Recibo
+            // Preencher Recibo com os dados da Loja
+            const cfg = window.globalData?.config || window.lojaConfig || {};
+            const lojaNome = cfg.storeName || cfg.osTitulo || cfg.nome || 'NOTE BOOK CENTER';
+            const lojaEnd = cfg.osEndereco || cfg.endereco || 'RUA SANTA CATARINA - 35, IVAIPORA-PR';
+            const lojaComp = cfg.osComplemento || 'RUA ATRAS DO BANCO DO BRASIL';
+            const lojaTel = cfg.osTelefone || cfg.telefone || '(43) 9900-4377';
+            const lojaEmail = cfg.osEmail || cfg.email || 'notecenter_ivp@hotmail.com';
+
             const reciboLojaNome = document.getElementById('recibo-loja-nome');
-            if (reciboLojaNome) reciboLojaNome.textContent = window.lojaConfig?.nome || 'NOME DA LOJA';
+            if (reciboLojaNome) reciboLojaNome.textContent = lojaNome;
             const reciboLojaEnd = document.getElementById('recibo-loja-end');
-            if (reciboLojaEnd) reciboLojaEnd.textContent = window.lojaConfig?.endereco || '';
+            if (reciboLojaEnd) reciboLojaEnd.textContent = lojaEnd;
+            const reciboLojaComp = document.getElementById('recibo-loja-comp');
+            if (reciboLojaComp) reciboLojaComp.textContent = lojaComp;
             const reciboLojaTel = document.getElementById('recibo-loja-tel');
-            if (reciboLojaTel) reciboLojaTel.textContent = 'Tel: ' + (window.lojaConfig?.telefone || '');
+            if (reciboLojaTel) reciboLojaTel.textContent = lojaTel;
+            const reciboLojaEmail = document.getElementById('recibo-loja-email');
+            if (reciboLojaEmail) reciboLojaEmail.textContent = lojaEmail;
 
-            const reciboData = document.getElementById('recibo-data');
-            if (reciboData) reciboData.textContent = new Date().toLocaleString('pt-BR');
+            // Data e Hora e Código de Sequência (cód:143)
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('pt-BR');
+            const elDataHora = document.getElementById('recibo-data-hora');
+            if (elDataHora) elDataHora.textContent = `${timeStr} ${dateStr}`;
 
-            // Número sequencial da Venda / O.S. (iniciando em 0)
+            // Número sequencial da Venda / O.S. (com 6 dígitos, ex: 006307)
             let vendaSeq = 0;
             const savedVendaSeq = localStorage.getItem('avence_numero_venda_pdv');
             if (savedVendaSeq !== null && !isNaN(parseInt(savedVendaSeq))) {
@@ -580,85 +595,77 @@
                 vendaSeq = 0;
             }
 
+            const elCodSeq = document.getElementById('recibo-cod-seq');
+            if (elCodSeq) elCodSeq.textContent = `(cód:${vendaSeq})`;
+
             const reciboNumero = document.getElementById('recibo-numero');
             if (reciboNumero) {
-                reciboNumero.textContent = String(vendaSeq);
+                reciboNumero.textContent = String(vendaSeq).padStart(6, '0');
             }
 
             // Atualiza para o próximo sequencial
             localStorage.setItem('avence_numero_venda_pdv', String(vendaSeq + 1));
 
-            const nomeVendedorUi = document.getElementById('pdv-vendedor')?.value.trim();
+            // Vendedor
+            const nomeVendedorUi = document.getElementById('pdv-vendedor')?.value.trim() || window.loggedUser?.nome || 'Não informado';
             const reciboVendedorNome = document.getElementById('recibo-vendedor');
             if (reciboVendedorNome) {
-                reciboVendedorNome.textContent = nomeVendedorUi || 'Não informado';
+                reciboVendedorNome.textContent = nomeVendedorUi.toUpperCase();
             }
-            const nomeCliente = document.getElementById('pdv-cliente-nome')?.value.trim();
-            const docCliente = document.getElementById('pdv-cliente-doc')?.value.trim();
-            const telCliente = document.getElementById('pdv-cliente-telefone')?.value.trim();
-            const endCliente = document.getElementById('pdv-cliente-endereco')?.value.trim();
+
+            // Dados do Cliente
+            const nomeCliente = document.getElementById('pdv-cliente-nome')?.value.trim() || 'Consumidor Final';
+            const docCliente = document.getElementById('pdv-cliente-doc')?.value.trim() || '';
+            const telCliente = document.getElementById('pdv-cliente-telefone')?.value.trim() || '';
+            const endCliente = document.getElementById('pdv-cliente-endereco')?.value.trim() || '';
             
-            const rInfo = document.getElementById('recibo-cliente-info');
-            if (rInfo) {
-                if (!nomeCliente && !docCliente && !telCliente && !endCliente) {
-                    rInfo.style.display = 'none';
-                } else {
-                    rInfo.style.display = 'block';
-                    const rNome = document.getElementById('recibo-cliente-nome');
-                    const rDoc = document.getElementById('recibo-cliente-doc');
-                    const rEnd = document.getElementById('recibo-cliente-end');
-                    const rTel = document.getElementById('recibo-cliente-tel');
-                    const rDocLinha = document.getElementById('recibo-cliente-doc-linha');
-                    const rTelLinha = document.getElementById('recibo-cliente-tel-linha');
-                    const rEndLinha = document.getElementById('recibo-cliente-end-linha');
-                    
-                    if (rNome) rNome.textContent = nomeCliente || 'Consumidor Final';
-                    if (rDoc) rDoc.textContent = docCliente || '';
-                    if (rTel) rTel.textContent = telCliente || '';
-                    if (rEnd) rEnd.textContent = endCliente || '';
+            const rNome = document.getElementById('recibo-cliente-nome');
+            if (rNome) rNome.textContent = nomeCliente;
+            const rDoc = document.getElementById('recibo-cliente-doc');
+            if (rDoc) rDoc.textContent = docCliente;
+            const rTel = document.getElementById('recibo-cliente-tel');
+            if (rTel) rTel.textContent = telCliente;
+            const rEnd = document.getElementById('recibo-cliente-end');
+            if (rEnd) rEnd.textContent = endCliente;
 
-                    if (rDocLinha) rDocLinha.style.display = docCliente ? 'block' : 'none';
-                    if (rTelLinha) rTelLinha.style.display = telCliente ? 'block' : 'none';
-                    if (rEndLinha) rEndLinha.style.display = endCliente ? 'block' : 'none';
-                }
-            }
+            const rAssinatura = document.getElementById('recibo-assinatura-cliente');
+            if (rAssinatura) rAssinatura.textContent = nomeCliente;
 
+            // Preencher Tabela de Itens (Codigo, Descrição, UN, Valor UN, QTD, Desconto, Vlr Total)
             const reciboItens = document.getElementById('recibo-itens');
             if (reciboItens) {
                 reciboItens.innerHTML = '';
                 pdvCart.forEach(item => {
                     const tr = document.createElement('tr');
-                    const codTxt = item.ean ? `EAN: ${item.ean}` : `Cód: ${String(item.id || '').substring(0, 8)}`;
+                    const codVal = item.codigo || item.ean || (item.id && !String(item.id).startsWith('local_') ? String(item.id).substring(0, 8) : '') || '';
+                    const descVal = item.nome || 'Item';
+                    const unVal = item.unidade || 'Un';
+                    const valUn = (parseFloat(item.venda) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const qtdVal = (parseFloat(item.qtd) || 1).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const descItem = (parseFloat(item.desconto) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const itemTotal = ((parseFloat(item.qtd) || 1) * (parseFloat(item.venda) || 0)) - (parseFloat(item.desconto) || 0);
+                    const totalVal = itemTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
                     tr.innerHTML = `
-                        <td style="word-break: break-word; padding: 4px 2px;">
-                            <strong style="font-size: 11px;">${item.nome}</strong>
-                            <div style="font-size: 9px; color: #444;">${codTxt}</div>
-                        </td>
-                        <td class="center" style="padding: 4px 2px; vertical-align: top; font-size: 11px;">${item.qtd}</td>
-                        <td class="right" style="padding: 4px 2px; vertical-align: top; font-size: 11px; white-space: nowrap;">${formatMoney(item.venda)}</td>
-                        <td class="right" style="padding: 4px 2px; vertical-align: top; font-size: 11px; white-space: nowrap;"><strong>${formatMoney(item.qtd * item.venda)}</strong></td>
+                        <td class="col-cod">${codVal}</td>
+                        <td class="col-desc">${descVal}</td>
+                        <td class="col-un">${unVal}</td>
+                        <td class="col-vlrun">${valUn}</td>
+                        <td class="col-qtd">${qtdVal}</td>
+                        <td class="col-descval">${descItem}</td>
+                        <td class="col-total">${totalVal}</td>
                     `;
                     reciboItens.appendChild(tr);
                 });
             }
 
-            const reciboSubtotal = document.getElementById('recibo-subtotal');
-            if (reciboSubtotal) reciboSubtotal.textContent = formatMoney(subtotal);
-            const reciboDesconto = document.getElementById('recibo-desconto');
-            if (reciboDesconto) reciboDesconto.textContent = formatMoney(descontoValue);
-            
-            const reciboJurosLinha = document.getElementById('recibo-juros-linha');
-            const reciboJuros = document.getElementById('recibo-juros');
-            if (jurosValor > 0 && reciboJurosLinha && reciboJuros) {
-                reciboJurosLinha.style.display = 'flex';
-                reciboJuros.textContent = formatMoney(jurosValor);
-            } else if (reciboJurosLinha) {
-                reciboJurosLinha.style.display = 'none';
+            // Total Final a Pagar
+            const reciboTotalFinal = document.getElementById('recibo-total-final');
+            if (reciboTotalFinal) {
+                reciboTotalFinal.textContent = 'R$ ' + finalTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
             
-            const reciboTotalFinal = document.getElementById('recibo-total-final');
-            if (reciboTotalFinal) reciboTotalFinal.textContent = formatMoney(finalTotal);
-            
+            // Forma de Pagamento
             const reciboFormaPgto = document.getElementById('recibo-forma-pgto');
             const reciboInfoExtra = document.getElementById('recibo-info-extra');
             let formaTexto = 'Dinheiro';
@@ -682,7 +689,7 @@
                 infoExtra = `${parcelas}x de ${formatMoney(finalTotal / parcelas)}`;
             }
             
-            if (reciboFormaPgto) reciboFormaPgto.textContent = 'Pagamento: ' + formaTexto;
+            if (reciboFormaPgto) reciboFormaPgto.textContent = formaTexto.toUpperCase();
             if (reciboInfoExtra) reciboInfoExtra.textContent = infoExtra;
 
             // Ocultar temporariamente outros elementos de impressão da OS

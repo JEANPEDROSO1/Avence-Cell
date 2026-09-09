@@ -211,25 +211,29 @@ window.updateVendedorDropdowns = function () {
     }
 };
 
-// Initialize Store Config from localStorage
+// Initialize Store Config from localStorage and Appwrite
 function loadConfig() {
-    const config = JSON.parse(localStorage.getItem('avence_config')) || {
-        nome: 'AVENCE CELL',
-        endereco: 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR',
-        telefone: '(43) 99969-1521',
-        email: 'avencecellivp@gmail.com',
-        emailRelatorio: '',
-        tecnico: 'Não definido',
-        tema: 'dark',
-        senhaGerente: '1234',
-        limiteCaixa: 500,
-        osTitulo: 'AVENCE CELL',
-        osAssinatura: 'AVENCE CELL',
-        osEndereco: 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR',
-        osComplemento: 'COMPLEMENTO: AO LADO DO BOMFIM CALÇADOS',
-        osTelefone: '(43) 99969-1521',
-        osEmail: 'avencecellivp@gmail.com',
-        osTermos: '1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;\n2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);\n3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).\n4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO'
+    const cachedCfg = JSON.parse(localStorage.getItem('avence_config')) || {};
+    const cloudCfg = window.globalData?.config || {};
+    const config = {
+        nome: cloudCfg.storeName || cloudCfg.osTitulo || cachedCfg.storeName || cachedCfg.osTitulo || cachedCfg.nome || 'NOTE BOOK CENTER',
+        endereco: cloudCfg.osEndereco || cachedCfg.osEndereco || cachedCfg.endereco || 'RUA SANTA CATARINA - 35, IVAIPORA-PR',
+        telefone: cloudCfg.osTelefone || cachedCfg.osTelefone || cachedCfg.telefone || '(43) 9900-4377',
+        email: cloudCfg.osEmail || cachedCfg.osEmail || cachedCfg.email || 'notecenter_ivp@hotmail.com',
+        osTitulo: cloudCfg.osTitulo || cloudCfg.storeName || cachedCfg.osTitulo || cachedCfg.storeName || cachedCfg.nome || 'NOTE BOOK CENTER',
+        osAssinatura: cloudCfg.osAssinatura || cachedCfg.osAssinatura || 'NOTE BOOK CENTER',
+        osEndereco: cloudCfg.osEndereco || cachedCfg.osEndereco || cachedCfg.endereco || 'RUA SANTA CATARINA - 35, IVAIPORA-PR',
+        osComplemento: cloudCfg.osComplemento || cachedCfg.osComplemento || 'RUA ATRAS DO BANCO DO BRASIL',
+        osTelefone: cloudCfg.osTelefone || cachedCfg.osTelefone || cachedCfg.telefone || '(43) 9900-4377',
+        osEmail: cloudCfg.osEmail || cachedCfg.osEmail || cachedCfg.email || 'notecenter_ivp@hotmail.com',
+        emailRelatorio: cachedCfg.emailRelatorio || '',
+        tecnico: cachedCfg.tecnico || 'Não definido',
+        tema: cachedCfg.tema || 'dark',
+        senhaGerente: cachedCfg.senhaGerente || '1234',
+        limiteCaixa: cachedCfg.limiteCaixa !== undefined ? cachedCfg.limiteCaixa : 500,
+        osTermos: cachedCfg.osTermos || '1) PRAZO PARA RETIRAR: 90 DIAS; GARANTIA 90 DIAS;\n2) GARANTIA E ENTREGA SOMENTE COM A ORDEM DE SERVIÇO (O.S.);\n3) REAJUSTE DE 10% A CADA 30 DIAS VENCIDOS (TAXA CONSERVAÇÃO).\n4) APOS 90 DIAS NAO RETIRAR O EQUIPAMENTO SERA FEITA A RECICLAGEM DO MESMO',
+        ...cachedCfg,
+        ...cloudCfg
     };
 
     // Update Form
@@ -354,6 +358,21 @@ btnSalvarConfig.addEventListener('click', async () => {
     };
 
     localStorage.setItem('avence_config', JSON.stringify(config));
+
+    try {
+        let docId = window.globalData?.config?.id || window.globalData?.config?.$id;
+        if (docId && window.appwrite?.databases) {
+            window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CONFIG, docId, {
+                storeName: config.nome,
+                osTitulo: config.osTitulo,
+                osEndereco: config.osEndereco,
+                osComplemento: config.osComplemento,
+                osTelefone: config.osTelefone,
+                osEmail: config.osEmail
+            }).catch(e => console.warn('Erro ao sincronizar config na nuvem:', e));
+        }
+    } catch (e) {}
+
     loadConfig();
     if (typeof renderEstoque === 'function') renderEstoque();
     window.customAlert('Configurações salvas com sucesso!', 'success');
