@@ -458,9 +458,8 @@ menuBtns.forEach(btn => {
             }
         }
         if (targetId === 'relatorios') {
-            if (window.loggedUser && !(Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo]).includes('Dono')) {
-                window.customAlert('Acesso Restrito:<br>Apenas o administrador (Dono) pode acessar os relatórios.', 'error');
-                return;
+            if (typeof window.renderRelatorios === 'function') {
+                window.renderRelatorios();
             }
         }
 
@@ -1841,17 +1840,19 @@ if (btnGestaoOs) {
     });
 }
 
-// Controle de Colab (Abre relatorios ou modal se existir)
+// Controle de Colab (Abre tela de Relatórios de Desempenho)
 const btnGestaoColab = document.getElementById('btn-gestao-colab');
 if (btnGestaoColab) {
     btnGestaoColab.addEventListener('click', () => {
-        const btnRelColab = document.getElementById('btn-relatorio-colab');
-        if (btnRelColab) {
-            btnRelColab.click();
-        } else if (document.getElementById('modal-relatorio-colab')) {
-            openModal(document.getElementById('modal-relatorio-colab'));
+        const btnRel = document.querySelector('.menu-btn[data-target="relatorios"]');
+        if (btnRel) {
+            btnRel.click();
         } else {
-            window.customAlert('Módulo de Controle de Ponto em desenvolvimento.', 'info');
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+            const relatScreen = document.getElementById('relatorios');
+            if (relatScreen) relatScreen.classList.add('active');
+            if (typeof window.renderRelatorios === 'function') window.renderRelatorios();
         }
     });
 }

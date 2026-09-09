@@ -293,10 +293,12 @@
             const modal = document.getElementById('modal-relatorio-compras');
             if (!modal) return;
             
+            const tbodyReposicao = document.getElementById('tbody-reposicao-urgente');
             const tbodyGiro = document.getElementById('tbody-alto-giro');
             const tbodyParado = document.getElementById('tbody-estoque-parado');
-            tbodyGiro.innerHTML = '';
-            tbodyParado.innerHTML = '';
+            if (tbodyReposicao) tbodyReposicao.innerHTML = '';
+            if (tbodyGiro) tbodyGiro.innerHTML = '';
+            if (tbodyParado) tbodyParado.innerHTML = '';
             
             let historicoItens = JSON.parse(localStorage.getItem('avence_historico_vendas_itens')) || [];
             const agora = Date.now();
@@ -306,47 +308,71 @@
             const vendasPorId = {};
             historicoItens.forEach(v => {
                 if (!vendasPorId[v.id]) vendasPorId[v.id] = { qtdVendida: 0, ultimaVenda: 0 };
-                vendasPorId[v.id].qtdVendida += v.qtd;
+                vendasPorId[v.id].qtdVendida += (v.qtd || 1);
                 const dataVenda = new Date(v.data).getTime();
                 if (dataVenda > vendasPorId[v.id].ultimaVenda) {
                     vendasPorId[v.id].ultimaVenda = dataVenda;
                 }
             });
+
+            // Lista de produtos do estoque atual
+            const prodsEstoque = (window.globalData && window.globalData.estoque && window.globalData.estoque.length > 0)
+                ? window.globalData.estoque
+                : (estoque || []);
             
-            estoque.forEach(p => {
+            prodsEstoque.forEach(p => {
                 if (p.tipo === 'servico') return;
+
+                const qtdNum = parseInt(p.qtd) || 0;
+                const precoCustoNum = parseFloat(p.precoCusto || p.custo || 0);
+                const precoVendaNum = parseFloat(p.preco || p.precoVenda || 0);
+                
+                // 1. Reposição Imediata / Estoque Crítico (Qtd <= 2)
+                if (tbodyReposicao && qtdNum <= 2) {
+                    const statusCritico = qtdNum <= 0 ? '<span style="color: #ef4444; font-weight: bold;">Esgotado (0)</span>' : '<span style="color: #f59e0b; font-weight: bold;">Crítico (' + qtdNum + ')</span>';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.ean || '-'}</td>
+                        <td style="font-weight: 600;">${p.nome}</td>
+                        <td style="text-align: center; font-weight: bold;">${qtdNum}</td>
+                        <td style="text-align: center;">R$ ${precoCustoNum.toFixed(2)}</td>
+                        <td style="text-align: center; color: #22c55e;">R$ ${precoVendaNum.toFixed(2)}</td>
+                        <td style="text-align: center;">${statusCritico}</td>
+                    `;
+                    tbodyReposicao.appendChild(tr);
+                }
                 
                 const dataCadastro = parseInt(p.id) > 1000000000000 ? parseInt(p.id) : agora;
                 let diasNoEstoque = Math.floor((agora - dataCadastro) / umDia);
                 if (diasNoEstoque < 0) diasNoEstoque = 0;
 
                 const vendas = vendasPorId[p.id] || { qtdVendida: 0, ultimaVenda: 0 };
-                const qtdInicial = p.qtd_inicial || (p.qtd + vendas.qtdVendida);
+                const qtdInicial = p.qtd_inicial || (qtdNum + vendas.qtdVendida);
                 const pctVendido = qtdInicial > 0 ? (vendas.qtdVendida / qtdInicial) * 100 : 0;
                 
-                // Alto Giro: vendeu >= 60% e teve alguma venda recente (ou > 10 itens vendidos)
-                if (pctVendido >= 60 || vendas.qtdVendida >= 10) {
+                // 2. Alto Giro: vendeu >= 50% ou > 5 itens vendidos
+                if (tbodyGiro && (pctVendido >= 50 || vendas.qtdVendida >= 5)) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${p.ean || '-'}</td>
-                        <td>${p.nome}</td>
+                        <td style="font-weight: 600;">${p.nome}</td>
                         <td style="text-align: center;">${qtdInicial}</td>
-                        <td style="text-align: center;">${p.qtd}</td>
-                        <td style="text-align: center;">${vendas.qtdVendida}</td>
+                        <td style="text-align: center;">${qtdNum}</td>
+                        <td style="text-align: center; font-weight: bold;">${vendas.qtdVendida}</td>
                         <td style="text-align: center; color: #22c55e; font-weight: bold;">${pctVendido.toFixed(1)}%</td>
                     `;
                     tbodyGiro.appendChild(tr);
                 }
                 
-                // Estoque Parado: > 90 dias (ou > 3 meses) e vendeu < 20%
-                if (diasNoEstoque >= 90 && pctVendido < 20) {
+                // 3. Estoque Parado: > 60 dias e vendeu < 20%
+                if (tbodyParado && diasNoEstoque >= 60 && pctVendido < 20) {
                     const dataUltimaVendaStr = vendas.ultimaVenda > 0 ? new Date(vendas.ultimaVenda).toLocaleDateString('pt-BR') : 'Nunca';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${p.ean || '-'}</td>
-                        <td>${p.nome}</td>
+                        <td style="font-weight: 600;">${p.nome}</td>
                         <td style="text-align: center;">${qtdInicial}</td>
-                        <td style="text-align: center;">${p.qtd}</td>
+                        <td style="text-align: center;">${qtdNum}</td>
                         <td style="text-align: center;">${diasNoEstoque} dias</td>
                         <td style="text-align: center;">${dataUltimaVendaStr}</td>
                     `;
@@ -354,8 +380,83 @@
                 }
             });
             
-            if (tbodyGiro.children.length === 0) tbodyGiro.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum produto de alto giro encontrado.</td></tr>';
-            if (tbodyParado.children.length === 0) tbodyParado.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum produto parado encontrado.</td></tr>';
+            if (tbodyReposicao && tbodyReposicao.children.length === 0) {
+                tbodyReposicao.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Nenhum produto em nível crítico no momento.</td></tr>';
+            }
+            if (tbodyGiro && tbodyGiro.children.length === 0) {
+                tbodyGiro.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Nenhum produto de alto giro identificado ainda.</td></tr>';
+            }
+            if (tbodyParado && tbodyParado.children.length === 0) {
+                tbodyParado.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Nenhum produto encalhado encontrado.</td></tr>';
+            }
+
+            // Ação de Impressão da Lista de Compras
+            const btnPrintCompras = document.getElementById('btn-imprimir-relat-compras');
+            if (btnPrintCompras && !btnPrintCompras.dataset.bound) {
+                btnPrintCompras.dataset.bound = 'true';
+                btnPrintCompras.addEventListener('click', () => {
+                    const printWin = window.open('', '_blank');
+                    if (!printWin) {
+                        window.print();
+                        return;
+                    }
+                    printWin.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Sugestão de Reposição e Compras - Avence Cell</title>
+                            <style>
+                                body { font-family: sans-serif; padding: 24px; color: #1e293b; }
+                                h1, h2, h3 { margin: 0 0 8px 0; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 24px; font-size: 13px; }
+                                th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+                                th { background: #f1f5f9; color: #334155; }
+                            </style>
+                        </head>
+                        <body>
+                            <div style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
+                                <h2>AVENCE CELL - SUGESTÃO DE REPOSIÇÃO & COMPRAS</h2>
+                                <p style="margin: 0; color: #64748b;">Emissão: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
+                            </div>
+                            <h3>Produtos com Estoque Crítico (≤ 2)</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>EAN</th>
+                                        <th>Produto</th>
+                                        <th>Qtd. Atual</th>
+                                        <th>Preço Custo</th>
+                                        <th>Preço Venda</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tbodyReposicao ? tbodyReposicao.innerHTML : ''}
+                                </tbody>
+                            </table>
+                            <h3>Produtos de Alto Giro</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>EAN</th>
+                                        <th>Produto</th>
+                                        <th>Qtd. Inicial</th>
+                                        <th>Qtd. Atual</th>
+                                        <th>Qtd. Vendida</th>
+                                        <th>% Vendido</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tbodyGiro ? tbodyGiro.innerHTML : ''}
+                                </tbody>
+                            </table>
+                        </body>
+                        </html>
+                    `);
+                    printWin.document.close();
+                    printWin.focus();
+                    setTimeout(() => { printWin.print(); }, 400);
+                });
+            }
             
             openModal(modal);
         });
@@ -512,34 +613,6 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 renderEstoque(e.target.value);
-            }
-        });
-    }
-
-    if (btnRelatorioCompras) {
-        btnRelatorioCompras.addEventListener('click', () => {
-            const faltando = estoque.filter(p => p.qtd <= 2);
-            if (faltando.length === 0) {
-                window.customAlert('Não há produtos precisando de reposição no momento.', 'success');
-            } else {
-                let msg = '<strong>Produtos para comprar:</strong><br><br>';
-                faltando.forEach(p => {
-                    msg += `- ${p.nome} (EAN: ${p.ean || 'N/A'}) - Restam: ${p.qtd}<br>`;
-                });
-                msg += '<br><br><em>(No futuro, esta lista será enviada para o seu e-mail)</em>';
-                
-                const modal = document.getElementById('modal-alerta');
-                document.getElementById('alerta-mensagem').innerHTML = msg;
-                document.getElementById('alerta-icon').className = 'ph ph-shopping-cart';
-                document.getElementById('alerta-icon').style.color = '#3b82f6';
-                document.getElementById('alerta-titulo').textContent = 'Relatório de Compras';
-                modal.classList.add('active');
-                
-                document.getElementById('btn-fechar-alerta').onclick = () => {
-                    modal.classList.remove('active');
-                    // Reset to default alert styles for next alerts
-                    document.getElementById('alerta-mensagem').textContent = '';
-                };
             }
         });
     }

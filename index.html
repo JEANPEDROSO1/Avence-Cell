@@ -37,8 +37,8 @@
                         if (btnConfig) btnConfig.style.display = 'none';
                     }
                     else if (isTecnico && !isVendedor) {
-                        // Somente Técnico: Esconde Relatórios e Configurações (Mantém acesso ao status do caixa e vendas)
-                        const hideTargets = ['relatorios'];
+                        // Somente Técnico: Acesso a Relatórios e Caixa (esconde apenas Configurações)
+                        const hideTargets = [];
                         hideTargets.forEach(target => {
                             const btn = document.querySelector(`.menu-btn[data-target="${target}"]`);
                             if (btn) btn.style.display = 'none';
@@ -47,8 +47,8 @@
                         if (btnConfig) btnConfig.style.display = 'none';
                     }
                     else if (isVendedor || (isTecnico && isVendedor)) {
-                        // Vendedor: Esconde Relatórios e Configurações (Mantém Financeiro para acompanhar caixa e vendas)
-                        const hideTargets = ['relatorios'];
+                        // Vendedor: Acesso a Relatórios e Caixa (esconde apenas Configurações)
+                        const hideTargets = [];
                         hideTargets.forEach(target => {
                             const btn = document.querySelector(`.menu-btn[data-target="${target}"]`);
                             if (btn) btn.style.display = 'none';
@@ -533,12 +533,47 @@
                 </section>
 
                 <section id="relatorios" class="screen">
-                    <div class="section-header">
+                    <div class="section-header" style="flex-wrap: wrap; gap: 12px;">
                         <h2 style="font-size: 24px; color: var(--text-main);"><i class="ph ph-chart-bar"
                                 style="color: var(--primary);"></i> Relatório de Desempenho (Equipe)</h2>
-                        <div class="actions">
-                            <button class="btn btn-secondary" id="btn-refresh-relatorios" style="padding: 8px 16px;"><i
+                        <div class="actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label for="relatorios-periodo-filtro" style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Período:</label>
+                                <select id="relatorios-periodo-filtro" style="padding: 8px 12px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">
+                                    <option value="todos">Todo o Período</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="7dias">Últimos 7 Dias</option>
+                                    <option value="hoje">Hoje</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-secondary" id="btn-refresh-relatorios" style="padding: 8px 14px;"><i
                                     class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                            <button class="btn btn-primary" id="btn-imprimir-relatorios" style="padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;"><i
+                                    class="ph ph-printer"></i> Imprimir Relatório</button>
+                        </div>
+                    </div>
+
+                    <!-- Cards de Resumo Geral (KPIs) -->
+                    <div id="relatorios-kpi-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="card" style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Vendas Equipe</div>
+                            <div id="relat-kpi-vendas" style="font-size: 22px; font-weight: 700; color: #22c55e; margin-top: 4px;">R$ 0,00</div>
+                            <div id="relat-kpi-vendas-qtd" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">0 vendas realizadas</div>
+                        </div>
+                        <div class="card" style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">O.S. Concluídas</div>
+                            <div id="relat-kpi-os" style="font-size: 22px; font-weight: 700; color: #3b82f6; margin-top: 4px;">0 un</div>
+                            <div id="relat-kpi-os-val" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">R$ 0,00 em serviços</div>
+                        </div>
+                        <div class="card" style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Comissões Previstas</div>
+                            <div id="relat-kpi-comissao" style="font-size: 22px; font-weight: 700; color: #eab308; margin-top: 4px;">R$ 0,00</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Vendas + Serviços técnicos</div>
+                        </div>
+                        <div class="card" style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Destaque do Período</div>
+                            <div id="relat-kpi-destaque" style="font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</div>
+                            <div id="relat-kpi-destaque-sub" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Maior faturamento</div>
                         </div>
                     </div>
 
@@ -3207,16 +3242,44 @@
     <div class="modal-overlay no-print" id="modal-relatorio-compras">
         <div class="modal-container large-modal modal-relatorio-compras-container">
             <div class="modal-header">
-                <h2><i class="ph ph-envelope-simple"></i> Relatório Avançado de Estoque (Alto Giro & Estoque Parado)
-                </h2>
-                <button class="close-btn" data-close="modal-relatorio-compras"><i class="ph ph-x"></i></button>
+                <h2><i class="ph ph-shopping-bag-open"></i> Relatório Avançado de Estoque & Reposição</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-primary btn-sm" id="btn-imprimir-relat-compras" style="padding: 6px 14px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="ph ph-printer"></i> Imprimir Lista
+                    </button>
+                    <button class="close-btn" data-close="modal-relatorio-compras"><i class="ph ph-x"></i></button>
+                </div>
             </div>
             <div class="modal-body"
                 style="padding: 24px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;">
-                <p style="color: var(--text-muted); font-size: 14px;">Este relatório avalia o desempenho de vendas
-                    baseado no histórico registrado. <strong>Nota:</strong> Produtos antigos que não tiveram sua
-                    quantidade de compra inicial registrada ou que foram vendidos antes dessa atualização não exibirão
-                    giro preciso.</p>
+                <p style="color: var(--text-muted); font-size: 14px;">Este relatório avalia produtos que necessitam de reposição imediata, itens com maior saída no caixa e produtos parados no estoque.</p>
+
+                <!-- Reposição Imediata / Estoque Crítico -->
+                <div
+                    style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <div
+                        style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; gap: 8px;">
+                        <i class="ph ph-shopping-cart" style="color: #f59e0b; font-size: 20px;"></i>
+                        <h3 style="margin: 0; color: #f59e0b;">Sugestão de Reposição Imediata (Estoque Crítico ≤ 2)</h3>
+                    </div>
+                    <div style="padding: 16px; overflow-x: auto;">
+                        <table class="estoque-table">
+                            <thead>
+                                <tr>
+                                    <th>EAN</th>
+                                    <th>Produto</th>
+                                    <th style="text-align: center;">Qtd. Atual</th>
+                                    <th style="text-align: center;">Preço Custo</th>
+                                    <th style="text-align: center;">Preço Venda</th>
+                                    <th style="text-align: center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-reposicao-urgente">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Alto Giro -->
                 <div
@@ -3366,9 +3429,22 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Últimas Vendas e O.S. Realizadas -->
+                <div style="margin-top: 20px; background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                    <h3 style="font-size: 15px; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; color: var(--text-main);">
+                        <i class="ph ph-receipt" style="color: var(--primary);"></i> Últimas Movimentações / Vendas / O.S. Atribuídas
+                    </h3>
+                    <div id="modal-relat-vendas-lista" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </div>
+                </div>
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn btn-primary" id="btn-imprimir-relat-colab" style="display: flex; align-items: center; gap: 6px;">
+                    <i class="ph ph-printer"></i> Imprimir Ficha
+                </button>
                 <button class="btn btn-secondary" data-close="modal-relatorio-colab">Fechar Relatório</button>
             </div>
         </div>
