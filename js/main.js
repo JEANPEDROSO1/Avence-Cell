@@ -157,8 +157,10 @@ window.updateTecnicoDropdowns = function () {
 
     // Add from colaboradores
     colabs.forEach(c => {
-        const cargos = Array.isArray(c.cargo) ? c.cargo : [c.cargo];
-        if (cargos.includes('Tecnico')) {
+        const cargos = Array.isArray(c.cargo)
+            ? c.cargo.flatMap(x => typeof x === 'string' ? x.split(',').map(s => s.trim()) : [String(x)])
+            : (typeof c.cargo === 'string' ? c.cargo.split(',').map(s => s.trim()) : [c.cargo]);
+        if (cargos.includes('Tecnico') || cargos.includes('Técnico')) {
             if (!added.has(c.nome)) {
                 const opt = document.createElement('option');
                 opt.value = c.nome;
@@ -442,7 +444,12 @@ menuBtns.forEach(btn => {
 
         if (targetModal) {
             if (targetModal === 'modal-configuracoes') {
-                if (window.loggedUser && !(Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo]).some(r => ['Dono', 'Gerente'].includes(r))) {
+                const userCargos = window.loggedUser
+                    ? (Array.isArray(window.loggedUser.cargo)
+                        ? window.loggedUser.cargo.flatMap(x => typeof x === 'string' ? x.split(',').map(s => s.trim()) : [String(x)])
+                        : (typeof window.loggedUser.cargo === 'string' ? window.loggedUser.cargo.split(',').map(s => s.trim()) : [window.loggedUser.cargo]))
+                    : [];
+                if (window.loggedUser && !userCargos.some(r => ['Dono', 'Gerente'].includes(r))) {
                     window.customAlert('Acesso Restrito:<br>Apenas Dono ou Gerente podem acessar as configurações.', 'error');
                     return;
                 }

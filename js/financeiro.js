@@ -27,6 +27,66 @@ try {
 
 window.caixaAberto = caixaAberto;
 
+// Funções auxiliares para listagem e validação de colaboradores e cargos (ex: 'Tecnico, Dono', 'Gerente', etc.)
+window.getGlobalColaboradoresList = function () {
+    if (window.colaboradores && Array.isArray(window.colaboradores) && window.colaboradores.length > 0) {
+        return window.colaboradores;
+    }
+    if (window.globalData && Array.isArray(window.globalData.colaboradores) && window.globalData.colaboradores.length > 0) {
+        return window.globalData.colaboradores;
+    }
+    try {
+        return JSON.parse(localStorage.getItem('avence_colaboradores') || '[]');
+    } catch (e) {
+        return [];
+    }
+};
+
+window.parseColabCargos = function (cargoVal) {
+    if (!cargoVal) return [];
+    if (Array.isArray(cargoVal)) {
+        return cargoVal.flatMap(c => typeof c === 'string' ? c.split(',').map(s => s.trim()) : [String(c)]).filter(Boolean);
+    }
+    if (typeof cargoVal === 'string') {
+        return cargoVal.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [String(cargoVal)];
+};
+
+window.isCargoAdminOrGerente = function (colab) {
+    if (!colab) return false;
+    const cargos = window.parseColabCargos(colab.cargo);
+    if (colab.perfil) cargos.push(...window.parseColabCargos(colab.perfil));
+    if (colab.funcao) cargos.push(...window.parseColabCargos(colab.funcao));
+    return cargos.some(c => {
+        const norm = c.toLowerCase();
+        return norm === 'dono' || norm === 'gerente' || norm === 'admin' || norm === 'administrador' || norm.includes('dono') || norm.includes('gerente');
+    });
+};
+
+window.matchesColabPassword = function (colab, senha) {
+    if (!colab || !senha) return false;
+    const s = String(senha).trim();
+    if (!s) return false;
+    const sRet = colab.senhaRetirada ? String(colab.senhaRetirada).trim() : null;
+    const sLog = colab.senhaLogin ? String(colab.senhaLogin).trim() : null;
+    const sPad = colab.senha ? String(colab.senha).trim() : null;
+    return (sRet && sRet === s) || (sLog && sLog === s) || (sPad && sPad === s);
+};
+
+window.isSenhaMasterLoja = function (senha) {
+    if (!senha) return false;
+    const s = String(senha).trim();
+    let masterCfg = window.lojaConfig?.senhaGerente;
+    if (!masterCfg) {
+        try {
+            masterCfg = JSON.parse(localStorage.getItem('avence_config') || '{}')?.senhaGerente;
+        } catch (e) {}
+    }
+    masterCfg = masterCfg || '1234';
+    return s === String(masterCfg).trim();
+};
+
 // Função central para desduplicação rigorosa de transações do caixa
 window.deduplicateTransactions = function (list) {
     if (!Array.isArray(list)) return [];
@@ -434,14 +494,14 @@ if (btnAbrirCaixa) {
         const selectResp = document.getElementById('fin-abrir-responsavel');
         if (selectResp) {
             selectResp.innerHTML = '<option value="">Selecione o Responsável...</option>';
-            if (window.colaboradores) {
-                window.colaboradores.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.textContent = `${c.nome} (${Array.isArray(c.cargo) ? c.cargo.join(', ') : c.cargo})`;
-                    selectResp.appendChild(opt);
-                });
-            }
+            const colabs = window.getGlobalColaboradoresList();
+            colabs.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id || c.$id;
+                const cgs = window.parseColabCargos(c.cargo);
+                opt.textContent = `${c.nome} (${cgs.join(', ')})`;
+                selectResp.appendChild(opt);
+            });
         }
         const saldoInput = document.getElementById('fin-saldo-inicial');
         if (saldoInput) saldoInput.value = '';
@@ -459,8 +519,8 @@ if (finAbrirRespInput) {
     finAbrirRespInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const saldoInicial = document.getElementById('fin-saldo-inicial');
-            if (saldoInicial) { saldoInicial.focus(); saldoInicial.select(); }
+            const saldoInput = document.getElementById('fin-saldo-inicial');
+            if (saldoInput) { saldoInput.focus(); saldoInput.select(); }
         }
     });
 }
@@ -493,14 +553,14 @@ if (btnSangria) {
         const selectResp = document.getElementById('fin-mov-responsavel');
         if (selectResp) {
             selectResp.innerHTML = '<option value="">Selecione o Responsável...</option>';
-            if (window.colaboradores) {
-                window.colaboradores.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.textContent = `${c.nome} (${Array.isArray(c.cargo) ? c.cargo.join(', ') : c.cargo})`;
-                    selectResp.appendChild(opt);
-                });
-            }
+            const colabs = window.getGlobalColaboradoresList();
+            colabs.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id || c.$id;
+                const cgs = window.parseColabCargos(c.cargo);
+                opt.textContent = `${c.nome} (${cgs.join(', ')})`;
+                selectResp.appendChild(opt);
+            });
         }
         openModal(modalSangria);
     });
@@ -527,14 +587,15 @@ if (btnFecharCaixa) btnFecharCaixa.addEventListener('click', () => {
 
 
     const selectFecharResp = document.getElementById('fin-fechar-responsavel');
-    if (selectFecharResp && window.colaboradores) {
+    if (selectFecharResp) {
         selectFecharResp.innerHTML = '<option value="">Selecione o Responsável...</option>';
-        window.colaboradores.forEach(c => {
-            const cargos = Array.isArray(c.cargo) ? c.cargo : [c.cargo];
-            if (cargos.includes('Dono') || cargos.includes('Gerente')) {
+        const colabs = window.getGlobalColaboradoresList();
+        colabs.forEach(c => {
+            if (window.isCargoAdminOrGerente(c)) {
                 const opt = document.createElement('option');
                 opt.value = c.nome;
-                opt.textContent = `${c.nome} (${cargos.join(', ')})`;
+                const cgs = window.parseColabCargos(c.cargo);
+                opt.textContent = `${c.nome} (${cgs.join(', ')})`;
                 selectFecharResp.appendChild(opt);
             }
         });
@@ -607,11 +668,14 @@ window.processarAberturaCaixa = function () {
     const responsavelId = document.getElementById('fin-abrir-responsavel') ? document.getElementById('fin-abrir-responsavel').value : '';
     if (!responsavelId) { window.customAlert('Selecione quem está abrindo o caixa.', 'warning'); return; }
 
-    const colabResp = window.colaboradores.find(c => c.id === responsavelId);
-    if (!colabResp) return;
+    const colabs = window.getGlobalColaboradoresList();
+    const colabResp = colabs.find(c => c.id === responsavelId || c.$id === responsavelId || c.nome === responsavelId);
+    if (!colabResp) { window.customAlert('Colaborador não encontrado.', 'warning'); return; }
 
-    const senhaInput = document.getElementById('fin-abrir-senha').value;
-    if (senhaInput !== colabResp.senhaLogin && senhaInput !== colabResp.senhaRetirada && senhaInput !== window.lojaConfig.senhaGerente) {
+    const senhaInput = (document.getElementById('fin-abrir-senha')?.value || '').trim();
+    const isMaster = window.isSenhaMasterLoja(senhaInput);
+
+    if (!isMaster && !window.matchesColabPassword(colabResp, senhaInput)) {
         window.customAlert('Senha incorreta para o colaborador selecionado!', 'warning');
         return;
     }
@@ -708,10 +772,12 @@ if (btnConfirmarDivergencia) {
         const novoFundo = parseFloat(modalDivergencia.dataset.novoFundo);
         const diff = parseFloat(modalDivergencia.dataset.diff);
 
-        const colabResp = window.colaboradores.find(c => c.id === responsavelId);
-        const senhaInput = document.getElementById('fin-divergencia-senha').value;
+        const colabs = window.getGlobalColaboradoresList();
+        const colabResp = colabs.find(c => c.id === responsavelId || c.$id === responsavelId || c.nome === responsavelId);
+        const senhaInput = (document.getElementById('fin-divergencia-senha')?.value || '').trim();
+        const isMaster = window.isSenhaMasterLoja(senhaInput);
 
-        if (senhaInput !== colabResp.senhaLogin && senhaInput !== colabResp.senhaRetirada && senhaInput !== window.lojaConfig.senhaGerente) {
+        if (!isMaster && (!colabResp || !window.matchesColabPassword(colabResp, senhaInput))) {
             window.customAlert('Senha incorreta!', 'warning');
             return;
         }
@@ -735,25 +801,37 @@ if (btnConfExcluir) {
         const dataTarget = dataInput ? dataInput.value : '';
         const idTarget = dataInput ? dataInput.dataset.txId : '';
         const valorTarget = dataInput && dataInput.dataset.txValor ? parseFloat(dataInput.dataset.txValor) : null;
-        const senhaInput = document.getElementById('del-transacao-senha').value;
+        const senhaInput = (document.getElementById('del-transacao-senha')?.value || '').trim();
 
-        const isMaster = (senhaInput === window.lojaConfig.senhaGerente);
-        const hasColab = window.colaboradores.some(c => c.senhaRetirada && c.senhaRetirada === senhaInput && ((Array.isArray(c.cargo) ? c.cargo : [c.cargo]).includes('Dono') || (Array.isArray(c.cargo) ? c.cargo : [c.cargo]).includes('Gerente')));
+        if (!senhaInput) {
+            window.customAlert('Por favor, digite sua senha de autorização.', 'warning');
+            return;
+        }
 
-        if (!isMaster && !hasColab) {
-            window.customAlert('Senha incorreta ou sem permissão para exclusão!', 'warning');
+        const isMaster = window.isSenhaMasterLoja(senhaInput);
+        const colabList = window.getGlobalColaboradoresList();
+        const hasColab = colabList.some(c => window.isCargoAdminOrGerente(c) && window.matchesColabPassword(c, senhaInput));
+
+        const loggedUser = (window.jwtAuth && window.jwtAuth.getUser()) || window.loggedUser || (sessionStorage.getItem('avence_session_logged') ? JSON.parse(sessionStorage.getItem('avence_session_logged')) : null);
+        const isLoggedAuth = loggedUser && window.isCargoAdminOrGerente(loggedUser) && window.matchesColabPassword(loggedUser, senhaInput);
+
+        if (!isMaster && !hasColab && !isLoggedAuth) {
+            window.customAlert('Senha incorreta ou sem permissão para exclusão! (Apenas Dono ou Gerente podem excluir)', 'warning');
             return;
         }
 
         let index = transacoesCaixa.findIndex(t => (idTarget && (t.id === idTarget || t.$id === idTarget)) || (dataTarget && t.data === dataTarget));
         if (index === -1 && valorTarget !== null && !isNaN(valorTarget)) {
-            index = transacoesCaixa.findIndex(t => Math.abs((parseFloat(t.valor) || 0) - valorTarget) < 0.01);
+            index = transacoesCaixa.findIndex(t => Math.abs((parseFloat(t.valor) || 0) - valorTarget) < 0.01 && (!dataTarget || t.data === dataTarget));
+        }
+        if (index === -1 && idTarget) {
+            index = transacoesCaixa.findIndex(t => String(t.id || t.$id) === String(idTarget));
         }
 
-        if (index > -1) {
-            const tx = transacoesCaixa[index];
-            const txId = idTarget || tx.id || tx.$id;
+        const tx = index > -1 ? transacoesCaixa[index] : null;
+        const txId = idTarget || (tx ? (tx.id || tx.$id) : null);
 
+        if (index > -1 || txId) {
             // Se possui ID remoto e não é ID local_, tenta remover do Appwrite na nuvem
             if (txId && !String(txId).startsWith('local_') && window.appwrite && window.appwrite.databases) {
                 try {
@@ -764,13 +842,15 @@ if (btnConfExcluir) {
             }
 
             // Remove de transacoesCaixa
-            transacoesCaixa.splice(index, 1);
+            if (index > -1) {
+                transacoesCaixa.splice(index, 1);
+            }
 
             // Remove também de window.globalData.transacoes
             if (window.globalData && Array.isArray(window.globalData.transacoes)) {
                 window.globalData.transacoes = window.globalData.transacoes.filter(t => {
                     const tid = t.id || t.$id;
-                    if (txId && tid && tid === txId) return false;
+                    if (txId && tid && String(tid) === String(txId)) return false;
                     if (dataTarget && t.data === dataTarget) return false;
                     if (valorTarget !== null && !isNaN(valorTarget) && Math.abs((parseFloat(t.valor) || 0) - valorTarget) < 0.01 && t.data === dataTarget) return false;
                     return true;
@@ -807,14 +887,15 @@ if (btnConfSangria) {
         const responsavelId = document.getElementById('fin-mov-responsavel') ? document.getElementById('fin-mov-responsavel').value : '';
         if (!responsavelId) { window.customAlert('Selecione quem é o Responsável/Destinatário.', 'warning'); return; }
 
-        const colabResp = window.colaboradores.find(c => c.id === responsavelId);
-        if (!colabResp) return;
+        const colabs = window.getGlobalColaboradoresList();
+        const colabResp = colabs.find(c => c.id === responsavelId || c.$id === responsavelId || c.nome === responsavelId);
+        if (!colabResp) { window.customAlert('Colaborador responsável não encontrado.', 'warning'); return; }
 
-        const senhaInput = document.getElementById('fin-senha-sangria').value;
-        const isMaster = (senhaInput === window.lojaConfig.senhaGerente);
+        const senhaInput = (document.getElementById('fin-senha-sangria')?.value || '').trim();
+        const isMaster = window.isSenhaMasterLoja(senhaInput);
 
         if (!isMaster) {
-            if (!colabResp.senhaRetirada || colabResp.senhaRetirada !== senhaInput) {
+            if (!window.matchesColabPassword(colabResp, senhaInput)) {
                 window.customAlert('Senha incorreta para o responsável selecionado ou sem permissão de retirada!', 'warning');
                 return;
             }
@@ -878,11 +959,14 @@ if (btnAjustarFundo) {
 
 if (btnConfirmarAjustarFundo) {
     btnConfirmarAjustarFundo.addEventListener('click', async () => {
-        const senhaInput = document.getElementById('fin-ajustar-fundo-senha')?.value || '';
-        const isMaster = (senhaInput === window.lojaConfig?.senhaGerente);
-        const hasColab = window.colaboradores && window.colaboradores.some(c => (c.senhaRetirada === senhaInput || c.senhaLogin === senhaInput) && ((Array.isArray(c.cargo) ? c.cargo : [c.cargo]).includes('Dono') || (Array.isArray(c.cargo) ? c.cargo : [c.cargo]).includes('Gerente')));
+        const senhaInput = (document.getElementById('fin-ajustar-fundo-senha')?.value || '').trim();
+        const isMaster = window.isSenhaMasterLoja(senhaInput);
+        const colabList = window.getGlobalColaboradoresList();
+        const hasColab = colabList.some(c => window.isCargoAdminOrGerente(c) && window.matchesColabPassword(c, senhaInput));
+        const loggedUser = (window.jwtAuth && window.jwtAuth.getUser()) || window.loggedUser || (sessionStorage.getItem('avence_session_logged') ? JSON.parse(sessionStorage.getItem('avence_session_logged')) : null);
+        const isLoggedAuth = loggedUser && window.isCargoAdminOrGerente(loggedUser) && window.matchesColabPassword(loggedUser, senhaInput);
 
-        if (!isMaster && !hasColab) {
+        if (!isMaster && !hasColab && !isLoggedAuth) {
             window.customAlert('Senha incorreta ou sem permissão de Dono/Gerente para ajustar o fundo!', 'warning');
             return;
         }
@@ -946,13 +1030,14 @@ window.processarFechamentoCaixa = async function () {
         return;
     }
 
-    const colabResp = window.colaboradores.find(c => c.nome === responsavelNome);
+    const colabs = window.getGlobalColaboradoresList();
+    const colabResp = colabs.find(c => c.nome === responsavelNome || c.id === responsavelNome || c.$id === responsavelNome);
 
-    const senhaInput = document.getElementById('fin-senha-fechar').value;
-    const isMaster = (senhaInput === window.lojaConfig.senhaGerente);
+    const senhaInput = (document.getElementById('fin-senha-fechar')?.value || '').trim();
+    const isMaster = window.isSenhaMasterLoja(senhaInput);
 
     if (!isMaster) {
-        if (!colabResp || !colabResp.senhaRetirada || colabResp.senhaRetirada !== senhaInput) {
+        if (!colabResp || !window.matchesColabPassword(colabResp, senhaInput)) {
             window.customAlert('Senha incorreta para o colaborador selecionado!', 'warning');
             return;
         }
@@ -1490,7 +1575,7 @@ setInterval(() => {
     if (config.horarioAviso) {
         const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         if (timeStr >= config.horarioAviso && timeStr < (config.horarioBloqueio || '23:59')) {
-            if (!hasAlertedExpediente && window.loggedUser && !(Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo]).includes('Dono')) {
+            if (!hasAlertedExpediente && window.loggedUser && !window.parseColabCargos(window.loggedUser.cargo).some(c => c.toLowerCase() === 'dono')) {
                 window.customAlert('Expediente Encerrado! O sistema será bloqueado para novos acessos em breve.', 'warning');
                 hasAlertedExpediente = true;
             }

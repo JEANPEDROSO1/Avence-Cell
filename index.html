@@ -24,7 +24,9 @@
 
             // Controle de Acesso (RBAC) - Esconde botões baseados no Cargo
             window.addEventListener('DOMContentLoaded', () => {
-                const cargos = Array.isArray(window.loggedUser.cargo) ? window.loggedUser.cargo : [window.loggedUser.cargo];
+                const cargos = Array.isArray(window.loggedUser.cargo)
+                    ? window.loggedUser.cargo.flatMap(x => typeof x === 'string' ? x.split(',').map(s => s.trim()) : [String(x)])
+                    : (typeof window.loggedUser.cargo === 'string' ? window.loggedUser.cargo.split(',').map(s => s.trim()) : [window.loggedUser.cargo]);
                 const isDono = cargos.includes('Dono');
                 const isGerente = cargos.includes('Gerente');
                 const isVendedor = cargos.includes('Vendedor');
