@@ -853,24 +853,49 @@ if (btnFinalizarCheckout) {
 
 // Modal Control Functions
 function openModal(modal) {
+    if (!modal) return;
+
+    // Empilhamento dinâmico inteligente de z-index para modais aninhados/sobrepostos
+    const activeModals = Array.from(document.querySelectorAll('.modal-overlay.active')).filter(m => m !== modal);
+    if (activeModals.length > 0) {
+        let maxZ = 1000;
+        activeModals.forEach(m => {
+            const z = parseInt(window.getComputedStyle(m).zIndex, 10);
+            if (!isNaN(z) && z > maxZ && z < 99999) {
+                maxZ = z;
+            }
+        });
+        modal.style.zIndex = Math.max(maxZ + 50, 10050);
+    } else {
+        const initialInlineZ = parseInt(modal.style.zIndex, 10);
+        if (!initialInlineZ || initialInlineZ < 1000) {
+            const computedZ = parseInt(window.getComputedStyle(modal).zIndex, 10);
+            modal.style.zIndex = (computedZ && computedZ > 1000) ? computedZ : '';
+        }
+    }
+
     modal.classList.add('active');
     if (!openModalsState.includes(modal.id)) {
         openModalsState.push(modal.id);
         localStorage.setItem('avence_open_modals', JSON.stringify(openModalsState));
     }
     if (modal.id === 'modal-cadastro') {
-        setTimeout(() => document.getElementById('c_nome').focus(), 300);
+        setTimeout(() => document.getElementById('c_nome')?.focus(), 300);
     } else if (modal.id === 'modal-intake') {
-        setTimeout(() => document.getElementById('a_marca').focus(), 300);
+        setTimeout(() => document.getElementById('a_marca')?.focus(), 300);
+    } else if (modal.id === 'modal-colaborador') {
+        setTimeout(() => document.getElementById('colab-nome')?.focus(), 300);
     }
 }
 
 function closeModal(modal) {
+    if (!modal) return;
     modal.classList.remove('active');
+    modal.style.zIndex = '';
     openModalsState = openModalsState.filter(id => id !== modal.id);
     localStorage.setItem('avence_open_modals', JSON.stringify(openModalsState));
-    if (modal.id === 'modal-cadastro' && document.getElementById('modal-abrir-os').classList.contains('active')) {
-        setTimeout(() => document.getElementById('client-search').focus(), 300);
+    if (modal.id === 'modal-cadastro' && document.getElementById('modal-abrir-os')?.classList.contains('active')) {
+        setTimeout(() => document.getElementById('client-search')?.focus(), 300);
     }
 }
 
