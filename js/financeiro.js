@@ -120,6 +120,9 @@ document.addEventListener('appwriteReady', () => {
             fundoCaixa = parseFloat(window.globalData.config.fundoCaixa) || 0;
             responsavelCaixaAtual = window.globalData.config.responsavelCaixa || responsavelCaixaAtual;
             window.caixaAberto = caixaAberto;
+            localStorage.setItem('avence_fundo_caixa', fundoCaixa);
+            localStorage.setItem('avence_caixa_aberto', JSON.stringify(caixaAberto));
+            localStorage.setItem('avence_abertura_responsavel', responsavelCaixaAtual);
         }
     }
     if (window.updateGlobalCaixaUI) {
@@ -134,10 +137,12 @@ const badgeStatus = document.getElementById('caixa-status-badge');
 const btnAbrirCaixa = document.getElementById('btn-abrir-caixa');
 const btnFecharCaixa = document.getElementById('btn-fechar-caixa');
 const btnSangria = document.getElementById('btn-sangria');
+const btnAjustarFundo = document.getElementById('btn-ajustar-fundo');
 
 const modalAbrirCaixa = document.getElementById('modal-abrir-caixa');
 const modalFecharCaixa = document.getElementById('modal-fechar-caixa');
 const modalSangria = document.getElementById('modal-sangria');
+const modalAjustarFundo = document.getElementById('modal-ajustar-fundo');
 
 // Tornar variável global para o checkout acessar
 window.caixaAberto = caixaAberto;
@@ -158,18 +163,25 @@ function showToast(message) {
 function renderFinanceiro() {
     if (caixaAberto) {
         if (badgeStatus) {
-            const respFormatado = responsavelCaixaAtual ? ` (Resp: ${responsavelCaixaAtual})` : '';
+            let nomeResp = responsavelCaixaAtual;
+            if (window.colaboradores && Array.isArray(window.colaboradores)) {
+                const found = window.colaboradores.find(c => c.id === responsavelCaixaAtual || c.$id === responsavelCaixaAtual || c.nome === responsavelCaixaAtual);
+                if (found && found.nome) nomeResp = found.nome;
+            }
+            const respFormatado = nomeResp ? ` (Resp: ${nomeResp})` : '';
             badgeStatus.textContent = `Caixa Aberto${respFormatado}`;
             badgeStatus.style.background = '#22c55e';
         }
         if (btnAbrirCaixa) btnAbrirCaixa.style.display = 'none';
         if (btnFecharCaixa) btnFecharCaixa.style.display = 'flex';
         if (btnSangria) btnSangria.style.display = 'flex';
+        if (btnAjustarFundo) btnAjustarFundo.style.display = 'flex';
     } else {
         if (badgeStatus) { badgeStatus.textContent = 'Caixa Fechado'; badgeStatus.style.background = '#ef4444'; }
         if (btnAbrirCaixa) btnAbrirCaixa.style.display = 'flex';
         if (btnFecharCaixa) btnFecharCaixa.style.display = 'none';
         if (btnSangria) btnSangria.style.display = 'none';
+        if (btnAjustarFundo) btnAjustarFundo.style.display = 'none';
     }
 
     if (typeof window.deduplicateTransactions === 'function') {
@@ -205,11 +217,19 @@ function renderFinanceiro() {
     const projecaoMes = entradasHoje * 22; // Simplificado
 
     const elSaldo = document.getElementById('fin-saldo-atual');
+    const elSaldoDetalhe = document.getElementById('fin-saldo-detalhe');
     const elEntradas = document.getElementById('fin-entradas-hoje');
     const elSaidas = document.getElementById('fin-saidas-hoje');
     const elProjecao = document.getElementById('fin-projecao-mes');
 
     if (elSaldo) elSaldo.textContent = formatMoney(saldoAtual);
+    if (elSaldoDetalhe) {
+        if (caixaAberto) {
+            elSaldoDetalhe.textContent = `Troco Inicial: ${formatMoney(fundoCaixa)} | Vendas em Dinheiro: ${formatMoney(entradasDinheiro)}`;
+        } else {
+            elSaldoDetalhe.textContent = 'Caixa Fechado';
+        }
+    }
     if (elEntradas) elEntradas.textContent = formatMoney(entradasHoje);
     if (elSaidas) elSaidas.textContent = formatMoney(saidasHoje);
     if (elProjecao) elProjecao.textContent = formatMoney(projecaoMes);
@@ -792,9 +812,9 @@ if (btnConfSangria) {
             });
             const saldoAtual = fundoCaixa + entradasDinheiro - saidas;
 
-            const limiteRetirada = Math.max(0, saldoAtual - 100);
+            const limiteRetirada = Math.max(0, saldoAtual);
             if (valor > limiteRetirada) {
-                window.customAlert(`Atenção: É obrigatório manter um fundo de R$ 100,00 no caixa.<br>Saldo disponível para retirada: <strong>${formatMoney(limiteRetirada)}</strong>`, 'warning');
+                window.customAlert(`Saldo insuficiente em dinheiro no caixa para esta sangria!<br>Saldo disponível: <strong>${formatMoney(limiteRetirada)}</strong>`, 'warning');
                 return;
             }
         }
@@ -806,6 +826,79 @@ if (btnConfSangria) {
         document.getElementById('fin-senha-sangria').value = '';
         closeModal(modalSangria);
         window.customAlert('Movimentação registrada com sucesso!', 'success');
+    });
+}
+
+// Handler de Ajuste de Troco Inicial (Fundo de Caixa)
+const btnConfirmarAjustarFundo = document.getElementById('btn-confirmar-ajustar-fundo');
+
+if (btnAjustarFundo) {
+    btnAjustarFundo.addEventListener('click', () => {
+        const inputNovoFundo = document.getElementById('fin-novo-fundo-input');
+        if (inputNovoFundo) inputNovoFundo.value = (fundoCaixa || 0).toFixed(2);
+        const senhaInput = document.getElementById('fin-ajustar-fundo-senha');
+        if (senhaInput) senhaInput.value = '';
+        if (modalAjustarFundo) openModal(modalAjustarFundo);
+        setTimeout(() => {
+            if (inputNovoFundo) { inputNovoFundo.focus(); inputNovoFundo.select(); }
+        }, 200);
+    });
+}
+
+if (btnConfirmarAjustarFundo) {
+    btnConfirmarAjustarFundo.addEventListener('click', async () => {
+        const senhaInput = document.getElementById('fin-ajustar-fundo-senha')?.value || '';
+        const isMaster = (senhaInput === window.lojaConfig?.senhaGerente);
+        const hasColab = window.colaboradores && window.colaboradores.some(c => (c.senhaRetirada === senhaInput || c.senhaLogin === senhaInput) && ((Array.isArray(c.cargo) ? c.cargo : [c.cargo]).includes('Dono') || (Array.isArray(c.cargo) ? c.cargo : [c.cargo]).includes('Gerente')));
+
+        if (!isMaster && !hasColab) {
+            window.customAlert('Senha incorreta ou sem permissão de Dono/Gerente para ajustar o fundo!', 'warning');
+            return;
+        }
+
+        const inputNovoFundo = document.getElementById('fin-novo-fundo-input');
+        const novoValor = parseFloat(inputNovoFundo?.value) || 0;
+        if (novoValor < 0) {
+            window.customAlert('O valor do fundo de caixa não pode ser negativo.', 'warning');
+            return;
+        }
+
+        fundoCaixa = novoValor;
+        localStorage.setItem('avence_fundo_caixa', fundoCaixa);
+
+        try {
+            let docId = window.globalData?.config?.id || window.globalData?.config?.$id;
+            if (docId) {
+                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CONFIG, docId, {
+                    fundoCaixa: novoValor
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao salvar ajuste de fundo no Appwrite:', e);
+        }
+
+        if (window.globalData?.config) {
+            window.globalData.config.fundoCaixa = novoValor;
+            localStorage.setItem('avence_config', JSON.stringify(window.globalData.config));
+        }
+
+        if (window.updateGlobalCaixaUI) {
+            window.updateGlobalCaixaUI(caixaAberto, responsavelCaixaAtual, fundoCaixa);
+        }
+
+        renderFinanceiro();
+        if (modalAjustarFundo) closeModal(modalAjustarFundo);
+        window.customAlert(`Fundo de caixa ajustado com sucesso para ${formatMoney(novoValor)}!`, 'success');
+    });
+}
+
+const senhaAjustarInput = document.getElementById('fin-ajustar-fundo-senha');
+if (senhaAjustarInput) {
+    senhaAjustarInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (btnConfirmarAjustarFundo) btnConfirmarAjustarFundo.click();
+        }
     });
 }
 

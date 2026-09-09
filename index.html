@@ -461,6 +461,9 @@
                             <button class="btn btn-secondary" id="btn-sangria"
                                 style="display: none; align-items: center; gap: 6px;"><i class="ph ph-money"></i>
                                 Sangria / Suprimento</button>
+                            <button class="btn btn-secondary" id="btn-ajustar-fundo"
+                                style="display: none; align-items: center; gap: 6px;" title="Ajustar ou zerar valor do troco inicial"><i
+                                    class="ph ph-pencil-simple"></i> Ajustar Troco</button>
                         </div>
                     </div>
 
@@ -473,6 +476,8 @@
                                 do Caixa Atual</span>
                             <span id="fin-saldo-atual"
                                 style="font-size: 28px; font-weight: bold; color: var(--text-main);">R$ 0,00</span>
+                            <span id="fin-saldo-detalhe"
+                                style="font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Troco Inicial: R$ 0,00 | Vendas em Dinheiro: R$ 0,00</span>
                         </div>
                         <div
                             style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column;">
@@ -3583,6 +3588,40 @@
                 <button class="btn btn-primary" id="btn-confirmar-abrir-caixa"
                     style="background-color: #22c55e; border-color: #22c55e;"><i class="ph ph-check"></i> Confirmar
                     Abertura</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajustar Troco Inicial / Fundo de Caixa -->
+    <div class="modal-overlay no-print" id="modal-ajustar-fundo">
+        <div class="modal-container" style="max-width: 420px;">
+            <div class="modal-header">
+                <h2><i class="ph ph-pencil-simple"></i> Ajustar Troco Inicial</h2>
+                <button class="close-btn" data-close="modal-ajustar-fundo"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+                    Altere ou zere o valor do fundo de caixa (troco inicial) sem precisar fechar o caixa.
+                </p>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: bold;">Novo Fundo de Caixa (Troco Inicial)</label>
+                    <div style="position: relative;">
+                        <span
+                            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--text-muted);">R$</span>
+                        <input type="number" id="fin-novo-fundo-input" step="0.01" min="0" placeholder="0.00"
+                            style="font-size: 20px; padding: 12px 12px 12px 40px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); text-align: right; font-weight: bold;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold; color: var(--primary);"><i class="ph ph-lock-key"></i> Senha de Autorização</label>
+                    <input type="password" id="fin-ajustar-fundo-senha" placeholder="Senha do Dono/Gerente"
+                        style="font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); margin-top: 4px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" data-close="modal-ajustar-fundo">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-ajustar-fundo"
+                    style="background-color: var(--primary); border-color: var(--primary);"><i class="ph ph-check"></i> Salvar Ajuste</button>
             </div>
         </div>
     </div>

@@ -182,6 +182,12 @@ window.bootAppwrite = async function() {
 window.updateGlobalCaixaUI = function(isAberto, responsavel = '', fundo = 0) {
     window.caixaAberto = !!isAberto;
 
+    let nomeResp = responsavel;
+    if (window.colaboradores && Array.isArray(window.colaboradores)) {
+        const found = window.colaboradores.find(c => c.id === responsavel || c.$id === responsavel || c.nome === responsavel);
+        if (found && found.nome) nomeResp = found.nome;
+    }
+
     // Header badge
     const headerBadge = document.getElementById('header-caixa-status');
     const headerText = document.getElementById('header-caixa-text');
@@ -191,7 +197,7 @@ window.updateGlobalCaixaUI = function(isAberto, responsavel = '', fundo = 0) {
             headerBadge.style.background = 'rgba(34, 197, 94, 0.15)';
             headerBadge.style.color = '#22c55e';
             headerBadge.style.borderColor = 'rgba(34, 197, 94, 0.3)';
-            const respFormatado = responsavel ? ` • ${responsavel.split(' ')[0]}` : '';
+            const respFormatado = nomeResp ? ` • ${nomeResp.split(' ')[0]}` : '';
             headerText.textContent = `Caixa Aberto${respFormatado}`;
             if (headerDot) headerDot.style.background = '#22c55e';
         } else {
@@ -208,7 +214,7 @@ window.updateGlobalCaixaUI = function(isAberto, responsavel = '', fundo = 0) {
     if (pdvBadge) {
         if (isAberto) {
             pdvBadge.style.background = '#22c55e';
-            const respTxt = responsavel ? ` (${responsavel})` : '';
+            const respTxt = nomeResp ? ` (${nomeResp})` : '';
             pdvBadge.innerHTML = `<i class="ph ph-lock-key-open"></i> <span>Caixa Aberto${respTxt}</span>`;
         } else {
             pdvBadge.style.background = '#ef4444';
