@@ -218,16 +218,16 @@ function loadConfig() {
     const cachedCfg = JSON.parse(localStorage.getItem('avence_config')) || {};
     const cloudCfg = window.globalData?.config || {};
     const config = {
-        nome: cloudCfg.storeName || cloudCfg.osTitulo || cachedCfg.storeName || cachedCfg.osTitulo || cachedCfg.nome || 'NOTE BOOK CENTER',
-        endereco: cloudCfg.osEndereco || cachedCfg.osEndereco || cachedCfg.endereco || 'RUA SANTA CATARINA - 35, IVAIPORA-PR',
-        telefone: cloudCfg.osTelefone || cachedCfg.osTelefone || cachedCfg.telefone || '(43) 9900-4377',
-        email: cloudCfg.osEmail || cachedCfg.osEmail || cachedCfg.email || 'notecenter_ivp@hotmail.com',
-        osTitulo: cloudCfg.osTitulo || cloudCfg.storeName || cachedCfg.osTitulo || cachedCfg.storeName || cachedCfg.nome || 'NOTE BOOK CENTER',
-        osAssinatura: cloudCfg.osAssinatura || cachedCfg.osAssinatura || 'NOTE BOOK CENTER',
-        osEndereco: cloudCfg.osEndereco || cachedCfg.osEndereco || cachedCfg.endereco || 'RUA SANTA CATARINA - 35, IVAIPORA-PR',
-        osComplemento: cloudCfg.osComplemento || cachedCfg.osComplemento || 'RUA ATRAS DO BANCO DO BRASIL',
-        osTelefone: cloudCfg.osTelefone || cachedCfg.osTelefone || cachedCfg.telefone || '(43) 9900-4377',
-        osEmail: cloudCfg.osEmail || cachedCfg.osEmail || cachedCfg.email || 'notecenter_ivp@hotmail.com',
+        nome: cloudCfg.storeName || cloudCfg.osTitulo || cachedCfg.storeName || cachedCfg.osTitulo || cachedCfg.nome || 'AVENCE CELL',
+        endereco: cloudCfg.osEndereco || cachedCfg.osEndereco || cachedCfg.endereco || 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR',
+        telefone: cloudCfg.osTelefone || cachedCfg.osTelefone || cachedCfg.telefone || '(43) 99969-1521',
+        email: cloudCfg.osEmail || cachedCfg.osEmail || cachedCfg.email || 'AVENCECELLIVP@GMAIL.COM',
+        osTitulo: cloudCfg.osTitulo || cloudCfg.storeName || cachedCfg.osTitulo || cachedCfg.storeName || cachedCfg.nome || 'AVENCE CELL',
+        osAssinatura: cloudCfg.osAssinatura || cachedCfg.osAssinatura || 'AVENCE CELL',
+        osEndereco: cloudCfg.osEndereco || cachedCfg.osEndereco || cachedCfg.endereco || 'AVENIDA SOUZA NAVES - 991, IVAIPORÃ-PR',
+        osComplemento: cloudCfg.osComplemento || cachedCfg.osComplemento || 'AO LADO DO BONFIM CALÇADOS',
+        osTelefone: cloudCfg.osTelefone || cachedCfg.osTelefone || cachedCfg.telefone || '(43) 99969-1521',
+        osEmail: cloudCfg.osEmail || cachedCfg.osEmail || cachedCfg.email || 'AVENCECELLIVP@GMAIL.COM',
         emailRelatorio: cachedCfg.emailRelatorio || '',
         tecnico: cachedCfg.tecnico || 'Não definido',
         tema: cachedCfg.tema || 'dark',
@@ -373,7 +373,7 @@ btnSalvarConfig.addEventListener('click', async () => {
                 osEmail: config.osEmail
             }).catch(e => console.warn('Erro ao sincronizar config na nuvem:', e));
         }
-    } catch (e) {}
+    } catch (e) { }
 
     loadConfig();
     if (typeof renderEstoque === 'function') renderEstoque();
@@ -415,7 +415,7 @@ menuBtns.forEach(btn => {
                         window.updateGlobalCaixaUI(true, resp, fundo);
                     }
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
 
         if (window.caixaAberto === false) {
