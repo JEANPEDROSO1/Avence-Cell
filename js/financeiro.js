@@ -1,7 +1,47 @@
 // --- FINANCEIRO LOGIC ---
 let caixaAberto = false;
 let fundoCaixa = 0;
+let responsavelCaixaAtual = '';
 let transacoesCaixa = [];
+
+// Leitura inicial síncrona do cache para evitar piscar "Caixa Fechado"
+try {
+    const cachedCfg = JSON.parse(localStorage.getItem('avence_config') || '{}');
+    if (cachedCfg.caixaAberto !== undefined) {
+        caixaAberto = cachedCfg.caixaAberto === true || cachedCfg.caixaAberto === 'true';
+        fundoCaixa = parseFloat(cachedCfg.fundoCaixa) || 0;
+        responsavelCaixaAtual = cachedCfg.responsavelCaixa || '';
+    } else {
+        const cAberto = localStorage.getItem('avence_caixa_aberto');
+        if (cAberto !== null) {
+            caixaAberto = JSON.parse(cAberto) === true;
+        }
+        fundoCaixa = parseFloat(localStorage.getItem('avence_fundo_caixa')) || 0;
+        responsavelCaixaAtual = localStorage.getItem('avence_abertura_responsavel') || '';
+    }
+    const cachedTr = JSON.parse(localStorage.getItem('avence_transacoes_caixa') || localStorage.getItem('avence_transacoes') || '[]');
+    if (Array.isArray(cachedTr) && cachedTr.length > 0) {
+        transacoesCaixa = cachedTr;
+    }
+} catch(e) {}
+
+window.caixaAberto = caixaAberto;
+
+// Função chamada pelo sistema de sincronização externa (appwrite-config.js)
+window.applyCaixaStatus = function(isAberto, fundo, responsavel) {
+    caixaAberto = !!isAberto;
+    window.caixaAberto = caixaAberto;
+    if (fundo !== undefined && fundo !== null) fundoCaixa = parseFloat(fundo) || 0;
+    if (responsavel) responsavelCaixaAtual = responsavel;
+    renderFinanceiro();
+};
+
+window.onTransacoesSynced = function(newTransList) {
+    if (Array.isArray(newTransList)) {
+        transacoesCaixa = newTransList;
+        renderFinanceiro();
+    }
+};
 
 document.addEventListener('appwriteReady', () => {
     if (window.globalData && window.globalData.transacoes) {
@@ -16,8 +56,6 @@ document.addEventListener('appwriteReady', () => {
             }
         });
         if (hasFixedOldTransactions) {
-            // If it was local, we would save, but for Appwrite we might want to update documents.
-            // Leaving as local sync for fallback.
             localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
         }
     }
@@ -25,8 +63,12 @@ document.addEventListener('appwriteReady', () => {
         if (window.globalData.config.caixaAberto !== undefined) {
             caixaAberto = window.globalData.config.caixaAberto === true || window.globalData.config.caixaAberto === 'true';
             fundoCaixa = parseFloat(window.globalData.config.fundoCaixa) || 0;
+            responsavelCaixaAtual = window.globalData.config.responsavelCaixa || responsavelCaixaAtual;
             window.caixaAberto = caixaAberto;
         }
+    }
+    if (window.updateGlobalCaixaUI) {
+        window.updateGlobalCaixaUI(caixaAberto, responsavelCaixaAtual, fundoCaixa);
     }
     if (typeof renderFinanceiro === 'function') renderFinanceiro();
 });
@@ -60,7 +102,11 @@ function showToast(message) {
 
 function renderFinanceiro() {
     if (caixaAberto) {
-        if (badgeStatus) { badgeStatus.textContent = 'Caixa Aberto'; badgeStatus.style.background = '#22c55e'; }
+        if (badgeStatus) {
+            const respFormatado = responsavelCaixaAtual ? ` (Resp: ${responsavelCaixaAtual})` : '';
+            badgeStatus.textContent = `Caixa Aberto${respFormatado}`;
+            badgeStatus.style.background = '#22c55e';
+        }
         if (btnAbrirCaixa) btnAbrirCaixa.style.display = 'none';
         if (btnFecharCaixa) btnFecharCaixa.style.display = 'flex';
         if (btnSangria) btnSangria.style.display = 'flex';
@@ -71,19 +117,28 @@ function renderFinanceiro() {
         if (btnSangria) btnSangria.style.display = 'none';
     }
 
-    const hoje = new Date().toISOString().split('T')[0];
+    const hojeLocal = new Date().toLocaleDateString('pt-BR');
     let entradasHoje = 0;
     let entradasDinheiro = 0;
     let saidasHoje = 0;
 
-    const transacoesHoje = transacoesCaixa.filter(t => t.data.startsWith(hoje));
+    // Filtra transações do dia local atual (compatível com fuso horário do Brasil)
+    const transacoesHoje = transacoesCaixa.filter(t => {
+        if (!t.data) return false;
+        try {
+            return new Date(t.data).toLocaleDateString('pt-BR') === hojeLocal;
+        } catch(e) {
+            return t.data.startsWith(new Date().toISOString().split('T')[0]);
+        }
+    });
+
     transacoesHoje.forEach(t => {
         const isDinheiro = (!t.formaPgto || t.formaPgto === 'dinheiro');
-        if (t.tipo === 'entrada') {
+        if (t.tipo === 'entrada' || t.tipo === 'info_sobra') {
             entradasHoje += t.valor;
             if (isDinheiro) entradasDinheiro += t.valor;
         }
-        if (t.tipo === 'saida') saidasHoje += t.valor;
+        if (t.tipo === 'saida' || t.tipo === 'info_furo') saidasHoje += t.valor;
     });
 
     const saldoAtual = fundoCaixa + entradasDinheiro - saidasHoje;
@@ -108,6 +163,33 @@ function renderFinanceiro() {
         container.innerHTML = ''; // Limpa se o saldo voltar ao normal
     }
 
+    // Resumo de vendas por vendedor hoje
+    const resumoVendedoresEl = document.getElementById('fin-vendas-vendedores-resumo');
+    if (resumoVendedoresEl) {
+        const vendasPorColab = {};
+        transacoesHoje.filter(t => t.tipo === 'entrada' || t.tipo === 'info_sobra').forEach(t => {
+            const v = t.vendedor || 'Geral';
+            if (!vendasPorColab[v]) vendasPorColab[v] = { total: 0, count: 0 };
+            vendasPorColab[v].total += t.valor;
+            vendasPorColab[v].count += 1;
+        });
+
+        const vKeys = Object.keys(vendasPorColab);
+        if (vKeys.length > 0) {
+            resumoVendedoresEl.style.display = 'flex';
+            resumoVendedoresEl.innerHTML = vKeys.map(k => `
+                <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px;">
+                    <i class="ph ph-user" style="color: var(--primary);"></i>
+                    <strong>${k}:</strong>
+                    <span style="color: #22c55e; font-weight: bold;">${formatMoney(vendasPorColab[k].total)}</span>
+                    <span style="color: var(--text-muted); font-size: 11px;">(${vendasPorColab[k].count}x)</span>
+                </div>
+            `).join('');
+        } else {
+            resumoVendedoresEl.style.display = 'none';
+        }
+    }
+
     const listaHist = document.getElementById('fin-historico-lista');
     if (listaHist) {
         listaHist.innerHTML = '';
@@ -121,12 +203,16 @@ function renderFinanceiro() {
                 div.addEventListener('mouseout', () => div.style.background = 'var(--bg-dark)');
                 const cor = (t.tipo === 'entrada' || t.tipo === 'info_sobra') ? '#22c55e' : '#ef4444';
                 const sinal = (t.tipo === 'entrada' || t.tipo === 'info_sobra') ? '+' : (t.tipo === 'saida' || t.tipo === 'info_furo' ? '-' : '');
-                const isDinheiro = (!t.formaPgto || t.formaPgto === 'dinheiro');
                 const labelForma = t.formaPgto && t.formaPgto !== 'dinheiro' ? ` (${t.formaPgto.toUpperCase()})` : '';
+                const vendTag = t.vendedor ? `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #60a5fa; background: rgba(59, 130, 246, 0.12); padding: 1px 6px; border-radius: 10px; width: fit-content; margin-top: 3px;"><i class="ph ph-user"></i> ${t.vendedor}</span>` : '';
+                
                 div.innerHTML = `
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-weight: bold; font-size: 14px;">${t.motivo}${labelForma}</span>
-                            <span style="font-size: 12px; color: var(--text-muted);">${new Date(t.data).toLocaleTimeString('pt-BR')}</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 12px; color: var(--text-muted);">${new Date(t.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                ${vendTag}
+                            </div>
                         </div>
                         <span style="font-weight: bold; color: ${cor};">${sinal} ${formatMoney(t.valor)}</span>
                     `;
@@ -136,6 +222,7 @@ function renderFinanceiro() {
                     if (modalExcluir) {
                         document.getElementById('del-transacao-detalhes').innerHTML = `
                                 <strong>${t.motivo}${labelForma}</strong><br>
+                                ${t.vendedor ? `<small style="color: #60a5fa;"><i class="ph ph-user"></i> Vendedor: ${t.vendedor}</small><br>` : ''}
                                 <span style="color: ${cor}; font-weight: bold;">${sinal} ${formatMoney(t.valor)}</span><br>
                                 <small style="color: var(--text-muted);">${new Date(t.data).toLocaleString('pt-BR')}</small>
                             `;
@@ -155,10 +242,20 @@ function renderFinanceiro() {
     renderChart();
 }
 
-window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto = 'dinheiro') {
-    if (!caixaAberto) return false;
+window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto = 'dinheiro', vendedor = null, osNumber = null) {
+    if (!caixaAberto && !window.caixaAberto) {
+        // Tenta checar se já foi aberto por outro usuário
+        if (window.globalData?.config?.caixaAberto) {
+            caixaAberto = true;
+            window.caixaAberto = true;
+        } else {
+            console.warn('Bloqueado: caixa fechado.');
+            return false;
+        }
+    }
 
     const dataIso = new Date().toISOString();
+    const vendedorNome = vendedor || window.loggedUser?.nome || 'Geral';
     const newTx = {
         tipo: tipo,
         valor: parseFloat(valor),
@@ -166,6 +263,8 @@ window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto 
         descricao: motivo,
         formaPgto: formaPgto,
         forma: formaPgto,
+        vendedor: vendedorNome,
+        osNumber: osNumber || '',
         data: dataIso
     };
 
@@ -173,17 +272,22 @@ window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto 
         const docId = window.appwrite.ID.unique();
         const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, docId, newTx);
         newTx.id = created.$id;
-        transacoesCaixa.push(newTx);
+
+        if (!transacoesCaixa.some(t => t.id === newTx.id)) {
+            transacoesCaixa.push(newTx);
+        }
         if (window.globalData && Array.isArray(window.globalData.transacoes)) {
-            window.globalData.transacoes.push(newTx);
+            if (!window.globalData.transacoes.some(t => t.id === newTx.id)) {
+                window.globalData.transacoes.push(newTx);
+            }
         }
         localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
         localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));
+        localStorage.setItem('avence_transacoes_sync_event', Date.now().toString());
         renderFinanceiro();
         return true;
     } catch (err) {
         console.error('Erro ao registrar transação na nuvem:', err);
-        // Garante registro local para não perder o fluxo de caixa
         newTx.id = 'local_' + Date.now();
         transacoesCaixa.push(newTx);
         if (window.globalData && Array.isArray(window.globalData.transacoes)) {
@@ -191,8 +295,9 @@ window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto 
         }
         localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
         localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));
+        localStorage.setItem('avence_transacoes_sync_event', Date.now().toString());
         renderFinanceiro();
-        window.customAlert('Aviso: Movimentação salva localmente. Erro ao sincronizar na nuvem: ' + err.message, 'warning');
+        window.customAlert('Aviso: Movimentação salva localmente. Sincronizando com a nuvem...', 'warning');
         return true;
     }
 };
@@ -477,9 +582,14 @@ async function efetivarAberturaCaixa(valor, responsavelId) {
     fundoCaixa = valor;
     caixaAberto = true; window.caixaAberto = true;
 
+    // Encontrar nome legível do colaborador
+    const colab = window.colaboradores ? window.colaboradores.find(c => c.id === responsavelId || c.nome === responsavelId) : null;
+    const responsavelNome = colab ? colab.nome : (window.loggedUser?.nome || responsavelId || 'Responsável');
+    responsavelCaixaAtual = responsavelNome;
+
     try {
         let docId = window.globalData?.config?.id;
-        const dataToSave = { caixaAberto: true, fundoCaixa: valor, responsavelCaixa: responsavelId || '' };
+        const dataToSave = { caixaAberto: true, fundoCaixa: valor, responsavelCaixa: responsavelNome };
         if (docId) {
             await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_CONFIG, docId, dataToSave);
             window.globalData.config = { ...window.globalData.config, ...dataToSave };
@@ -496,7 +606,12 @@ async function efetivarAberturaCaixa(valor, responsavelId) {
 
     localStorage.setItem('avence_fundo_caixa', fundoCaixa);
     localStorage.setItem('avence_caixa_aberto', JSON.stringify(true));
-    if (responsavelId) localStorage.setItem('avence_abertura_responsavel', responsavelId);
+    localStorage.setItem('avence_abertura_responsavel', responsavelNome);
+    localStorage.setItem('avence_caixa_sync_event', Date.now().toString());
+
+    if (window.updateGlobalCaixaUI) {
+        window.updateGlobalCaixaUI(true, responsavelNome, fundoCaixa);
+    }
     if (typeof window.updateVendedorDropdowns === 'function') window.updateVendedorDropdowns();
     renderFinanceiro();
 }
@@ -663,6 +778,7 @@ window.processarFechamentoCaixa = async function () {
 
     caixaAberto = false; window.caixaAberto = false;
     fundoCaixa = 0;
+    responsavelCaixaAtual = '';
 
     const nomeFechamento = (isMaster && !colabResp) ? 'Administrador/Dono' : responsavelNome;
     const nowIso = new Date().toISOString();
@@ -698,6 +814,11 @@ window.processarFechamentoCaixa = async function () {
     localStorage.setItem('avence_caixa_aberto', JSON.stringify(false));
     localStorage.setItem('avence_fundo_caixa', 0);
     localStorage.removeItem('avence_abertura_responsavel');
+    localStorage.setItem('avence_caixa_sync_event', Date.now().toString());
+
+    if (window.updateGlobalCaixaUI) {
+        window.updateGlobalCaixaUI(false, '', 0);
+    }
 
     document.getElementById('fin-senha-fechar').value = '';
     closeModal(modalFecharCaixa);

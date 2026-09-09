@@ -37,8 +37,8 @@
                         if (btnConfig) btnConfig.style.display = 'none';
                     }
                     else if (isTecnico && !isVendedor) {
-                        // Somente Técnico: Esconde PDV, Financeiro, Relatórios, Config
-                        const hideTargets = ['pdv', 'financeiro', 'relatorios'];
+                        // Somente Técnico: Esconde Relatórios e Configurações (Mantém acesso ao status do caixa e vendas)
+                        const hideTargets = ['relatorios'];
                         hideTargets.forEach(target => {
                             const btn = document.querySelector(`.menu-btn[data-target="${target}"]`);
                             if (btn) btn.style.display = 'none';
@@ -47,8 +47,8 @@
                         if (btnConfig) btnConfig.style.display = 'none';
                     }
                     else if (isVendedor || (isTecnico && isVendedor)) {
-                        // Vendedor (ou Técnico que também é Vendedor): Esconde Financeiro, Relatórios, Config
-                        const hideTargets = ['financeiro', 'relatorios'];
+                        // Vendedor: Esconde Relatórios e Configurações (Mantém Financeiro para acompanhar caixa e vendas)
+                        const hideTargets = ['relatorios'];
                         hideTargets.forEach(target => {
                             const btn = document.querySelector(`.menu-btn[data-target="${target}"]`);
                             if (btn) btn.style.display = 'none';
@@ -186,7 +186,15 @@
                     </button>
                     <h1 id="page-title">Abrir O.S</h1>
                 </div>
-                <div class="date-time" id="datetime-display">--:--</div>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div id="header-caixa-status"
+                        style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer; transition: all 0.2s;"
+                        title="Status do Caixa da Loja (Clique para ver no Financeiro)">
+                        <span id="header-caixa-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                        <span id="header-caixa-text">Caixa Fechado</span>
+                    </div>
+                    <div class="date-time" id="datetime-display">--:--</div>
+                </div>
             </header>
 
             <div class="content-area">
@@ -255,9 +263,13 @@
                 <!-- ========================================== -->
                 <section id="pdv" class="screen">
                     <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
                         <h2 style="font-size: 24px; display: flex; align-items: center; gap: 8px;"><i
                                 class="ph ph-shopping-cart"></i> Ponto de Venda (PDV)</h2>
+                        <div id="pdv-caixa-badge"
+                            style="padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 6px; background: #ef4444; color: white; transition: all 0.2s;">
+                            <i class="ph ph-lock-key"></i> <span>Caixa Fechado</span>
+                        </div>
                     </div>
 
                     <div class="pdv-container">
@@ -501,8 +513,14 @@
                         <div
                             style="background: var(--bg-surface-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0; display: flex; flex-direction: column; overflow: hidden;">
                             <div
-                                style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-surface);">
+                                style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-surface); display: flex; justify-content: space-between; align-items: center;">
                                 <h3 style="font-size: 16px; margin: 0;">Últimas Movimentações</h3>
+                                <button type="button" id="btn-refresh-financeiro" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;" title="Atualizar dados do caixa em tempo real">
+                                    <i class="ph ph-arrows-clockwise"></i> Sincronizar
+                                </button>
+                            </div>
+                            <div id="fin-vendas-vendedores-resumo"
+                                style="display: none; flex-wrap: wrap; gap: 8px; padding: 10px 14px; background: rgba(0,0,0,0.15); border-bottom: 1px solid var(--border);">
                             </div>
                             <div id="fin-historico-lista"
                                 style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
@@ -3867,20 +3885,45 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
-    <script src="js/appwrite-config.js?v=9"></script>
-    <script src="js/main.js?v=9"></script>
-    <script src="js/estoque.js?v=9"></script>
-    <script src="js/pdv.js?v=9"></script>
-    <script src="js/os.js?v=9"></script>
-    <script src="js/financeiro.js?v=9"></script>
-    <script src="js/clientes.js?v=1"></script>
-    <script src="js/todas-os.js?v=1"></script>
-    <script src="js/antivirus.js?v=1"></script>
+    <script src="js/appwrite-config.js?v=10"></script>
+    <script src="js/main.js?v=10"></script>
+    <script src="js/estoque.js?v=10"></script>
+    <script src="js/pdv.js?v=10"></script>
+    <script src="js/os.js?v=10"></script>
+    <script src="js/financeiro.js?v=10"></script>
+    <script src="js/clientes.js?v=2"></script>
+    <script src="js/todas-os.js?v=2"></script>
+    <script src="js/antivirus.js?v=2"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Iniciar sincronização do Appwrite
             if (window.bootAppwrite) {
                 window.bootAppwrite();
+            }
+
+            // Ação ao clicar no badge de caixa no topo da página
+            const headerCaixaBtn = document.getElementById('header-caixa-status');
+            if (headerCaixaBtn) {
+                headerCaixaBtn.addEventListener('click', () => {
+                    const btnFin = document.querySelector('.menu-btn[data-target="financeiro"]');
+                    if (btnFin) btnFin.click();
+                });
+            }
+
+            // Botão de sincronização manual no financeiro
+            const btnRefreshFin = document.getElementById('btn-refresh-financeiro');
+            if (btnRefreshFin) {
+                btnRefreshFin.addEventListener('click', async () => {
+                    btnRefreshFin.disabled = true;
+                    btnRefreshFin.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Atualizando...';
+                    if (window.syncCaixaAndTransacoes) {
+                        await window.syncCaixaAndTransacoes();
+                    }
+                    setTimeout(() => {
+                        btnRefreshFin.disabled = false;
+                        btnRefreshFin.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Sincronizar';
+                    }, 600);
+                });
             }
 
             const inputImagem = document.getElementById('a_imagem');

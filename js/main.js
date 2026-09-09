@@ -383,6 +383,20 @@ menuBtns.forEach(btn => {
         const targetId = btn.getAttribute('data-target');
 
         // --- Bloqueio de Caixa Fechado ---
+        if (!window.caixaAberto) {
+            try {
+                const cachedCfg = JSON.parse(localStorage.getItem('avence_config') || '{}');
+                if (window.globalData?.config?.caixaAberto || cachedCfg.caixaAberto || localStorage.getItem('avence_caixa_aberto') === 'true') {
+                    window.caixaAberto = true;
+                    if (window.updateGlobalCaixaUI) {
+                        const resp = window.globalData?.config?.responsavelCaixa || cachedCfg.responsavelCaixa || '';
+                        const fundo = window.globalData?.config?.fundoCaixa || cachedCfg.fundoCaixa || 0;
+                        window.updateGlobalCaixaUI(true, resp, fundo);
+                    }
+                }
+            } catch(e) {}
+        }
+
         if (window.caixaAberto === false) {
             if (targetId !== 'financeiro' && targetModal !== 'modal-configuracoes') {
                 window.customAlert('O Caixa está FECHADO!<br><br>Abra o caixa no Painel Financeiro antes de acessar as outras telas do sistema.', 'warning');
@@ -400,6 +414,11 @@ menuBtns.forEach(btn => {
                 }
                 return;
             }
+        }
+
+        // Se navegar para financeiro ou pdv, dispara sincronização imediata
+        if ((targetId === 'financeiro' || targetId === 'pdv') && typeof window.syncCaixaAndTransacoes === 'function') {
+            window.syncCaixaAndTransacoes();
         }
 
         if (targetModal) {
@@ -727,8 +746,15 @@ if (btnFinalizarCheckout) {
                 motivoVenda += ` - Cliente: ${nomeCliente}`;
             }
 
+            const vendedorOS = window.loggedUser?.nome || 'Técnico';
+            motivoVenda += ` - Resp: ${vendedorOS}`;
+
+            if (!window.caixaAberto && (window.globalData?.config?.caixaAberto || localStorage.getItem('avence_caixa_aberto') === 'true')) {
+                window.caixaAberto = true;
+            }
+
             if (window.caixaAberto && window.registrarTransacaoCaixa) {
-                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto);
+                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto, vendedorOS, osNumber);
             } else if (!window.caixaAberto) {
                 window.customAlert('Aviso: O caixa está FECHADO. A O.S. foi encerrada mas não registrada no fluxo de caixa.', 'warning');
             }

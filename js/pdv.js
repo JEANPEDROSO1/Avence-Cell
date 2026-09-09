@@ -678,13 +678,18 @@
                 motivoVenda += ` - Cliente: ${nomeCliente}`;
             }
             
-            const nomeVendedor = document.getElementById('pdv-vendedor')?.value.trim();
+            const nomeVendedor = document.getElementById('pdv-vendedor')?.value.trim() || window.loggedUser?.nome || 'Geral';
             if (nomeVendedor) {
                 motivoVenda += ` - Vendedor: ${nomeVendedor}`;
             }
 
+            // Checagem de segurança para caixa aberto no cloud/local
+            if (!window.caixaAberto && (window.globalData?.config?.caixaAberto || localStorage.getItem('avence_caixa_aberto') === 'true')) {
+                window.caixaAberto = true;
+            }
+
             if (window.caixaAberto && window.registrarTransacaoCaixa) {
-                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto);
+                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto, nomeVendedor);
             } else if (!window.caixaAberto) {
                 window.customAlert('Aviso: O caixa está FECHADO. A venda foi concluída mas não registrada no fluxo de caixa.', 'warning');
             }
