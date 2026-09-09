@@ -265,11 +265,34 @@ window.syncTransacoesList = function(documents) {
             valor: parseFloat(doc.valor) || 0
         };
 
-        const idx = window.globalData.transacoes.findIndex(t => t.id === id || (t.data === formatted.data && t.valor === formatted.valor && t.motivo === formatted.motivo));
+        const idx = window.globalData.transacoes.findIndex(t => {
+            const exId = t.id || t.$id;
+            if (id && exId && id === exId) return true;
+
+            const mesmoTipo = t.tipo === formatted.tipo;
+            const mesmoValor = Math.abs(parseFloat(t.valor || 0) - parseFloat(formatted.valor || 0)) < 0.01;
+            const mesmoMotivo = (t.motivo || '').trim() === (formatted.motivo || '').trim();
+            const mesmoVend = (t.vendedor || 'Geral') === (formatted.vendedor || 'Geral');
+
+            if (mesmoTipo && mesmoValor && mesmoMotivo && mesmoVend) {
+                if (t.data && formatted.data) {
+                    const diffMs = Math.abs(new Date(t.data).getTime() - new Date(formatted.data).getTime());
+                    if (diffMs <= 15000) return true;
+                } else {
+                    return true;
+                }
+            }
+            return false;
+        });
+
         if (idx >= 0) {
-            // Se mudou algo, atualiza
-            if (JSON.stringify(window.globalData.transacoes[idx]) !== JSON.stringify(formatted)) {
-                window.globalData.transacoes[idx] = formatted;
+            const existing = window.globalData.transacoes[idx];
+            // Se o ID remoto oficial do Appwrite chegou para substituir ID local_
+            if (id && !String(id).startsWith('local_') && existing.id && String(existing.id).startsWith('local_')) {
+                window.globalData.transacoes[idx] = { ...existing, ...formatted, id: id };
+                hasChanges = true;
+            } else if (JSON.stringify(existing) !== JSON.stringify(formatted)) {
+                window.globalData.transacoes[idx] = { ...existing, ...formatted, id: id };
                 hasChanges = true;
             }
         } else {
@@ -277,6 +300,14 @@ window.syncTransacoesList = function(documents) {
             hasChanges = true;
         }
     });
+
+    if (typeof window.deduplicateTransactions === 'function') {
+        const deduplicated = window.deduplicateTransactions(window.globalData.transacoes);
+        if (deduplicated.length !== window.globalData.transacoes.length) {
+            window.globalData.transacoes = deduplicated;
+            hasChanges = true;
+        }
+    }
 
     if (hasChanges) {
         localStorage.setItem('avence_transacoes', JSON.stringify(window.globalData.transacoes));

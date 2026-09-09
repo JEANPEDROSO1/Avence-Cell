@@ -1657,6 +1657,11 @@ textarea {
     /* Print Scopes */
     body.printing-pdv #print-recibo-pdv {
         display: block !important;
+        max-width: 80mm !important;
+        width: 100% !important;
+        padding: 3mm 2mm !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
     }
     
     body.printing-os-delivery #print-delivery {

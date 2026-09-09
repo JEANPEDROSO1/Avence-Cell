@@ -27,6 +27,59 @@ try {
 
 window.caixaAberto = caixaAberto;
 
+// Função central para desduplicação rigorosa de transações do caixa
+window.deduplicateTransactions = function (list) {
+    if (!Array.isArray(list)) return [];
+    const result = [];
+    const seenIds = new Set();
+
+    list.forEach(tx => {
+        if (!tx) return;
+        const txId = tx.id || tx.$id;
+
+        // Se tem ID específico e já vimos esse ID exato
+        if (txId && seenIds.has(txId)) {
+            return;
+        }
+
+        // Checar por duplicata por conteúdo (mesmo tipo, valor, motivo, vendedor e data próxima)
+        const isDuplicateContent = result.some(existing => {
+            const exId = existing.id || existing.$id;
+            if (txId && exId && txId === exId) return true;
+
+            const mesmoTipo = existing.tipo === tx.tipo;
+            const mesmoValor = Math.abs(parseFloat(existing.valor || 0) - parseFloat(tx.valor || 0)) < 0.01;
+            const mesmoMotivo = (existing.motivo || '').trim() === (tx.motivo || '').trim();
+            const mesmoVend = (existing.vendedor || 'Geral') === (tx.vendedor || 'Geral');
+
+            if (mesmoTipo && mesmoValor && mesmoMotivo && mesmoVend) {
+                // Checar proximidade temporal (se for menor que 15 segundos, é a mesma movimentação)
+                if (existing.data && tx.data) {
+                    const diffMs = Math.abs(new Date(existing.data).getTime() - new Date(tx.data).getTime());
+                    if (diffMs <= 15000) {
+                        // Se a nova tem ID remoto do Appwrite e a anterior é local_, promover para o ID remoto
+                        if (txId && !String(txId).startsWith('local_') && exId && String(exId).startsWith('local_')) {
+                            existing.id = txId;
+                            existing.$id = txId;
+                        }
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (!isDuplicateContent) {
+            if (txId) seenIds.add(txId);
+            result.push(tx);
+        }
+    });
+
+    return result;
+};
+
 // Função chamada pelo sistema de sincronização externa (appwrite-config.js)
 window.applyCaixaStatus = function(isAberto, fundo, responsavel) {
     caixaAberto = !!isAberto;
@@ -38,14 +91,16 @@ window.applyCaixaStatus = function(isAberto, fundo, responsavel) {
 
 window.onTransacoesSynced = function(newTransList) {
     if (Array.isArray(newTransList)) {
-        transacoesCaixa = newTransList;
+        transacoesCaixa = window.deduplicateTransactions(newTransList);
+        if (window.globalData) window.globalData.transacoes = transacoesCaixa;
         renderFinanceiro();
     }
 };
 
 document.addEventListener('appwriteReady', () => {
     if (window.globalData && window.globalData.transacoes) {
-        transacoesCaixa = window.globalData.transacoes;
+        transacoesCaixa = window.deduplicateTransactions(window.globalData.transacoes);
+        window.globalData.transacoes = transacoesCaixa;
 
         // Retroactive Fix: Convert any old divergence adjustments
         let hasFixedOldTransactions = false;
@@ -115,6 +170,11 @@ function renderFinanceiro() {
         if (btnAbrirCaixa) btnAbrirCaixa.style.display = 'flex';
         if (btnFecharCaixa) btnFecharCaixa.style.display = 'none';
         if (btnSangria) btnSangria.style.display = 'none';
+    }
+
+    if (typeof window.deduplicateTransactions === 'function') {
+        transacoesCaixa = window.deduplicateTransactions(transacoesCaixa);
+        if (window.globalData) window.globalData.transacoes = transacoesCaixa;
     }
 
     const hojeLocal = new Date().toLocaleDateString('pt-BR');
@@ -273,13 +333,10 @@ window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto 
         const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, docId, newTx);
         newTx.id = created.$id;
 
-        if (!transacoesCaixa.some(t => t.id === newTx.id)) {
-            transacoesCaixa.push(newTx);
-        }
-        if (window.globalData && Array.isArray(window.globalData.transacoes)) {
-            if (!window.globalData.transacoes.some(t => t.id === newTx.id)) {
-                window.globalData.transacoes.push(newTx);
-            }
+        transacoesCaixa.push(newTx);
+        transacoesCaixa = window.deduplicateTransactions(transacoesCaixa);
+        if (window.globalData) {
+            window.globalData.transacoes = transacoesCaixa;
         }
         localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
         localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));
@@ -290,8 +347,9 @@ window.registrarTransacaoCaixa = async function (tipo, valor, motivo, formaPgto 
         console.error('Erro ao registrar transação na nuvem:', err);
         newTx.id = 'local_' + Date.now();
         transacoesCaixa.push(newTx);
-        if (window.globalData && Array.isArray(window.globalData.transacoes)) {
-            window.globalData.transacoes.push(newTx);
+        transacoesCaixa = window.deduplicateTransactions(transacoesCaixa);
+        if (window.globalData) {
+            window.globalData.transacoes = transacoesCaixa;
         }
         localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
         localStorage.setItem('avence_transacoes', JSON.stringify(transacoesCaixa));

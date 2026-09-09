@@ -422,8 +422,14 @@
         });
     }
 
+    let isFinalizandoVenda = false;
     if (btnFinalizarVenda) {
         btnFinalizarVenda.addEventListener('click', async () => {
+            if (isFinalizandoVenda) {
+                console.warn('[PDV] Finalização já em andamento, ignorando clique duplicado.');
+                return;
+            }
+
             if (pdvCart.length === 0) {
                 window.customAlert('Adicione produtos ao carrinho primeiro.', 'warning');
                 return;
@@ -439,6 +445,7 @@
                 return;
             }
 
+            isFinalizandoVenda = true;
             const btnText = btnFinalizarVenda.innerHTML;
             btnFinalizarVenda.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Finalizando...';
             btnFinalizarVenda.disabled = true;
@@ -492,6 +499,7 @@
                 window.customAlert('Erro ao atualizar dados na nuvem: ' + err.message, 'warning');
                 btnFinalizarVenda.innerHTML = btnText;
                 btnFinalizarVenda.disabled = false;
+                isFinalizandoVenda = false;
                 return;
             }
 
@@ -563,8 +571,22 @@
             const reciboData = document.getElementById('recibo-data');
             if (reciboData) reciboData.textContent = new Date().toLocaleString('pt-BR');
 
+            // Número sequencial da Venda / O.S. (iniciando em 0)
+            let vendaSeq = 0;
+            const savedVendaSeq = localStorage.getItem('avence_numero_venda_pdv');
+            if (savedVendaSeq !== null && !isNaN(parseInt(savedVendaSeq))) {
+                vendaSeq = parseInt(savedVendaSeq);
+            } else {
+                vendaSeq = 0;
+            }
+
             const reciboNumero = document.getElementById('recibo-numero');
-            if (reciboNumero) reciboNumero.textContent = String(Math.floor(Math.random() * 100000)).padStart(6, '0');
+            if (reciboNumero) {
+                reciboNumero.textContent = String(vendaSeq);
+            }
+
+            // Atualiza para o próximo sequencial
+            localStorage.setItem('avence_numero_venda_pdv', String(vendaSeq + 1));
 
             const nomeVendedorUi = document.getElementById('pdv-vendedor')?.value.trim();
             const reciboVendedorNome = document.getElementById('recibo-vendedor');
@@ -586,10 +608,18 @@
                     const rDoc = document.getElementById('recibo-cliente-doc');
                     const rEnd = document.getElementById('recibo-cliente-end');
                     const rTel = document.getElementById('recibo-cliente-tel');
+                    const rDocLinha = document.getElementById('recibo-cliente-doc-linha');
+                    const rTelLinha = document.getElementById('recibo-cliente-tel-linha');
+                    const rEndLinha = document.getElementById('recibo-cliente-end-linha');
+                    
                     if (rNome) rNome.textContent = nomeCliente || 'Consumidor Final';
                     if (rDoc) rDoc.textContent = docCliente || '';
-                    if (rEnd) rEnd.textContent = endCliente || '';
                     if (rTel) rTel.textContent = telCliente || '';
+                    if (rEnd) rEnd.textContent = endCliente || '';
+
+                    if (rDocLinha) rDocLinha.style.display = docCliente ? 'block' : 'none';
+                    if (rTelLinha) rTelLinha.style.display = telCliente ? 'block' : 'none';
+                    if (rEndLinha) rEndLinha.style.display = endCliente ? 'block' : 'none';
                 }
             }
 
@@ -598,14 +628,15 @@
                 reciboItens.innerHTML = '';
                 pdvCart.forEach(item => {
                     const tr = document.createElement('tr');
+                    const codTxt = item.ean ? `EAN: ${item.ean}` : `Cód: ${String(item.id || '').substring(0, 8)}`;
                     tr.innerHTML = `
-                        <td>${item.ean || String(item.id).substring(0, 5)}</td>
-                        <td>${item.nome}</td>
-                        <td class="center">Un</td>
-                        <td class="right">${formatMoney(item.venda)}</td>
-                        <td class="center">${item.qtd}</td>
-                        <td class="right">0,00</td>
-                        <td class="right">${formatMoney(item.qtd * item.venda)}</td>
+                        <td style="word-break: break-word; padding: 4px 2px;">
+                            <strong style="font-size: 11px;">${item.nome}</strong>
+                            <div style="font-size: 9px; color: #444;">${codTxt}</div>
+                        </td>
+                        <td class="center" style="padding: 4px 2px; vertical-align: top; font-size: 11px;">${item.qtd}</td>
+                        <td class="right" style="padding: 4px 2px; vertical-align: top; font-size: 11px; white-space: nowrap;">${formatMoney(item.venda)}</td>
+                        <td class="right" style="padding: 4px 2px; vertical-align: top; font-size: 11px; white-space: nowrap;"><strong>${formatMoney(item.qtd * item.venda)}</strong></td>
                     `;
                     reciboItens.appendChild(tr);
                 });
@@ -689,7 +720,7 @@
             }
 
             if (window.caixaAberto && window.registrarTransacaoCaixa) {
-                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto, nomeVendedor);
+                await window.registrarTransacaoCaixa('entrada', finalTotal, motivoVenda, formaPgto, nomeVendedor, String(vendaSeq));
             } else if (!window.caixaAberto) {
                 window.customAlert('Aviso: O caixa está FECHADO. A venda foi concluída mas não registrada no fluxo de caixa.', 'warning');
             }
@@ -708,5 +739,6 @@
             
             btnFinalizarVenda.innerHTML = btnText;
             btnFinalizarVenda.disabled = false;
+            isFinalizandoVenda = false;
         });
     }
