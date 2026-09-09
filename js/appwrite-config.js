@@ -257,7 +257,20 @@ window.syncTransacoesList = function(documents) {
     if (!window.globalData) window.globalData = {};
     if (!Array.isArray(window.globalData.transacoes)) window.globalData.transacoes = [];
 
-    let hasChanges = false;
+    const remoteIds = new Set(documents.map(d => d.$id || d.id).filter(Boolean));
+
+    // Remover transações antigas que foram excluídas na nuvem (mantém apenas as locais não enviadas ainda)
+    const initialCount = window.globalData.transacoes.length;
+    window.globalData.transacoes = window.globalData.transacoes.filter(t => {
+        const tid = t.id || t.$id;
+        if (tid && String(tid).startsWith('local_')) return true;
+        if (tid && !remoteIds.has(tid)) {
+            return false; // Foi excluída na nuvem
+        }
+        return true;
+    });
+
+    let hasChanges = (window.globalData.transacoes.length !== initialCount);
     documents.forEach(doc => {
         const id = doc.$id || doc.id;
         const formatted = {

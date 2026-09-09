@@ -306,7 +306,12 @@ function renderFinanceiro() {
                                 <span style="color: ${cor}; font-weight: bold;">${sinal} ${formatMoney(t.valor)}</span><br>
                                 <small style="color: var(--text-muted);">${new Date(t.data).toLocaleString('pt-BR')}</small>
                             `;
-                        document.getElementById('del-transacao-data').value = t.data;
+                        const dataInput = document.getElementById('del-transacao-data');
+                        if (dataInput) {
+                            dataInput.value = t.data;
+                            dataInput.dataset.txId = t.id || t.$id || '';
+                            dataInput.dataset.txValor = (t.valor !== undefined && t.valor !== null) ? t.valor : '';
+                        }
                         document.getElementById('del-transacao-senha').value = '';
                         openModal(modalExcluir);
                         setTimeout(() => {
@@ -726,7 +731,10 @@ if (btnConfirmarDivergencia) {
 const btnConfExcluir = document.getElementById('btn-confirmar-excluir-transacao');
 if (btnConfExcluir) {
     btnConfExcluir.addEventListener('click', async () => {
-        const dataTarget = document.getElementById('del-transacao-data').value;
+        const dataInput = document.getElementById('del-transacao-data');
+        const dataTarget = dataInput ? dataInput.value : '';
+        const idTarget = dataInput ? dataInput.dataset.txId : '';
+        const valorTarget = dataInput && dataInput.dataset.txValor ? parseFloat(dataInput.dataset.txValor) : null;
         const senhaInput = document.getElementById('del-transacao-senha').value;
 
         const isMaster = (senhaInput === window.lojaConfig.senhaGerente);
@@ -737,23 +745,46 @@ if (btnConfExcluir) {
             return;
         }
 
-        const index = transacoesCaixa.findIndex(t => t.data === dataTarget);
-        if (index > -1) {
-            try {
-                const txId = transacoesCaixa[index].id;
-                if (txId) {
-                    await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, txId);
-                }
-                transacoesCaixa.splice(index, 1);
-                localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+        let index = transacoesCaixa.findIndex(t => (idTarget && (t.id === idTarget || t.$id === idTarget)) || (dataTarget && t.data === dataTarget));
+        if (index === -1 && valorTarget !== null && !isNaN(valorTarget)) {
+            index = transacoesCaixa.findIndex(t => Math.abs((parseFloat(t.valor) || 0) - valorTarget) < 0.01);
+        }
 
-                closeModal(document.getElementById('modal-excluir-transacao'));
-                window.customAlert('Movimentação excluída com sucesso.', 'success');
-                renderFinanceiro();
-            } catch (err) {
-                console.error('Erro ao excluir:', err);
-                window.customAlert('Erro ao excluir transação na nuvem.', 'warning');
+        if (index > -1) {
+            const tx = transacoesCaixa[index];
+            const txId = idTarget || tx.id || tx.$id;
+
+            // Se possui ID remoto e não é ID local_, tenta remover do Appwrite na nuvem
+            if (txId && !String(txId).startsWith('local_') && window.appwrite && window.appwrite.databases) {
+                try {
+                    await window.appwrite.databases.deleteDocument(window.appwrite.DB_ID, window.appwrite.COL_TRANS, txId);
+                } catch (err) {
+                    console.warn('Transação não encontrada na nuvem ou já removida (permitindo exclusão local):', err);
+                }
             }
+
+            // Remove de transacoesCaixa
+            transacoesCaixa.splice(index, 1);
+
+            // Remove também de window.globalData.transacoes
+            if (window.globalData && Array.isArray(window.globalData.transacoes)) {
+                window.globalData.transacoes = window.globalData.transacoes.filter(t => {
+                    const tid = t.id || t.$id;
+                    if (txId && tid && tid === txId) return false;
+                    if (dataTarget && t.data === dataTarget) return false;
+                    if (valorTarget !== null && !isNaN(valorTarget) && Math.abs((parseFloat(t.valor) || 0) - valorTarget) < 0.01 && t.data === dataTarget) return false;
+                    return true;
+                });
+            }
+
+            // Atualiza todos os caches do navegador
+            localStorage.setItem('avence_transacoes_caixa', JSON.stringify(transacoesCaixa));
+            localStorage.setItem('avence_transacoes', JSON.stringify(window.globalData?.transacoes || transacoesCaixa));
+            localStorage.setItem('avence_transacoes_sync_event', Date.now().toString());
+
+            closeModal(document.getElementById('modal-excluir-transacao'));
+            window.customAlert('Movimentação excluída com sucesso.', 'success');
+            renderFinanceiro();
         } else {
             window.customAlert('Transação não encontrada.', 'warning');
         }
