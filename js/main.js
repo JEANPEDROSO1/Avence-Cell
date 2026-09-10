@@ -396,7 +396,8 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // Navigation Logic
-let currentOSAction = ''; // 'alterar' or 'encerrar'
+window.currentOSAction = window.currentOSAction || '';
+let currentOSAction = window.currentOSAction;
 
 menuBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -491,9 +492,10 @@ menuBtns.forEach(btn => {
 
         if (targetId === 'alterar-os' || targetId === 'encerrar-os') {
             currentOSAction = targetId === 'alterar-os' ? 'alterar' : 'encerrar';
+            window.currentOSAction = currentOSAction;
             const titulo = document.getElementById('titulo-pesquisa-os');
             if (titulo) {
-                titulo.innerHTML = targetId === 'alterar-os' ? '<i class="ph ph-pencil-simple"></i> Alterar O.S' : '<i class="ph ph-check-circle"></i> Encerrar O.S';
+                titulo.innerHTML = currentOSAction === 'alterar' ? '<i class="ph ph-pencil-simple"></i> Alterar O.S' : '<i class="ph ph-check-circle"></i> Encerrar O.S';
             }
             const inputPesquisa = document.getElementById('input-pesquisa-os');
             if (inputPesquisa) inputPesquisa.value = '';
@@ -526,7 +528,7 @@ if (btnConfirmarPesquisa) {
             return;
         }
 
-        const selectedOS = window.globalData && window.globalData.os ? window.globalData.os.find(os => os.osNumber === osNumber) : null;
+        const selectedOS = window.globalData && window.globalData.os ? window.globalData.os.find(os => String(os.osNumber || os.numero).trim() === String(osNumber).trim()) : null;
         if (!selectedOS) {
             window.customAlert(`Ops! Não encontramos nenhuma O.S com o número "${osNumber}". Verifique e tente novamente.`, 'error');
             return;
@@ -538,16 +540,19 @@ if (btnConfirmarPesquisa) {
         }
 
         // Popula os dados para o fluxo atual mantendo o ID para reconhecer que é edição
-        currentFlowData = { ...selectedOS };
+        currentFlowData = { ...selectedOS, _isEditing: true };
         if (!currentFlowData.aparelho) currentFlowData.aparelho = {};
         if (!currentFlowData.cliente) currentFlowData.cliente = {};
         if (typeof currentFlowData.cliente === 'string') currentFlowData.cliente = { nome: currentFlowData.cliente };
 
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = (val !== undefined && val !== null) ? val : ''; };
+
+        const cliNome = typeof selectedOS.cliente === 'object' ? (selectedOS.cliente?.nome || '') : (selectedOS.cliente || '');
+        const cliFone = typeof selectedOS.cliente === 'object' ? (selectedOS.cliente?.telefone || selectedOS.fones || '') : (selectedOS.fones || '');
 
         // Popula campos de Cliente e Aparelho (caso Alterar)
-        setVal('c_nome', selectedOS.cliente);
-        setVal('c_telefone', selectedOS.fones);
+        setVal('c_nome', cliNome);
+        setVal('c_telefone', cliFone);
         setVal('a_marca', selectedOS.marca || selectedOS.aparelho?.marca);
         setVal('a_modelo', selectedOS.modelo || selectedOS.aparelho?.modelo);
         setVal('a_serie', selectedOS.serie || selectedOS.aparelho?.serie);
@@ -555,30 +560,33 @@ if (btnConfirmarPesquisa) {
         setVal('a_aparencia', selectedOS.aparencia || selectedOS.aparelho?.aparencia);
         setVal('a_defeito', selectedOS.defeito || selectedOS.aparelho?.defeito);
         setVal('a_laudo', selectedOS.laudo || selectedOS.orcamento?.laudo);
-        setVal('a_adiantamento', selectedOS.adiantamento || selectedOS.orcamento?.adiantamento || '0.00');
 
-        let mo = selectedOS.maodeobra || selectedOS.orcamento?.maodeobra || 0;
-        const pecas = selectedOS.pecas || selectedOS.orcamento?.pecas || 0;
-        const des = selectedOS.deslocamento || selectedOS.orcamento?.deslocamento || 0;
-        const ter = selectedOS.terceiros || selectedOS.orcamento?.terceiros || 0;
-        const out = selectedOS.outros || selectedOS.orcamento?.outros || 0;
+        const adiantamento = parseFloat(selectedOS.adiantamento || selectedOS.orcamento?.adiantamento) || 0;
+        let mo = parseFloat(selectedOS.maodeobra || selectedOS.orcamento?.maodeobra) || 0;
+        const pecas = parseFloat(selectedOS.pecas || selectedOS.orcamento?.pecas) || 0;
+        const des = parseFloat(selectedOS.deslocamento || selectedOS.orcamento?.deslocamento) || 0;
+        const ter = parseFloat(selectedOS.terceiros || selectedOS.orcamento?.terceiros) || 0;
+        const out = parseFloat(selectedOS.outros || selectedOS.orcamento?.outros) || 0;
+        const totalOS = parseFloat(selectedOS.total) || 0;
 
-        const totalOS = selectedOS.total || 0;
-
-        // Fallback para O.S. muito antigas que s tinham o total e no tinham os servios preenchidos
-        if (mo == 0 && pecas == 0 && des == 0 && ter == 0 && out == 0 && totalOS > 0) {
-            mo = totalOS;
+        // Fallback para O.S. muito antigas que só tinham o total e não tinham os serviços preenchidos
+        if (mo === 0 && pecas === 0 && des === 0 && ter === 0 && out === 0 && totalOS > 0) {
+            mo = totalOS + adiantamento;
         }
 
-        setVal('a_maodeobra', mo || '0.00');
-        setVal('a_pecas', pecas || '0.00');
-        setVal('a_deslocamento', des || '0.00');
-        setVal('a_terceiros', ter || '0.00');
-        setVal('a_outros', out || '0.00');
+        setVal('a_adiantamento', adiantamento > 0 ? adiantamento.toFixed(2) : '0.00');
+        setVal('a_maodeobra', mo > 0 ? mo.toFixed(2) : '0.00');
+        setVal('a_pecas', pecas > 0 ? pecas.toFixed(2) : '0.00');
+        setVal('a_deslocamento', des > 0 ? des.toFixed(2) : '0.00');
+        setVal('a_terceiros', ter > 0 ? ter.toFixed(2) : '0.00');
+        setVal('a_outros', out > 0 ? out.toFixed(2) : '0.00');
+
+        calculateTotal();
 
         closeModal(document.getElementById('modal-pesquisa-os'));
 
-        if (currentOSAction === 'alterar') {
+        const action = window.currentOSAction || currentOSAction;
+        if (action === 'alterar') {
             document.getElementById('intake-os-number').textContent = currentFlowData.osNumber !== undefined ? currentFlowData.osNumber : (currentFlowData.numero || '-');
             document.getElementById('intake-client-name').textContent = typeof currentFlowData.cliente === 'string' ? currentFlowData.cliente : (currentFlowData.cliente?.nome || '-');
             document.getElementById('intake-client-phone').textContent = currentFlowData.fones || currentFlowData.cliente?.telefone || '-';
@@ -588,8 +596,8 @@ if (btnConfirmarPesquisa) {
             const tabAparelho = document.querySelector('.os-tab[data-target="tab-aparelho"]');
             if (tabAparelho) tabAparelho.click();
 
-            setTimeout(() => document.getElementById('a_marca').focus(), 300);
-        } else if (currentOSAction === 'encerrar') {
+            setTimeout(() => document.getElementById('a_marca')?.focus(), 300);
+        } else if (action === 'encerrar') {
             calculateCheckoutTotal();
             document.getElementById('checkout-valorpago').value = '';
             document.getElementById('checkout-troco').textContent = 'R$ 0,00';
@@ -600,7 +608,7 @@ if (btnConfirmarPesquisa) {
             const vCont = document.getElementById('checkout-valores-container');
             if (vCont) vCont.style.display = 'grid';
             openModal(document.getElementById('modal-checkout'));
-            setTimeout(() => document.getElementById('checkout-valorpago').focus(), 300);
+            setTimeout(() => document.getElementById('checkout-valorpago')?.focus(), 300);
         }
     });
 
@@ -647,7 +655,10 @@ const parcelasContainer = document.getElementById('checkout-parcelas-container')
 const valoresContainer = document.getElementById('checkout-valores-container');
 
 function calculateCheckoutTotal() {
-    const baseTotal = calculateTotal();
+    let baseTotal = calculateTotal();
+    if ((!baseTotal || baseTotal === 0) && currentFlowData && currentFlowData.total) {
+        baseTotal = parseFloat(currentFlowData.total) || 0;
+    }
     let finalTotal = baseTotal;
     const valPagamento = selectPagamento?.value || 'Dinheiro';
 
@@ -737,16 +748,27 @@ if (btnFinalizarCheckout) {
 
         try {
             // Update Appwrite OS to "Encerrada"
-            if (currentFlowData && (currentFlowData.id || currentFlowData.$id)) {
-                const docId = currentFlowData.id || currentFlowData.$id;
-                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, {
-                    status: 'Encerrada'
-                });
+            let docId = currentFlowData ? (currentFlowData.id || currentFlowData.$id) : null;
+            if (!docId && osNumber && window.globalData?.os) {
+                const found = window.globalData.os.find(o => String(o.osNumber || o.numero).trim() === String(osNumber).trim());
+                if (found) docId = found.id || found.$id;
+            }
+            if (docId) {
+                try {
+                    await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, {
+                        status: 'Encerrada'
+                    });
+                } catch (osErr) {
+                    console.warn('[Checkout] Erro ao atualizar status no Appwrite:', osErr);
+                }
 
-                const index = window.globalData.os.findIndex(o => o.id === docId || o.$id === docId);
+                const index = window.globalData.os.findIndex(o => (docId && (o.id === docId || o.$id === docId)) || String(o.osNumber) === String(osNumber));
                 if (index !== -1) {
                     window.globalData.os[index].status = 'Encerrada';
                     localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+                }
+                if (typeof window.renderTodasOS === 'function') {
+                    window.renderTodasOS();
                 }
             }
 
@@ -1200,77 +1222,172 @@ btnFinalizarImprimir.addEventListener('click', async (e) => {
     btnFinalizarImprimir.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Gravando...';
     btnFinalizarImprimir.disabled = true;
 
-    let isEditing = !!(currentFlowData.id || currentFlowData.$id);
+    // Detect if editing and obtain docId
+    let docId = currentFlowData ? (currentFlowData.id || currentFlowData.$id) : null;
+    if (!docId && currentFlowData && currentFlowData.osNumber && window.globalData && window.globalData.os) {
+        const found = window.globalData.os.find(o => String(o.osNumber || o.numero).trim() === String(currentFlowData.osNumber).trim());
+        if (found) {
+            docId = found.id || found.$id;
+        }
+    }
+    let isEditing = (currentFlowData && currentFlowData._isEditing === true) || !!docId;
 
-    try {
-        const osDoc = {
-            osNumber: currentFlowData.osNumber !== undefined ? currentFlowData.osNumber.toString() : "0",
-            status: currentFlowData.status || 'Aberta',
-            cliente: document.getElementById('intake-client-name').textContent || (currentFlowData.cliente ? currentFlowData.cliente.nome : ''),
-            fones: document.getElementById('intake-client-phone').textContent || (currentFlowData.cliente ? currentFlowData.cliente.telefone : ''),
-            marca: marca,
-            modelo: modelo,
-            serie: serie,
-            acessorio: acessorio,
-            aparencia: aparencia,
-            defeito: defeito,
-            maodeobra: parseFloat(document.getElementById('a_maodeobra')?.value) || 0,
-            pecas: parseFloat(document.getElementById('a_pecas')?.value) || 0,
-            deslocamento: parseFloat(document.getElementById('a_deslocamento')?.value) || 0,
-            terceiros: parseFloat(document.getElementById('a_terceiros')?.value) || 0,
-            outros: parseFloat(document.getElementById('a_outros')?.value) || 0,
-            total: calculateTotal(),
-            laudo: document.getElementById('a_laudo')?.value || '',
-            relatorio: currentFlowData.relatorio || '',
-            dataIntake: document.getElementById('intake-entrada') ? document.getElementById('intake-entrada').value : '',
-            dataDelivery: document.getElementById('intake-previsao') ? document.getElementById('intake-previsao').value : ''
+    const maodeobra = parseFloat(document.getElementById('a_maodeobra')?.value) || 0;
+    const pecas = parseFloat(document.getElementById('a_pecas')?.value) || 0;
+    const deslocamento = parseFloat(document.getElementById('a_deslocamento')?.value) || 0;
+    const terceiros = parseFloat(document.getElementById('a_terceiros')?.value) || 0;
+    const outros = parseFloat(document.getElementById('a_outros')?.value) || 0;
+    const adiantamento = parseFloat(document.getElementById('a_adiantamento')?.value) || 0;
+    const total = calculateTotal();
+
+    const intakeClientName = document.getElementById('intake-client-name')?.textContent?.trim();
+    const intakeClientPhone = document.getElementById('intake-client-phone')?.textContent?.trim();
+    const clienteNome = (intakeClientName && intakeClientName !== '-') 
+        ? intakeClientName 
+        : (typeof currentFlowData.cliente === 'string' ? currentFlowData.cliente : (currentFlowData.cliente?.nome || ''));
+    const clientePhone = (intakeClientPhone && intakeClientPhone !== '-') 
+        ? intakeClientPhone 
+        : (typeof currentFlowData.cliente === 'string' ? '' : (currentFlowData.cliente?.telefone || currentFlowData.fones || ''));
+
+    const osDoc = {
+        osNumber: currentFlowData.osNumber !== undefined ? currentFlowData.osNumber.toString() : "0",
+        status: currentFlowData.status || 'Aberta',
+        cliente: clienteNome,
+        fones: clientePhone,
+        marca: marca,
+        modelo: modelo,
+        serie: serie,
+        acessorio: acessorio,
+        aparencia: aparencia,
+        defeito: defeito,
+        adiantamento: adiantamento,
+        maodeobra: maodeobra,
+        pecas: pecas,
+        deslocamento: deslocamento,
+        terceiros: terceiros,
+        outros: outros,
+        total: total,
+        laudo: document.getElementById('a_laudo')?.value || '',
+        relatorio: currentFlowData.relatorio || '',
+        dataIntake: document.getElementById('intake-entrada') ? document.getElementById('intake-entrada').value : '',
+        dataDelivery: document.getElementById('intake-previsao') ? document.getElementById('intake-previsao').value : ''
+    };
+
+    if (!window.globalData) window.globalData = {};
+    if (!window.globalData.os) window.globalData.os = [];
+
+    // 1. Sempre salva localmente primeiro para garantir que nenhuma alteração seja perdida
+    const localIndex = window.globalData.os.findIndex(o => 
+        (docId && (o.id === docId || o.$id === docId)) || 
+        (osDoc.osNumber && String(o.osNumber || o.numero).trim() === String(osDoc.osNumber).trim())
+    );
+
+    if (localIndex !== -1) {
+        window.globalData.os[localIndex] = { 
+            ...window.globalData.os[localIndex], 
+            ...osDoc, 
+            id: docId || window.globalData.os[localIndex].id || window.globalData.os[localIndex].$id, 
+            $id: docId || window.globalData.os[localIndex].$id || window.globalData.os[localIndex].id 
+        };
+    } else {
+        window.globalData.os.push({ ...osDoc, id: docId, $id: docId });
+    }
+    localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+
+    if (typeof window.renderTodasOS === 'function') {
+        window.renderTodasOS();
+    }
+
+    // 2. Tenta sincronizar com o Appwrite com payload estritamente compatível
+    let cloudError = null;
+    if (window.appwrite && window.appwrite.databases) {
+        const cloudPayload = {
+            osNumber: String(osDoc.osNumber || '0').slice(0, 50),
+            status: String(osDoc.status || 'Aberta').slice(0, 50),
+            cliente: String(osDoc.cliente || '').slice(0, 255),
+            fones: String(osDoc.fones || '').slice(0, 100),
+            marca: String(osDoc.marca || '').slice(0, 100),
+            modelo: String(osDoc.modelo || '').slice(0, 100),
+            serie: String(osDoc.serie || '').slice(0, 100),
+            acessorio: String(osDoc.acessorio || '').slice(0, 500),
+            aparencia: String(osDoc.aparencia || '').slice(0, 500),
+            defeito: String(osDoc.defeito || '').slice(0, 2000),
+            adiantamento: parseFloat(osDoc.adiantamento) || 0,
+            maodeobra: parseFloat(osDoc.maodeobra) || 0,
+            pecas: parseFloat(osDoc.pecas) || 0,
+            deslocamento: parseFloat(osDoc.deslocamento) || 0,
+            terceiros: parseFloat(osDoc.terceiros) || 0,
+            outros: parseFloat(osDoc.outros) || 0,
+            total: parseFloat(osDoc.total) || 0,
+            laudo: String(osDoc.laudo || '').slice(0, 5000),
+            relatorio: String(osDoc.relatorio || '').slice(0, 5000),
+            dataIntake: String(osDoc.dataIntake || '').slice(0, 100),
+            dataDelivery: String(osDoc.dataDelivery || '').slice(0, 100)
         };
 
-        if (!window.globalData) window.globalData = {};
-        if (!window.globalData.os) window.globalData.os = [];
-
-        if (isEditing) {
-            try {
-                await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
-            } catch (osErr) {
-                if (osErr.code === 404 || (osErr.message && osErr.message.toLowerCase().includes('could not be found'))) {
-                    console.warn('[OS] Documento não encontrado na nuvem para atualização. Criando novo registro...', docId);
-                    const newId = window.appwrite.ID.unique();
-                    const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, newId, osDoc);
-                    if (currentFlowData) {
-                        currentFlowData.id = created.$id;
-                        currentFlowData.$id = created.$id;
+        try {
+            if (isEditing && docId) {
+                try {
+                    await window.appwrite.databases.updateDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, cloudPayload);
+                } catch (osErr) {
+                    if (osErr.code === 404 || (osErr.message && osErr.message.toLowerCase().includes('could not be found'))) {
+                        console.warn('[OS] Documento não encontrado na nuvem para atualização. Criando novo registro...', docId);
+                        const newId = window.appwrite.ID.unique();
+                        const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, newId, cloudPayload);
+                        docId = created.$id;
+                        if (currentFlowData) {
+                            currentFlowData.id = created.$id;
+                            currentFlowData.$id = created.$id;
+                        }
+                        const idx = window.globalData.os.findIndex(o => String(o.osNumber || o.numero).trim() === String(osDoc.osNumber).trim());
+                        if (idx !== -1) {
+                            window.globalData.os[idx].id = created.$id;
+                            window.globalData.os[idx].$id = created.$id;
+                            localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+                        }
+                    } else {
+                        throw osErr;
                     }
-                } else {
-                    throw osErr;
+                }
+            } else {
+                const newDocId = (docId && docId.length <= 36) ? docId : window.appwrite.ID.unique();
+                const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, newDocId, cloudPayload);
+                const savedId = created ? created.$id : newDocId;
+                docId = savedId;
+                if (currentFlowData) {
+                    currentFlowData.id = savedId;
+                    currentFlowData.$id = savedId;
+                }
+                const idx = window.globalData.os.findIndex(o => String(o.osNumber || o.numero).trim() === String(osDoc.osNumber).trim());
+                if (idx !== -1) {
+                    window.globalData.os[idx].id = savedId;
+                    window.globalData.os[idx].$id = savedId;
+                    localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
                 }
             }
-            const index = window.globalData.os.findIndex(o => o.id === docId || o.$id === docId);
-            if (index !== -1) {
-                window.globalData.os[index] = { ...window.globalData.os[index], ...osDoc };
-            }
-            localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
-        } else {
-            const docId = window.appwrite.ID.unique();
-            const created = await window.appwrite.databases.createDocument(window.appwrite.DB_ID, window.appwrite.COL_OS, docId, osDoc);
-            window.globalData.os.push({ ...osDoc, id: created.$id });
-            localStorage.setItem('avence_os', JSON.stringify(window.globalData.os));
+        } catch (apiErr) {
+            console.warn('[OS] Aviso de sincronização na nuvem:', apiErr);
+            cloudError = apiErr;
         }
-    } catch (err) {
-        console.error(err);
-        window.customAlert('Erro ao gravar O.S na nuvem: ' + err.message, 'warning');
-        btnFinalizarImprimir.innerHTML = btnText;
-        btnFinalizarImprimir.disabled = false;
-        return; // Stop if failed to save
     }
+
+    currentFlowData = { ...currentFlowData, ...osDoc, id: docId, $id: docId };
+    saveFlowData();
 
     btnFinalizarImprimir.innerHTML = btnText;
     btnFinalizarImprimir.disabled = false;
 
     if (isEditing) {
         const modalIntake = document.getElementById('modal-intake');
-        if (modalIntake) {
+        if (typeof closeModal === 'function' && modalIntake) {
+            closeModal(modalIntake);
+        } else if (modalIntake) {
             modalIntake.classList.remove('active');
+        }
+        if (cloudError) {
+            window.customAlert('O.S. alterada e salva com sucesso! (Nuvem em modo offline)', 'success');
+        } else {
+            window.customAlert('Ordem de Serviço salva com sucesso!', 'success');
         }
         return; // Não imprime quando é alteração
     }
@@ -1624,7 +1741,7 @@ if (btnAlterarOsHistorico) {
                     window.customAlert(`A O.S. Nº ${osSelecionadaHistorico} já encontra-se Encerrada e não está mais disponível para alterações.`, 'warning');
                     return;
                 }
-                currentFlowData = { ...selectedOS };
+                currentFlowData = { ...selectedOS, _isEditing: true };
                 if (!currentFlowData.aparelho) currentFlowData.aparelho = {};
                 if (!currentFlowData.cliente) currentFlowData.cliente = {};
                 if (typeof currentFlowData.cliente === 'string') currentFlowData.cliente = { nome: currentFlowData.cliente };
@@ -1644,25 +1761,24 @@ if (btnAlterarOsHistorico) {
                 setVal('a_prioridade', selectedOS.prioridade || selectedOS.aparelho?.prioridade);
                 setVal('a_senha', selectedOS.senha || selectedOS.aparelho?.senha);
 
-                setVal('a_adiantamento', selectedOS.adiantamento || selectedOS.orcamento?.adiantamento || '0.00');
+                const adiantamento = parseFloat(selectedOS.adiantamento || selectedOS.orcamento?.adiantamento) || 0;
+                let mo = parseFloat(selectedOS.maodeobra || selectedOS.orcamento?.maodeobra) || 0;
+                const pecas = parseFloat(selectedOS.pecas || selectedOS.orcamento?.pecas) || 0;
+                const des = parseFloat(selectedOS.deslocamento || selectedOS.orcamento?.deslocamento) || 0;
+                const ter = parseFloat(selectedOS.terceiros || selectedOS.orcamento?.terceiros) || 0;
+                const out = parseFloat(selectedOS.outros || selectedOS.orcamento?.outros) || 0;
+                const totalOS = parseFloat(selectedOS.total || selectedOS.orcamento?.total) || 0;
 
-                let mo = selectedOS.maodeobra || selectedOS.orcamento?.maodeobra || 0;
-                const pecas = selectedOS.pecas || selectedOS.orcamento?.pecas || 0;
-                const des = selectedOS.deslocamento || selectedOS.orcamento?.deslocamento || 0;
-                const ter = selectedOS.terceiros || selectedOS.orcamento?.terceiros || 0;
-                const out = selectedOS.outros || selectedOS.orcamento?.outros || 0;
-
-                const totalOS = selectedOS.total || selectedOS.orcamento?.total || 0;
-
-                if (mo == 0 && pecas == 0 && des == 0 && ter == 0 && out == 0 && totalOS > 0) {
-                    mo = totalOS;
+                if (mo === 0 && pecas === 0 && des === 0 && ter === 0 && out === 0 && totalOS > 0) {
+                    mo = totalOS + adiantamento;
                 }
 
-                setVal('a_maodeobra', mo || '0.00');
-                setVal('a_pecas', pecas || '0.00');
-                setVal('a_deslocamento', des || '0.00');
-                setVal('a_terceiros', ter || '0.00');
-                setVal('a_outros', out || '0.00');
+                setVal('a_adiantamento', adiantamento > 0 ? adiantamento.toFixed(2) : '0.00');
+                setVal('a_maodeobra', mo > 0 ? mo.toFixed(2) : '0.00');
+                setVal('a_pecas', pecas > 0 ? pecas.toFixed(2) : '0.00');
+                setVal('a_deslocamento', des > 0 ? des.toFixed(2) : '0.00');
+                setVal('a_terceiros', ter > 0 ? ter.toFixed(2) : '0.00');
+                setVal('a_outros', out > 0 ? out.toFixed(2) : '0.00');
 
                 if (selectedOS.laudo) setVal('a_laudo', selectedOS.laudo);
 

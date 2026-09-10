@@ -68,6 +68,7 @@ const collectionsToCreate = [
             { key: 'acessorio', type: 'string', size: 500, required: false },
             { key: 'aparencia', type: 'string', size: 500, required: false },
             { key: 'defeito', type: 'string', size: 2000, required: false },
+            { key: 'adiantamento', type: 'float', required: false },
             { key: 'maodeobra', type: 'float', required: false },
             { key: 'pecas', type: 'float', required: false },
             { key: 'deslocamento', type: 'float', required: false },
